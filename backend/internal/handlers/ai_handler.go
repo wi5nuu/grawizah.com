@@ -88,3 +88,45 @@ func (h *AIHandler) OptimizeListing(c *gin.Context) {
 		},
 	})
 }
+
+// TranslateText handles POST /api/ai/translate
+func (h *AIHandler) TranslateText(c *gin.Context) {
+	var input struct {
+		Text       string `json:"text" binding:"required"`
+		SourceLang string `json:"sourceLang"`
+		TargetLang string `json:"targetLang" binding:"required"`
+	}
+	
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// TODO: Call AI translation service (Groq/Llama 3)
+	// For now, return mock response
+	c.JSON(http.StatusOK, gin.H{
+		"translatedText": input.Text, // In production, this would be translated
+		"sourceLang":     input.SourceLang,
+		"targetLang":     input.TargetLang,
+		"confidence":     0.95,
+	})
+}
+
+// DetectLanguage handles POST /api/ai/detect-language
+func (h *AIHandler) DetectLanguage(c *gin.Context) {
+	var input struct {
+		Text string `json:"text" binding:"required"`
+	}
+	
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// TODO: Call AI language detection service
+	// For now, return mock response
+	c.JSON(http.StatusOK, gin.H{
+		"language":   "en",
+		"confidence": 0.98,
+	})
+}

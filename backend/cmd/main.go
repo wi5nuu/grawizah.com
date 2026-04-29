@@ -28,6 +28,7 @@ func main() {
 	buyerHandler := handlers.NewBuyerHandler(buyerService)
 	aiHandler := handlers.NewAIHandler(aiService)
 	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
+	chatHandler := handlers.NewChatHandler()
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -96,6 +97,8 @@ func main() {
 			ai.POST("/hs-code", aiHandler.ClassifyHSCode)
 			ai.POST("/response-suggestion", aiHandler.GetResponseSuggestion)
 			ai.POST("/optimize-listing", aiHandler.OptimizeListing)
+			ai.POST("/translate", aiHandler.TranslateText)
+			ai.POST("/detect-language", aiHandler.DetectLanguage)
 		}
 
 		// Leaderboard routes
@@ -113,6 +116,19 @@ func main() {
 		api.GET("/companies/me", func(c *gin.Context) {
 			c.JSON(200, gin.H{})
 		})
+
+		// Chat & WhatsApp Bridge routes
+		chat := api.Group("/chat")
+		{
+			chat.POST("/send", chatHandler.SendMessage)
+			chat.GET("/history/:supplier_id", chatHandler.GetChatHistory)
+		}
+
+		whatsapp := api.Group("/whatsapp")
+		{
+			whatsapp.POST("/send", chatHandler.SendWhatsAppMessage)
+			whatsapp.POST("/webhook", chatHandler.ReceiveWhatsAppWebhook)
+		}
 	}
 
 	// Start server

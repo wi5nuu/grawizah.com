@@ -6,13 +6,15 @@ import { useBuyerRadar } from '@/hooks/useBuyerRadar';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { BuyerRadarTable } from '@/components/BuyerRadarTable';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
+import { MarketOpportunityAlerts } from '@/components/MarketOpportunityAlerts';
 import { 
   Target, 
   TrendingUp, 
   Users, 
   BarChart3,
   Lock,
-  Download
+  Download,
+  Bell
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -162,6 +164,17 @@ export default function IntelligenceHubPage() {
                 <BarChart3 className="w-4 h-4 inline mr-2" />
                 Competitor Benchmarking
               </button>
+              <button
+                onClick={() => setActiveTab('alerts')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'alerts'
+                    ? 'border-primary-700 text-primary-700'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Bell className="w-4 h-4 inline mr-2" />
+                Market Alerts
+              </button>
             </nav>
           </div>
 
@@ -226,11 +239,94 @@ export default function IntelligenceHubPage() {
                   </div>
                 </div>
 
-                <div className="text-center py-12 text-gray-500">
-                  <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">Coming Soon</p>
-                  <p className="text-sm">Competitor analysis features are under development</p>
+                {/* Competitor Comparison Chart */}
+                <div className="bg-white p-6 rounded-lg shadow mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">Price Positioning Analysis</h3>
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Your Company', price: 850, volume: 1200, color: 'bg-primary-600' },
+                      { name: 'Competitor A', price: 875, volume: 1500, color: 'bg-red-500' },
+                      { name: 'Competitor B', price: 820, volume: 800, color: 'bg-orange-500' },
+                      { name: 'Competitor C', price: 900, volume: 1100, color: 'bg-yellow-500' },
+                      { name: 'Market Average', price: 861, volume: 1150, color: 'bg-gray-400' },
+                    ].map((comp) => (
+                      <div key={comp.name} className="flex items-center gap-4">
+                        <div className="w-32 text-sm font-medium text-gray-700">{comp.name}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+                              <div
+                                className={`${comp.color} h-6 rounded-full flex items-center justify-end pr-2`}
+                                style={{ width: `${(comp.price / 900) * 100}%` }}
+                              >
+                                <span className="text-xs text-white font-semibold">
+                                  ${comp.price}
+                                </span>
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-600 w-20">{comp.volume} MT</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Competitive Insights */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-6 rounded-lg shadow">
+                    <h3 className="font-semibold text-gray-900 mb-4">Your Competitive Position</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Price Competitiveness</span>
+                        <span className="badge badge-success">Good</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Market Share</span>
+                        <span className="font-semibold text-gray-900">26%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Response Time</span>
+                        <span className="badge badge-success">Faster than 78%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Conversion Rate</span>
+                        <span className="badge badge-warning">Average</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-lg shadow">
+                    <h3 className="font-semibold text-gray-900 mb-4">Recommended Actions</h3>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-sm font-medium text-blue-900">💡 Price Optimization</p>
+                        <p className="text-xs text-blue-700 mt-1">
+                          You can increase price by 2-3% and still remain competitive
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm font-medium text-green-900">✅ Response Time</p>
+                        <p className="text-xs text-green-700 mt-1">
+                          Your response time is excellent. Keep it up!
+                        </p>
+                      </div>
+                      <div className="p-3 bg-orange-50 border border-orange-200 rounded">
+                        <p className="text-sm font-medium text-orange-900">⚠️ Conversion Rate</p>
+                        <p className="text-xs text-orange-700 mt-1">
+                          Focus on improving inquiry-to-deal conversion
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Market Alerts Tab */}
+            {activeTab === 'alerts' && (
+              <div>
+                <MarketOpportunityAlerts />
               </div>
             )}
           </div>
