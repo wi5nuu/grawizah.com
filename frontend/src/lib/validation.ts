@@ -179,7 +179,7 @@ export function validateStringLength(
 export function sanitizeSearchQuery(query: string): string {
   // Remove SQL keywords and special characters
   return query
-    .replace(/[';--]/g, '')
+    .replace(/[';\-]/g, '')
     .replace(/\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, '')
     .trim();
 }

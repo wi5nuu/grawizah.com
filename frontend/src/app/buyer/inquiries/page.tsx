@@ -27,7 +27,7 @@ export default function BuyerInquiryManagerPage() {
     try {
       setLoading(true);
       if (user) {
-        const data = await inquiryService.getByBuyerId(user.id);
+        const data = await inquiryService.getInquiriesByBuyer(user.id);
         setInquiries(data);
       }
     } catch (error) {
@@ -58,7 +58,7 @@ export default function BuyerInquiryManagerPage() {
     if (!selectedInquiry || !replyMessage) return;
 
     try {
-      await inquiryService.respond(selectedInquiry.id, replyMessage);
+      await inquiryService.respondToInquiry(selectedInquiry.id, replyMessage);
       setReplyMessage('');
       setSelectedInquiry(null);
       loadInquiries();

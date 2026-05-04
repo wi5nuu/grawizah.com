@@ -22,7 +22,7 @@ import Link from 'next/link';
 export default function IntelligenceHubPage() {
   const { user, isPremium, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'buyer-radar' | 'leaderboard' | 'competitors'>('buyer-radar');
+  const [activeTab, setActiveTab] = useState<'buyer-radar' | 'leaderboard' | 'competitors' | 'alerts'>('buyer-radar');
   
   const { buyers, loading: buyersLoading, searchBuyers } = useBuyerRadar();
   const { scores, loading: leaderboardLoading } = useLeaderboard();

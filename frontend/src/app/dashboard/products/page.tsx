@@ -19,8 +19,8 @@ export default function ProductsManagementPage() {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const data = await productService.getAll();
-      setProducts(data);
+      const data = await productService.getProducts();
+      setProducts(data.data);
     } catch (error) {
       console.error('Failed to load products:', error);
     } finally {
@@ -32,10 +32,51 @@ export default function ProductsManagementPage() {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
     try {
-      await productService.delete(id);
+      await productService.deleteProduct(id);
       setProducts(products.filter(p => p.id !== id));
     } catch (error) {
       console.error('Failed to delete product:', error);
+    }
+  };
+
+  const handleOptimizeListing = async (product: Product) => {
+    try {
+      const { ListingOptimizerService } = await import('@/services/AIService');
+      const aiService = new ListingOptimizerService();
+      
+      const result = await aiService.analyze({
+        product_id: product.id,
+        current_description: product.description || '',
+        product_name: product.name,
+      });
+
+      if (result.success && result.data) {
+        alert('Listing Optimized!\n' + JSON.stringify(result.data, null, 2));
+      } else {
+        alert('Failed to optimize listing.');
+      }
+    } catch (err) {
+      console.error('Failed to optimize:', err);
+    }
+  };
+
+  const handleGenerateHSCode = async (product: Product) => {
+    try {
+      const { HSCodeAIService } = await import('@/services/AIService');
+      const aiService = new HSCodeAIService();
+      
+      const result = await aiService.analyze({
+        description: product.description || product.name,
+        category: product.category,
+      });
+
+      if (result.success && result.data) {
+        alert('HS Code Found!\n' + JSON.stringify(result.data, null, 2));
+      } else {
+        alert('Failed to generate HS Code.');
+      }
+    } catch (err) {
+      console.error('Failed to generate HS Code:', err);
     }
   };
 

@@ -49,14 +49,15 @@ export abstract class BaseService {
 
   protected getAuthToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('auth_token');
+      return localStorage.getItem('grawizah_token');
     }
     return null;
   }
 
   protected handleUnauthorized(): void {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
+      localStorage.removeItem('grawizah_token');
+      localStorage.removeItem('grawizah_user');
       window.location.href = '/login';
     }
   }

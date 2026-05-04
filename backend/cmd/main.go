@@ -29,6 +29,7 @@ func main() {
 	aiHandler := handlers.NewAIHandler(aiService)
 	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
 	chatHandler := handlers.NewChatHandler()
+	authHandler := handlers.NewAuthHandler()
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -59,6 +60,13 @@ func main() {
 	// API routes
 	api := r.Group("/api")
 	{
+		// Auth routes
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/register", authHandler.Register)
+		}
+
 		// Product routes
 		products := api.Group("/products")
 		{

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LeaderboardService } from '@/services/LeaderboardService';
-import { LeaderboardScore } from '@/types';
+import { LeaderboardScore } from '@/types/company';
 import { Trophy, TrendingUp, TrendingDown, Award } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,7 +20,7 @@ export default function LeaderboardPage() {
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
-      const data = await leaderboardService.getAll();
+      const data = await leaderboardService.getLeaderboard();
       setScores(data);
       
       if (user) {
@@ -121,7 +121,7 @@ export default function LeaderboardPage() {
                       className={`hover:bg-gray-50 ${isMyCompany ? 'bg-primary-50' : ''}`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-2xl">{getRankIcon(score.rank)}</span>
+                        <span className="text-2xl">{getRankIcon(score.rank || 0)}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
