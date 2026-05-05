@@ -19,7 +19,7 @@ export class TranslatorService extends BaseService {
    */
   async translate(request: TranslationRequest): Promise<TranslationResponse> {
     try {
-      const response = await this.post<TranslationResponse>('/ai/translate', request);
+      const response = await this.post<TranslationResponse>('/api/ai/translate', request);
       return response;
     } catch (error) {
       console.error('Translation failed:', error);
@@ -32,7 +32,7 @@ export class TranslatorService extends BaseService {
    */
   async detectLanguage(text: string): Promise<string> {
     try {
-      const response = await this.post<{ language: string }>('/ai/detect-language', { text });
+      const response = await this.post<{ language: string }>('/api/ai/detect-language', { text });
       return response.language;
     } catch (error) {
       console.error('Language detection failed:', error);

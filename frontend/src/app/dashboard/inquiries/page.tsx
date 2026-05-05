@@ -20,7 +20,7 @@ export default function InquiriesManagementPage() {
   const loadInquiries = async () => {
     try {
       setLoading(true);
-      const data = await inquiryService.getAll();
+      const data = await inquiryService.getInquiriesBySupplier(user?.id || '');
       setInquiries(data);
     } catch (error) {
       console.error('Failed to load inquiries:', error);
@@ -34,10 +34,40 @@ export default function InquiriesManagementPage() {
     if (!response) return;
 
     try {
-      await inquiryService.respond(id, response);
+      await inquiryService.respondToInquiry(id, response);
       loadInquiries();
     } catch (error) {
       console.error('Failed to respond:', error);
+    }
+  };
+
+  const handleAISuggestion = async (inquiry: Inquiry) => {
+    try {
+      const { ResponseSuggestionService } = await import('@/services/AIService');
+      const aiService = new ResponseSuggestionService();
+      setLoading(true);
+      
+      const result = await aiService.analyze({
+        inquiry_message: inquiry.message,
+        product_name: inquiry.product_id || 'Our Product', // In real app, fetch product name
+        buyer_country: 'Unknown', // Need to pass buyer country if available
+      });
+
+      setLoading(false);
+      
+      if (result.success && result.data?.suggested_response) {
+        const response = prompt('AI Suggested Response (Edit as needed):', result.data.suggested_response);
+        if (response) {
+          await inquiryService.respondToInquiry(inquiry.id, response);
+          loadInquiries();
+        }
+      } else {
+        alert('Failed to generate AI suggestion');
+      }
+    } catch (error) {
+      setLoading(false);
+      console.error('AI suggestion failed:', error);
+      alert('Error generating suggestion');
     }
   };
 
@@ -164,12 +194,21 @@ export default function InquiriesManagementPage() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {inquiry.status === 'open' && (
-                      <button
-                        onClick={() => handleRespond(inquiry.id)}
-                        className="btn-primary text-sm"
-                      >
-                        Respond
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleRespond(inquiry.id)}
+                          className="btn-primary text-sm"
+                        >
+                          Respond
+                        </button>
+                        <button
+                          onClick={() => handleAISuggestion(inquiry)}
+                          className="btn-outline text-sm flex items-center justify-center gap-1 border-purple-200 text-purple-700 hover:bg-purple-50"
+                        >
+                          <TrendingUp className="w-4 h-4" />
+                          AI Suggest
+                        </button>
+                      </>
                     )}
                     {!inquiry.converted_to_deal && inquiry.status === 'responded' && (
                       <button

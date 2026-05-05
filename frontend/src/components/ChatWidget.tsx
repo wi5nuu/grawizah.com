@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, Send, X, Minimize2, Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { TranslatorService } from '@/services/TranslatorService';
+import { ChatService } from '@/services/ChatService';
 
 interface Message {
   id: string;
@@ -71,6 +72,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const chatService = new ChatService();
+
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -100,43 +103,31 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     setMessages([...messages, message]);
     setNewMessage('');
 
-    // TODO: Send to backend and WhatsApp Bridge
+    // Send to backend and WhatsApp Bridge
     await sendMessageToBackend(message);
   };
 
   const sendMessageToBackend = async (message: Message) => {
     try {
-      // Send to API
-      const response = await fetch('/api/chat/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          supplierId,
-          productId,
-          message: message.message,
-          channel: 'chat',
-        }),
+      // Send to API via ChatService
+      await chatService.sendMessage({
+        supplierId,
+        productId,
+        message: message.message,
+        channel: 'chat',
       });
-
-      if (response.ok) {
-        // Also send via WhatsApp Bridge if enabled
-        await sendViaWhatsApp(message);
-      }
+      // Also send via WhatsApp Bridge if enabled
+      await sendViaWhatsApp(message);
     } catch (error) {
       console.error('Failed to send message:', error);
     }
   };
 
   const sendViaWhatsApp = async (message: Message) => {
-    // TODO: Integrate with WhatsApp Business API
     try {
-      await fetch('/api/whatsapp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: supplierId,
-          message: message.message,
-        }),
+      await chatService.sendWhatsAppMessage({
+        to: supplierId,
+        message: message.message,
       });
     } catch (error) {
       console.error('WhatsApp send failed:', error);
