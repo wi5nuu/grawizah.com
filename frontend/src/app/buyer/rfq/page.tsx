@@ -1,164 +1,106 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Send, Plus, X } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Plus, Clock, CheckCircle, Send } from 'lucide-react';
+import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
 
-export default function RFQManagerPage() {
-  const [rfqForm, setRfqForm] = useState({
-    productName: '',
-    hsCode: '',
-    quantity: '',
-    targetPrice: '',
-    deliveryDate: '',
-    specifications: '',
-    certifications: [] as string[],
-  });
+const MOCK_RFQS = [
+  { id: '1', product: 'Virgin Coconut Oil - Organic', quantity: '20 MT', country_origin: 'Indonesia', budget: '$16,000 - $24,000', deadline: '2026-06-01', status: 'active', responses: 3 },
+  { id: '2', product: 'Arabica Coffee Beans Grade 1', quantity: '500 kg', country_origin: 'Indonesia', budget: '$1,750 - $2,500', deadline: '2026-05-20', status: 'active', responses: 5 },
+  { id: '3', product: 'Teak Wood Planks KD', quantity: '50 m³', country_origin: 'Indonesia', budget: '$30,000 - $45,000', deadline: '2026-05-15', status: 'closed', responses: 7 },
+];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('RFQ submitted:', rfqForm);
-  };
+export default function RFQPage() {
+  const [showCreate, setShowCreate] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">RFQ Manager</h1>
-          <p className="text-gray-600 mt-1">Create and manage your requests for quotation</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <FileText className="w-6 h-6 text-primary-700" /> RFQ Manager
+            </h1>
+            <p className="text-gray-500 mt-1">Create and manage your Requests for Quotation</p>
+          </div>
+          <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2">
+            <Plus className="w-5 h-5" /> New RFQ
+          </button>
         </div>
 
-        {/* RFQ Form */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">Create New RFQ</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Create RFQ Form */}
+        {showCreate && (
+          <div className="card mb-6 animate-slide-up">
+            <h2 className="text-lg font-semibold mb-4">Create New RFQ</h2>
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product Name *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  placeholder="e.g., Crude Palm Oil"
-                  value={rfqForm.productName}
-                  onChange={(e) => setRfqForm({ ...rfqForm, productName: e.target.value })}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                <input className="input-field" placeholder="e.g. Virgin Coconut Oil" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  HS Code
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g., 1511.10"
-                  value={rfqForm.hsCode}
-                  onChange={(e) => setRfqForm({ ...rfqForm, hsCode: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quantity *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="input-field"
-                  placeholder="e.g., 1000 MT"
-                  value={rfqForm.quantity}
-                  onChange={(e) => setRfqForm({ ...rfqForm, quantity: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Target Price (USD)
-                </label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="e.g., 850 per MT"
-                  value={rfqForm.targetPrice}
-                  onChange={(e) => setRfqForm({ ...rfqForm, targetPrice: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Delivery Date *
-                </label>
-                <input
-                  type="date"
-                  required
-                  className="input-field"
-                  value={rfqForm.deliveryDate}
-                  onChange={(e) => setRfqForm({ ...rfqForm, deliveryDate: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Required Certifications
-                </label>
-                <select className="input-field">
-                  <option>RSPO</option>
-                  <option>ISCC</option>
-                  <option>ISO 9001</option>
-                  <option>Halal</option>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select className="select-field">
+                  <option value="">Select category</option>
+                  {PRODUCT_CATEGORIES.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Specifications & Requirements *
-              </label>
-              <textarea
-                required
-                rows={6}
-                className="input-field"
-                placeholder="Describe your product specifications, quality requirements, packaging, shipping terms, etc."
-                value={rfqForm.specifications}
-                onChange={(e) => setRfqForm({ ...rfqForm, specifications: e.target.value })}
-              />
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button type="submit" className="btn-primary flex items-center gap-2">
-                <Send className="w-4 h-4" />
-                Send RFQ to Suppliers
-              </button>
-              <button type="button" className="btn-secondary">
-                Save as Draft
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Active RFQs */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Active RFQs</h2>
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Crude Palm Oil - 1000 MT</h3>
-                  <p className="text-sm text-gray-500 mt-1">Sent to 5 suppliers • 3 quotes received</p>
-                  <p className="text-sm text-gray-500">Created: April 25, 2026</p>
-                </div>
-                <span className="badge badge-success">Active</span>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input className="input-field" placeholder="e.g. 20 MT" />
               </div>
-              <div className="mt-4 flex gap-2">
-                <button className="btn-primary text-sm">View Quotes</button>
-                <button className="btn-secondary text-sm">Edit RFQ</button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Budget Range (USD)</label>
+                <input className="input-field" placeholder="e.g. $16,000 - $24,000" />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Origin</label>
+                <select className="select-field">
+                  <option value="">Any</option>
+                  {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                <input type="date" className="input-field" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+              <textarea className="input-field h-20 resize-none" placeholder="Specify certifications, quality standards, packaging requirements..." />
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+              <button onClick={() => setShowCreate(false)} className="btn-ghost">Cancel</button>
+              <button className="btn-primary flex items-center gap-2"><Send className="w-4 h-4" /> Submit RFQ</button>
             </div>
           </div>
+        )}
+
+        {/* RFQ List */}
+        <div className="space-y-4">
+          {MOCK_RFQS.map((rfq) => (
+            <div key={rfq.id} className="card hover:shadow-md transition">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900">{rfq.product}</h3>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                    <span>Qty: {rfq.quantity}</span>
+                    <span>Origin: {rfq.country_origin}</span>
+                    <span>Budget: {rfq.budget}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`badge text-xs capitalize ${rfq.status === 'active' ? 'badge-success' : 'bg-gray-100 text-gray-500'}`}>
+                    {rfq.status === 'active' ? <><Clock className="w-3 h-3 mr-1" /> Active</> : <><CheckCircle className="w-3 h-3 mr-1" /> Closed</>}
+                  </span>
+                  <p className="text-sm text-gray-500 mt-1">{rfq.responses} responses</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
+                <span>Deadline: {rfq.deadline}</span>
+                <button className="text-primary-600 font-medium hover:underline">View Details →</button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

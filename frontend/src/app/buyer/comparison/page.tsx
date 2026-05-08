@@ -1,192 +1,102 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CheckCircle, XCircle, Star, Award } from 'lucide-react';
+import { useState } from 'react';
+import { GitCompare, Star, Shield, MapPin, Award, Bot } from 'lucide-react';
 
-interface Supplier {
-  id: string;
-  name: string;
-  country: string;
-  price: number;
-  moq: string;
-  leadTime: string;
-  certifications: string[];
-  rating: number;
-  verified: boolean;
-}
+const MOCK_SUPPLIERS = [
+  { id: '1', name: 'PT Nusantara Agro', country: 'Indonesia', verified: true, experience: 12, rating: 4.8, response_rate: 95, conversion_rate: 28, certifications: ['ISO 9001', 'USDA Organic', 'HACCP'], price: '$800-1200/MT', ai_match: 92 },
+  { id: '2', name: 'Java Spice Trading', country: 'Indonesia', verified: true, experience: 8, rating: 4.6, response_rate: 92, conversion_rate: 25, certifications: ['ISO 22000', 'EU Organic'], price: '$850-1100/MT', ai_match: 87 },
+  { id: '3', name: 'Borneo Natural Co', country: 'Indonesia', verified: false, experience: 5, rating: 4.2, response_rate: 78, conversion_rate: 18, certifications: ['GMP'], price: '$700-1000/MT', ai_match: 74 },
+];
 
-export default function SupplierComparisonPage() {
-  const [suppliers] = useState<Supplier[]>([
-    {
-      id: '1',
-      name: 'PT Indo Palm Export',
-      country: 'Indonesia',
-      price: 850,
-      moq: '500 MT',
-      leadTime: '30 days',
-      certifications: ['RSPO', 'ISCC', 'Halal'],
-      rating: 4.8,
-      verified: true,
-    },
-    {
-      id: '2',
-      name: 'Malaysia Palm Industries',
-      country: 'Malaysia',
-      price: 875,
-      moq: '1000 MT',
-      leadTime: '45 days',
-      certifications: ['RSPO', 'ISO 9001'],
-      rating: 4.5,
-      verified: true,
-    },
-    {
-      id: '3',
-      name: 'Thai Commodities Ltd',
-      country: 'Thailand',
-      price: 820,
-      moq: '250 MT',
-      leadTime: '60 days',
-      certifications: ['ISO 9001', 'Halal'],
-      rating: 4.2,
-      verified: false,
-    },
-  ]);
-
+export default function ComparisonPage() {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Supplier Comparison</h1>
-          <p className="text-gray-600 mt-1">Compare quotes and supplier capabilities side-by-side</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 lg:p-8 max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <GitCompare className="w-6 h-6 text-green-600" /> Supplier Comparison
+          </h1>
+          <p className="text-gray-500 mt-1">AI-powered comparison of shortlisted suppliers</p>
         </div>
 
         {/* Comparison Table */}
-        <div className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="min-w-full">
+        <div className="table-container overflow-x-auto">
+          <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Criteria</th>
-                {suppliers.map((supplier) => (
-                  <th key={supplier.id} className="px-6 py-4 text-center">
-                    <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-bold text-gray-900">{supplier.name}</span>
-                        {supplier.verified && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-500">{supplier.country}</span>
-                    </div>
+                <th className="text-left px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Criteria</th>
+                {MOCK_SUPPLIERS.map(s => (
+                  <th key={s.id} className="text-center px-6 py-4">
+                    <p className="text-sm font-semibold text-gray-900">{s.name}</p>
+                    <p className="text-xs text-gray-500">{s.country}</p>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
-              {/* Price */}
-              <tr>
-                <td className="px-6 py-4 font-medium text-gray-900">Price (USD/MT)</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center">
-                    <span className="text-lg font-bold text-primary-700">
-                      ${supplier.price}
+            <tbody className="divide-y divide-gray-100">
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">AI Match Score</td>
+                {MOCK_SUPPLIERS.map(s => (
+                  <td key={s.id} className="text-center px-6 py-3">
+                    <span className={`badge text-sm font-bold ${s.ai_match >= 85 ? 'badge-success' : s.ai_match >= 70 ? 'badge-warning' : 'badge-danger'}`}>
+                      <Bot className="w-3.5 h-3.5 mr-1" /> {s.ai_match}%
                     </span>
                   </td>
                 ))}
               </tr>
-
-              {/* MOQ */}
-              <tr className="bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">Minimum Order Quantity</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center text-gray-700">
-                    {supplier.moq}
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Verified</td>
+                {MOCK_SUPPLIERS.map(s => (
+                  <td key={s.id} className="text-center px-6 py-3">
+                    {s.verified ? <Shield className="w-5 h-5 text-green-500 mx-auto" /> : <span className="text-gray-300">—</span>}
                   </td>
                 ))}
               </tr>
-
-              {/* Lead Time */}
-              <tr>
-                <td className="px-6 py-4 font-medium text-gray-900">Lead Time</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center text-gray-700">
-                    {supplier.leadTime}
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Experience (years)</td>
+                {MOCK_SUPPLIERS.map(s => <td key={s.id} className="text-center px-6 py-3 text-sm font-medium">{s.experience}</td>)}
+              </tr>
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Rating</td>
+                {MOCK_SUPPLIERS.map(s => (
+                  <td key={s.id} className="text-center px-6 py-3 text-sm font-medium">
+                    <span className="flex items-center justify-center gap-1"><Star className="w-4 h-4 text-amber-500" /> {s.rating}</span>
                   </td>
                 ))}
               </tr>
-
-              {/* Rating */}
-              <tr className="bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">Supplier Rating</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                      <span className="font-semibold">{supplier.rating}</span>
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Response Rate</td>
+                {MOCK_SUPPLIERS.map(s => <td key={s.id} className="text-center px-6 py-3 text-sm font-medium">{s.response_rate}%</td>)}
+              </tr>
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Conversion Rate</td>
+                {MOCK_SUPPLIERS.map(s => <td key={s.id} className="text-center px-6 py-3 text-sm font-medium">{s.conversion_rate}%</td>)}
+              </tr>
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Price Range</td>
+                {MOCK_SUPPLIERS.map(s => <td key={s.id} className="text-center px-6 py-3 text-sm font-semibold text-primary-700">{s.price}</td>)}
+              </tr>
+              <tr className="hover:bg-gray-50">
+                <td className="px-6 py-3 text-sm font-medium text-gray-700">Certifications</td>
+                {MOCK_SUPPLIERS.map(s => (
+                  <td key={s.id} className="text-center px-6 py-3">
+                    <div className="flex flex-wrap justify-center gap-1">
+                      {s.certifications.map(c => <span key={c} className="badge bg-green-50 text-green-700 text-[10px]">{c}</span>)}
                     </div>
                   </td>
                 ))}
               </tr>
-
-              {/* Certifications */}
               <tr>
-                <td className="px-6 py-4 font-medium text-gray-900">Certifications</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {supplier.certifications.map((cert) => (
-                        <span key={cert} className="badge badge-success text-xs">
-                          {cert}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                ))}
-              </tr>
-
-              {/* Verified */}
-              <tr className="bg-gray-50">
-                <td className="px-6 py-4 font-medium text-gray-900">Verified Supplier</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center">
-                    {supplier.verified ? (
-                      <CheckCircle className="w-6 h-6 text-green-600 mx-auto" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-gray-400 mx-auto" />
-                    )}
-                  </td>
-                ))}
-              </tr>
-
-              {/* Actions */}
-              <tr>
-                <td className="px-6 py-4 font-medium text-gray-900">Actions</td>
-                {suppliers.map((supplier) => (
-                  <td key={supplier.id} className="px-6 py-4 text-center">
-                    <div className="flex flex-col gap-2">
-                      <button className="btn-primary text-sm">Select</button>
-                      <button className="btn-secondary text-sm">Contact</button>
-                    </div>
+                <td className="px-6 py-4"></td>
+                {MOCK_SUPPLIERS.map(s => (
+                  <td key={s.id} className="text-center px-6 py-4">
+                    <button className="btn-primary btn-sm w-full">Contact</button>
                   </td>
                 ))}
               </tr>
             </tbody>
           </table>
-        </div>
-
-        {/* Recommendation */}
-        <div className="mt-6 bg-gradient-to-r from-primary-600 to-blue-600 text-white p-6 rounded-lg shadow">
-          <div className="flex items-start gap-4">
-            <Award className="w-8 h-8 flex-shrink-0" />
-            <div>
-              <h3 className="text-lg font-bold mb-2">AI Recommendation</h3>
-              <p className="text-sm opacity-90">
-                Based on your requirements, we recommend <strong>PT Indo Palm Export</strong>. 
-                They offer competitive pricing, verified certifications, and have the highest rating. 
-                Their MOQ matches your order quantity and lead time is reasonable.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

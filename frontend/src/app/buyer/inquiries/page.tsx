@@ -1,264 +1,55 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { InquiryService } from '@/services/InquiryService';
-import { TranslatorService } from '@/services/TranslatorService';
-import { Inquiry } from '@/types/inquiry';
-import { MessageSquare, Languages, Send, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useState } from 'react';
+import { MessageSquare, Search, Clock, CheckCircle } from 'lucide-react';
 
-export default function BuyerInquiryManagerPage() {
-  const { user } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
-  const [replyMessage, setReplyMessage] = useState('');
-  const [translating, setTranslating] = useState(false);
-  const [targetLang, setTargetLang] = useState('en');
-  
-  const inquiryService = new InquiryService();
-  const translatorService = new TranslatorService();
+const MOCK_INQUIRIES = [
+  { id: '1', supplier: 'PT Nusantara Agro', product: 'Virgin Coconut Oil', message: 'Interested in 20MT organic coconut oil with USDA certification', status: 'responded', date: '2026-05-08' },
+  { id: '2', supplier: 'Java Spice Trading', product: 'Arabica Coffee', message: 'Need samples for 500kg order evaluation', status: 'open', date: '2026-05-07' },
+  { id: '3', supplier: 'Borneo Wood Export', product: 'Teak Wood Planks', message: 'FSC certified teak for furniture manufacturing', status: 'open', date: '2026-05-06' },
+];
 
-  useEffect(() => {
-    loadInquiries();
-  }, []);
+export default function BuyerInquiriesPage() {
+  const [filter, setFilter] = useState('all');
 
-  const loadInquiries = async () => {
-    try {
-      setLoading(true);
-      if (user) {
-        const data = await inquiryService.getInquiriesByBuyer(user.id);
-        setInquiries(data);
-      }
-    } catch (error) {
-      console.error('Failed to load inquiries:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTranslate = async () => {
-    if (!replyMessage) return;
-
-    try {
-      setTranslating(true);
-      const translated = await translatorService.translate({
-        text: replyMessage,
-        targetLang: targetLang,
-      });
-      setReplyMessage(translated.translatedText);
-    } catch (error) {
-      console.error('Translation failed:', error);
-    } finally {
-      setTranslating(false);
-    }
-  };
-
-  const handleSendReply = async () => {
-    if (!selectedInquiry || !replyMessage) return;
-
-    try {
-      await inquiryService.respondToInquiry(selectedInquiry.id, replyMessage);
-      setReplyMessage('');
-      setSelectedInquiry(null);
-      loadInquiries();
-    } catch (error) {
-      console.error('Failed to send reply:', error);
-    }
-  };
-
-  const stats = {
-    total: inquiries.length,
-    pending: inquiries.filter(i => i.status === 'open').length,
-    responded: inquiries.filter(i => i.status === 'responded').length,
-    converted: inquiries.filter(i => i.converted_to_deal).length,
-  };
+  const filtered = MOCK_INQUIRIES.filter(i => filter === 'all' || i.status === filter);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Inquiry Manager</h1>
-          <p className="text-gray-600 mt-1">Track and manage your supplier inquiries</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <MessageSquare className="w-6 h-6 text-accent-600" /> My Inquiries
+          </h1>
+          <p className="text-gray-500 mt-1">Track your inquiries sent to suppliers</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-primary-600" />
-              <div>
-                <p className="text-sm text-gray-600">Total Inquiries</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="w-8 h-8 text-orange-600" />
-              <div>
-                <p className="text-sm text-gray-600">Pending Response</p>
-                <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-8 h-8 text-blue-600" />
-              <div>
-                <p className="text-sm text-gray-600">Responded</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.responded}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-8 h-8 text-green-600" />
-              <div>
-                <p className="text-sm text-gray-600">Converted to Deal</p>
-                <p className="text-2xl font-bold text-green-600">{stats.converted}</p>
-              </div>
-            </div>
-          </div>
+        <div className="flex gap-2 mb-6">
+          {['all', 'open', 'responded'].map(f => (
+            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${filter === f ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+              {f}
+            </button>
+          ))}
         </div>
 
-        {/* Inquiries List */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Your Inquiries</h2>
-            
-            {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading inquiries...</div>
-            ) : inquiries.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No inquiries yet. Start browsing suppliers!
+        <div className="space-y-3">
+          {filtered.map(inq => (
+            <div key={inq.id} className="card hover:shadow-md transition">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-semibold text-gray-900">{inq.supplier}</h3>
+                  <p className="text-sm text-gray-500 mt-0.5">Re: {inq.product}</p>
+                  <p className="text-sm text-gray-600 mt-2">{inq.message}</p>
+                </div>
+                <span className={`badge text-xs capitalize ${inq.status === 'responded' ? 'badge-success' : 'badge-warning'}`}>
+                  {inq.status === 'responded' ? <CheckCircle className="w-3 h-3 mr-1" /> : <Clock className="w-3 h-3 mr-1" />}
+                  {inq.status}
+                </span>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {inquiries.map((inquiry) => (
-                  <div
-                    key={inquiry.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setSelectedInquiry(inquiry)}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-gray-900">
-                            Supplier: {inquiry.supplier_id}
-                          </h3>
-                          <span className={`badge ${
-                            inquiry.status === 'open' ? 'badge-warning' :
-                            inquiry.status === 'responded' ? 'badge-primary' :
-                            'badge-success'
-                          }`}>
-                            {inquiry.status}
-                          </span>
-                          {inquiry.converted_to_deal && (
-                            <span className="badge badge-success">Deal Closed</span>
-                          )}
-                        </div>
-                        <p className="text-gray-700 mb-2">{inquiry.message}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span>Product: {inquiry.product_id}</span>
-                          <span>Source: {inquiry.source_type}</span>
-                          <span>{new Date(inquiry.created_at).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Reply Modal with AI Translator */}
-        {selectedInquiry && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Reply to Inquiry
-                </h3>
-
-                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 mb-1">Original Message:</p>
-                  <p className="text-gray-900">{selectedInquiry.message}</p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Reply
-                  </label>
-                  <textarea
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    rows={6}
-                    className="input-field"
-                    placeholder="Type your reply..."
-                  />
-                </div>
-
-                {/* AI Translator */}
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Languages className="w-5 h-5 text-blue-600" />
-                    <h4 className="font-semibold text-blue-900">AI Translator</h4>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <select
-                      value={targetLang}
-                      onChange={(e) => setTargetLang(e.target.value)}
-                      className="input-field flex-1"
-                    >
-                      {translatorService.getSupportedLanguages().map((lang) => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={handleTranslate}
-                      disabled={translating || !replyMessage}
-                      className="btn-secondary flex items-center gap-2"
-                    >
-                      <Languages className="w-4 h-4" />
-                      {translating ? 'Translating...' : 'Translate'}
-                    </button>
-                  </div>
-                  <p className="text-xs text-blue-700 mt-2">
-                    💡 Translate your message to supplier's language for better communication
-                  </p>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleSendReply}
-                    disabled={!replyMessage}
-                    className="btn-primary flex items-center gap-2"
-                  >
-                    <Send className="w-4 h-4" />
-                    Send Reply
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedInquiry(null);
-                      setReplyMessage('');
-                    }}
-                    className="btn-secondary"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+              <p className="text-xs text-gray-400 mt-3">{inq.date}</p>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );

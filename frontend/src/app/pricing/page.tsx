@@ -1,121 +1,137 @@
-import React from 'react';
+'use client';
+
+import Navbar from '@/components/ui/Navbar';
+import Footer from '@/components/ui/Footer';
 import Link from 'next/link';
+import { Check, X } from 'lucide-react';
+
+const plans = [
+  {
+    name: 'Basic Intelligence',
+    price: 'Free',
+    priceDetail: 'Forever',
+    cta: 'Get Started',
+    ctaHref: '/register',
+    featured: false,
+    features: {
+      'AI-Ranked Product Catalog': true,
+      'In-App Chat & WhatsApp Bridge': true,
+      'AI HS Code Classifier': '3x/day',
+      'AI Listing Optimizer': true,
+      'Basic Inquiry Analytics': true,
+      'Full Buyer Radar': false,
+      'AI Lead Scoring': false,
+      'Competitor Benchmarking': false,
+      'Unlimited AI HS Code': false,
+      'AI Response Suggestion': false,
+      'Market Opportunity Alerts': false,
+      'Buyer Quality Score': false,
+      'Premium Badge': false,
+    },
+  },
+  {
+    name: 'Premium Intelligence',
+    price: 'Contact Sales',
+    priceDetail: 'Custom pricing',
+    cta: 'Contact Sales',
+    ctaHref: '/register',
+    featured: true,
+    features: {
+      'AI-Ranked Product Catalog': true,
+      'In-App Chat & WhatsApp Bridge': true,
+      'AI HS Code Classifier': 'Unlimited',
+      'AI Listing Optimizer': true,
+      'Basic Inquiry Analytics': true,
+      'Full Buyer Radar': true,
+      'AI Lead Scoring': true,
+      'Competitor Benchmarking': true,
+      'Unlimited AI HS Code': true,
+      'AI Response Suggestion': true,
+      'Market Opportunity Alerts': true,
+      'Buyer Quality Score': true,
+      'Premium Badge': true,
+    },
+  },
+];
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-700 to-accent-500 rounded-lg"></div>
-            <span className="text-2xl font-bold text-primary-700">Grawizah</span>
-          </Link>
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/catalog" className="text-gray-700 hover:text-primary-700 transition">
-              Catalog
-            </Link>
-            <Link href="/features" className="text-gray-700 hover:text-primary-700 transition">
-              Features
-            </Link>
-            <Link href="/pricing" className="text-primary-700 font-semibold transition">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex items-center space-x-4">
-            <Link href="/login" className="text-gray-700 hover:text-primary-700 transition">
-              Login
-            </Link>
-            <Link href="/register" className="btn-primary">
-              Start Free
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white">
+      <Navbar />
 
-      {/* Hero Section */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-6 py-20 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Simple, Transparent <span className="text-primary-700">Pricing</span>
+      <section className="container mx-auto px-6 py-20">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Simple, Transparent <span className="gradient-text">Pricing</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Choose the intelligence plan that fits your business needs. Upgrade anytime as your global trade operations scale.
-          </p>
+          <p className="text-lg text-gray-500">Start free and upgrade when you need more power. No hidden fees.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-2xl p-8 transition-all ${
+                plan.featured
+                  ? 'border-2 border-primary-500 shadow-xl shadow-primary-100 relative'
+                  : 'border-2 border-gray-200'
+              }`}
+            >
+              {plan.featured && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="badge-primary px-4 py-1.5 text-sm font-semibold shadow-md">Recommended</span>
+                </div>
+              )}
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{plan.name}</h3>
+              <p className="text-4xl font-extrabold gradient-text mb-1">{plan.price}</p>
+              <p className="text-sm text-gray-500 mb-8">{plan.priceDetail}</p>
+
+              <ul className="space-y-3 mb-8">
+                {Object.entries(plan.features).map(([feature, value]) => (
+                  <li key={feature} className="flex items-center gap-3 text-sm">
+                    {value ? (
+                      <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <X className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                    )}
+                    <span className={value ? 'text-gray-700' : 'text-gray-400'}>
+                      {feature}
+                      {typeof value === 'string' && <span className="ml-1 text-xs badge-primary">{value}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href={plan.ctaHref}
+                className={`w-full text-center block py-3 rounded-lg font-semibold transition-all ${
+                  plan.featured ? 'btn-primary' : 'btn-outline'
+                }`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* FAQ */}
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-8">Frequently Asked Questions</h2>
+          {[
+            { q: 'Can I start for free?', a: 'Yes! The Basic Intelligence plan is free forever with core features including AI HS Code classification, product catalog, and inquiry management.' },
+            { q: 'What payment methods do you accept?', a: 'For Premium plans, we accept bank transfer, credit card, and PayPal. Contact our sales team for enterprise billing.' },
+            { q: 'Can I upgrade or downgrade anytime?', a: 'Absolutely. You can upgrade to Premium anytime, and your data will be preserved if you switch plans.' },
+            { q: 'Is there a free trial for Premium?', a: 'Yes, we offer a 14-day free trial for Premium Intelligence. No credit card required to start.' },
+          ].map((faq, i) => (
+            <div key={i} className="border-b border-gray-100 py-5">
+              <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">{faq.a}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="container mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Free Tier */}
-          <div className="card border-2 border-gray-200 hover:border-primary-300 transition-colors">
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic Intelligence</h3>
-            <p className="text-gray-500 mb-6">Perfect for new exporters</p>
-            <div className="mb-8">
-              <span className="text-5xl font-bold text-gray-900">$0</span>
-              <span className="text-gray-500">/forever</span>
-            </div>
-            <ul className="space-y-4 mb-8">
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> AI-Ranked Product Catalog
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> In-App Chat & WhatsApp Bridge
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> AI HS Code Classifier (3x/day)
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Basic Inquiry Analytics
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> AI Listing Optimizer
-              </li>
-            </ul>
-            <Link href="/register" className="btn-outline w-full block text-center">
-              Start Free Trial
-            </Link>
-          </div>
-
-          {/* Premium Tier */}
-          <div className="card border-2 border-primary-700 relative shadow-xl">
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <span className="bg-primary-700 text-white px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">
-                Recommended
-              </span>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium Intelligence</h3>
-            <p className="text-gray-500 mb-6">For established global traders</p>
-            <div className="mb-8">
-              <span className="text-5xl font-bold text-gray-900">Custom</span>
-            </div>
-            <ul className="space-y-4 mb-8">
-              <li className="flex items-center text-gray-700 font-medium">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Everything in Basic, plus:
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Full Buyer Radar + AI Lead Scoring
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Competitor Benchmarking
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Unlimited AI HS Code
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> AI Response Suggestion
-              </li>
-              <li className="flex items-center text-gray-700">
-                <span className="text-green-500 mr-3 text-xl">✓</span> Market Opportunity Alerts
-              </li>
-            </ul>
-            <Link href="/contact" className="btn-primary w-full block text-center">
-              Contact Sales
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Footer />
     </div>
   );
 }

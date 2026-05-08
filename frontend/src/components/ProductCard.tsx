@@ -1,99 +1,118 @@
-import React from 'react';
+'use client';
+
+import { useState } from 'react';
 import { Product } from '@/types/product';
-import { MapPin, Star, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import { Package, MapPin, Eye, MessageSquare } from 'lucide-react';
+import SendInquiryModal from '@/components/SendInquiryModal';
 
 interface ProductCardProps {
   product: Product;
-  showSupplier?: boolean;
-  onInquiry?: (productId: string) => void;
+  viewMode?: 'grid' | 'list';
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ 
-  product, 
-  showSupplier = true,
-  onInquiry 
-}) => {
-  const hasImages = product.images && product.images.length > 0;
-  const imageUrl = hasImages ? product.images[0] : '/placeholder-product.jpg';
-  
-  const priceRange = product.price_range_min && product.price_range_max
-    ? `${product.currency} ${product.price_range_min.toLocaleString()} - ${product.price_range_max.toLocaleString()}`
-    : 'Contact for pricing';
+export default function ProductCard({ product, viewMode = 'grid' }: ProductCardProps) {
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-yellow-500';
+    return 'bg-orange-500';
+  };
+
+  // Track view – calls POST /api/products/:id/view
+  const handleView = () => {
+    fetch(`http://localhost:8080/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {});
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <>
+        <div className="card flex gap-6 hover:shadow-md transition" onClick={handleView}>
+          <div className="w-40 h-28 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Package className="w-10 h-10 text-primary-300" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="badge-primary text-[10px]">HS: {product.hs_code}</span>
+                  <span className="badge bg-gray-100 text-gray-600 text-[10px]">{product.category}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
+                <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+              </div>
+              <span className={`${getScoreColor(product.listing_score || 0)} text-white text-xs font-bold px-2.5 py-1 rounded-lg`}>
+                {product.listing_score}
+              </span>
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-4 text-xs text-gray-400">
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {product.country_origin}</span>
+                <span>MOQ: {product.moq}</span>
+                <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {product.view_count}</span>
+                <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {product.inquiry_count}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-primary-700 font-semibold text-sm">
+                  ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} {product.currency}/MT
+                </span>
+                <button onClick={(e) => { e.stopPropagation(); setInquiryOpen(true); }} className="btn-primary btn-sm text-xs">
+                  Send Inquiry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <SendInquiryModal isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} productId={product.id} productName={product.name} />
+      </>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200">
-      {/* Product Image */}
-      <div className="relative h-48 bg-gray-100">
-        <img 
-          src={imageUrl} 
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
-        {product.listing_score && product.listing_score >= 80 && (
-          <div className="absolute top-2 right-2">
-            <span className="badge badge-success flex items-center gap-1">
-              <Star className="w-3 h-3" />
-              Premium
-            </span>
-          </div>
-        )}
-        {product.hs_code && (
-          <div className="absolute bottom-2 left-2">
-            <span className="badge bg-white/90 text-gray-700 text-xs">
-              HS: {product.hs_code}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Product Info */}
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-            {product.name}
-          </h3>
+    <>
+      <div className="card-hover group" onClick={handleView}>
+        {/* Image */}
+        <div className="relative h-44 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
+          <Package className="w-14 h-14 text-primary-200 group-hover:scale-110 transition-transform" />
+          <span className={`absolute top-3 right-3 ${getScoreColor(product.listing_score || 0)} text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow`}>
+            {product.listing_score}
+          </span>
         </div>
 
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-          {product.description}
+        {/* Tags */}
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <span className="badge-primary text-[10px]">HS: {product.hs_code}</span>
+          <span className="badge bg-gray-100 text-gray-600 text-[10px]">{product.category}</span>
+        </div>
+
+        {/* Title */}
+        <h3 className="font-semibold text-gray-900 group-hover:text-primary-700 transition mb-1">{product.name}</h3>
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{product.description}</p>
+
+        {/* Origin & MOQ */}
+        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+          <MapPin className="w-3 h-3" /> {product.country_origin}
+          <span className="mx-1">•</span>
+          MOQ: {product.moq}
+        </div>
+
+        {/* Price */}
+        <p className="text-primary-700 font-semibold text-sm mb-4">
+          ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} {product.currency}/MT
         </p>
 
-        {/* Category & Origin */}
-        <div className="flex items-center gap-3 mb-3 text-sm text-gray-500">
-          <span className="badge badge-primary">{product.category}</span>
-          <span className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {product.country_origin}
-          </span>
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-3 text-xs text-gray-400">
+            <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {product.view_count}</span>
+            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {product.inquiry_count}</span>
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); setInquiryOpen(true); }} className="btn-primary btn-sm text-xs">
+            Send Inquiry
+          </button>
         </div>
-
-        {/* Price Range */}
-        <div className="mb-3">
-          <p className="text-xs text-gray-500 mb-1">Indicative Price Range</p>
-          <p className="text-lg font-bold text-primary-700">{priceRange}</p>
-          {product.moq && (
-            <p className="text-xs text-gray-500">MOQ: {product.moq} units</p>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="flex items-center gap-4 mb-3 text-xs text-gray-500">
-          <span className="flex items-center gap-1">
-            <TrendingUp className="w-3 h-3" />
-            {product.view_count} views
-          </span>
-          <span>{product.inquiry_count} inquiries</span>
-        </div>
-
-        {/* Action Button */}
-        <button
-          onClick={() => onInquiry?.(product.id)}
-          className="btn-primary w-full text-sm"
-        >
-          Send Inquiry
-        </button>
       </div>
-    </div>
+      <SendInquiryModal isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} productId={product.id} productName={product.name} />
+    </>
   );
-};
+}
