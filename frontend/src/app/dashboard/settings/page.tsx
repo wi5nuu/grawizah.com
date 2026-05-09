@@ -1,237 +1,111 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, Building, User, Bell, Shield, CreditCard, Save, CheckCircle2, Camera } from 'lucide-react';
-
-const tabs = [
-  { id: 'company', icon: Building, label: 'Company' },
-  { id: 'account', icon: User, label: 'Account' },
-  { id: 'notifications', icon: Bell, label: 'Notifications' },
-  { id: 'security', icon: Shield, label: 'Security' },
-  { id: 'billing', icon: CreditCard, label: 'Billing' },
-];
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('company');
-  const [saved, setSaved] = useState(false);
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState('James');
+  const [lastName, setLastName] = useState('Chen');
+  const [email, setEmail] = useState(user?.email || 'j.chen@globaltrade.co');
+  const [companyName, setCompanyName] = useState('Chen Manufacturing Ltd.');
+  const [regNumber, setRegNumber] = useState('CN-9842100-XYZ');
+  const [industry, setIndustry] = useState('Electronics & Components');
+  const [certs, setCerts] = useState(['ISO 9001', 'CE Marked']);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  const removeCert = (cert: string) => setCerts(certs.filter(c => c !== cert));
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-500 mt-1">Manage your company profile, account, and preferences</p>
-        </div>
-        {saved && (
-          <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-2 rounded-lg text-sm font-medium animate-fade-in">
-            <CheckCircle2 className="w-4 h-4" /> Changes saved successfully
+    <div className="flex-1 flex flex-col min-h-screen">
+      {/* Top Bar */}
+      <header className="h-20 bg-surface/80 backdrop-blur-md flex items-center px-8 border-b border-surface-variant/30 sticky top-0 z-30">
+        <h2 className="text-2xl font-display font-bold text-on-surface">Supplier Settings</h2>
+      </header>
+
+      <div className="flex-1 p-8 max-w-[1440px] mx-auto w-full space-y-8 pb-20">
+        {/* Profile Section */}
+        <section className="bg-surface-container-lowest rounded-xl border border-surface-variant/50 p-6 hover:shadow-[0_8px_32px_rgba(109,40,217,0.06)] transition-shadow duration-300" style={{ boxShadow: '0 4px 24px rgba(109,40,217,0.03)' }}>
+          <div className="mb-6">
+            <h3 className="text-xl font-headline font-semibold text-on-surface">Profile</h3>
+            <p className="text-on-surface-variant text-sm mt-1">Manage your personal information and login credentials.</p>
           </div>
-        )}
-      </div>
+          <div className="flex flex-col md:flex-row gap-8 items-start">
+            {/* Avatar */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary-fixed bg-surface-container flex items-center justify-center relative group cursor-pointer">
+                <div className="w-full h-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <span className="text-white text-3xl font-bold">{firstName[0]}{lastName[0]}</span>
+                </div>
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="material-symbols-outlined text-white">photo_camera</span>
+                </div>
+              </div>
+              <button className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors">Change Photo</button>
+            </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar */}
-        <div className="lg:w-56 flex-shrink-0">
-          <nav className="flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition ${activeTab === tab.id ? 'bg-primary-50 text-primary-700' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                  }`}
-              >
-                <tab.icon className="w-5 h-5" /> {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {activeTab === 'company' && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Company Profile</h2>
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Name</label>
-                  <input className="input-field" defaultValue="PT Export Indonesia" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Country</label>
-                    <input className="input-field" defaultValue="Indonesia" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Export Experience (years)</label>
-                    <input type="number" className="input-field" defaultValue="8" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                  <textarea className="input-field h-24 resize-none" defaultValue="Leading exporter of premium Indonesian agricultural products." />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">NIB (Business ID)</label>
-                    <input className="input-field" placeholder="Enter NIB" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">NPWP (Tax ID)</label>
-                    <input className="input-field" placeholder="Enter NPWP" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Website</label>
-                  <input className="input-field" placeholder="https://your-company.com" />
-                </div>
-                <div className="pt-4 border-t border-gray-100 flex justify-end">
-                  <button onClick={handleSave} className="btn-primary flex items-center gap-2">
-                    <Save className="w-4 h-4" /> Save Changes
-                  </button>
-                </div>
+            {/* Form Fields */}
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-2">First Name</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-2">Last Name</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-on-surface mb-2">Email Address</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" />
               </div>
             </div>
-          )}
+          </div>
+          <div className="mt-8 flex justify-end">
+            <button className="bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2.5 px-6 rounded-lg hover:opacity-90 transition-opacity">Save Profile</button>
+          </div>
+        </section>
 
-          {activeTab === 'account' && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Account Settings</h2>
-              <div className="flex items-center gap-5 mb-6 pb-6 border-b border-gray-100">
-                <div className="relative">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-accent-500 rounded-2xl flex items-center justify-center">
-                    <span className="text-xl font-bold text-white">J</span>
-                  </div>
-                  <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-primary-600 text-white rounded-full flex items-center justify-center shadow-md hover:bg-primary-700 transition">
-                    <Camera className="w-3 h-3" />
-                  </button>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900">John Doe</p>
-                  <p className="text-sm text-gray-500">user@company.com</p>
-                </div>
-              </div>
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                  <input className="input-field" defaultValue="user@company.com" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Display Name</label>
-                  <input className="input-field" defaultValue="John Doe" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Contact Phone</label>
-                  <input className="input-field" placeholder="+62 812 xxxx xxxx" />
-                </div>
-                <div className="pt-4 border-t border-gray-100 flex justify-end">
-                  <button onClick={handleSave} className="btn-primary flex items-center gap-2">
-                    <Save className="w-4 h-4" /> Save Changes
-                  </button>
-                </div>
-              </div>
+        {/* Company Details */}
+        <section className="bg-surface-container-lowest rounded-xl border border-surface-variant/50 p-6 hover:shadow-[0_8px_32px_rgba(109,40,217,0.06)] transition-shadow duration-300" style={{ boxShadow: '0 4px 24px rgba(109,40,217,0.03)' }}>
+          <div className="mb-6">
+            <h3 className="text-xl font-headline font-semibold text-on-surface">Company Details</h3>
+            <p className="text-on-surface-variant text-sm mt-1">Update your business information and operational capabilities.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-on-surface mb-2">Company Name</label>
+              <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" />
             </div>
-          )}
-
-          {activeTab === 'notifications' && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Notification Preferences</h2>
-              <div className="space-y-5">
-                {[
-                  { key: 'inquiries', label: 'New Inquiry Alerts', desc: 'Get notified when a buyer sends an inquiry', checked: true },
-                  { key: 'market', label: 'Market Opportunity Alerts', desc: 'Receive alerts for matching buyer searches', checked: true },
-                  { key: 'leaderboard', label: 'Leaderboard Updates', desc: 'Weekly ranking position updates', checked: false },
-                  { key: 'milestones', label: 'Product View Milestones', desc: 'Notify when products reach view milestones', checked: false },
-                ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{item.label}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" defaultChecked={item.checked} className="sr-only peer" />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:bg-primary-600 transition-all after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
-                    </label>
-                  </div>
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-2">Registration Number</label>
+              <input value={regNumber} onChange={(e) => setRegNumber(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-on-surface mb-2">Primary Industry</label>
+              <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="w-full rounded-lg border-outline-variant bg-surface-bright px-4 py-2.5 text-on-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none appearance-none">
+                <option>Electronics & Components</option>
+                <option>Textiles</option>
+                <option>Heavy Machinery</option>
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-on-surface mb-2">Certifications</label>
+              <div className="flex flex-wrap gap-2">
+                {certs.map((cert) => (
+                  <span key={cert} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/10 text-secondary text-sm font-medium">
+                    {cert}
+                    <button onClick={() => removeCert(cert)} className="hover:text-error transition-colors"><span className="material-symbols-outlined text-[16px]">close</span></button>
+                  </span>
                 ))}
-                <div className="pt-4 border-t border-gray-100 flex justify-end">
-                  <button onClick={handleSave} className="btn-primary flex items-center gap-2">
-                    <Save className="w-4 h-4" /> Save Preferences
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'security' && (
-            <div className="space-y-6">
-              <div className="card">
-                <h2 className="text-lg font-semibold text-gray-900 mb-6">Change Password</h2>
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
-                    <input type="password" className="input-field" placeholder="••••••••" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
-                    <input type="password" className="input-field" placeholder="Min 8 characters" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
-                    <input type="password" className="input-field" placeholder="••••••••" />
-                  </div>
-                  <button className="btn-primary flex items-center gap-2">
-                    <Shield className="w-4 h-4" /> Update Password
-                  </button>
-                </div>
-              </div>
-              <div className="card">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Two-Factor Authentication</h2>
-                <p className="text-sm text-gray-500 mb-4">Add an extra layer of security to your account</p>
-                <button className="btn-outline flex items-center gap-2">
-                  <Shield className="w-4 h-4" /> Enable 2FA
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary transition-colors text-sm font-medium">
+                  <span className="material-symbols-outlined text-[16px]">add</span> Add Certification
                 </button>
               </div>
             </div>
-          )}
-
-          {activeTab === 'billing' && (
-            <div className="card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">Billing & Plan</h2>
-              <div className="bg-gradient-to-r from-primary-50 to-accent-50 rounded-xl p-6 mb-6 border border-primary-100">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Current Plan</p>
-                    <p className="text-2xl font-bold text-primary-700">Basic Intelligence</p>
-                    <p className="text-xs text-gray-500 mt-1">Free forever • Core features included</p>
-                  </div>
-                  <span className="badge bg-green-100 text-green-700">Active</span>
-                </div>
-              </div>
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-gray-600">Product Listings</span>
-                  <span className="font-medium text-gray-900">5 / 10</span>
-                </div>
-                <div className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-gray-600">Inquiry Responses</span>
-                  <span className="font-medium text-gray-900">Unlimited</span>
-                </div>
-                <div className="flex items-center justify-between py-2 text-sm">
-                  <span className="text-gray-600">Trade Intelligence</span>
-                  <span className="font-medium text-gray-900">Basic</span>
-                </div>
-              </div>
-              <button className="btn-primary flex items-center gap-2">
-                <CreditCard className="w-4 h-4" /> Upgrade Plan
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+          <div className="mt-8 flex justify-end">
+            <button className="bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2.5 px-6 rounded-lg hover:opacity-90 transition-opacity">Save Company Info</button>
+          </div>
+        </section>
       </div>
     </div>
   );

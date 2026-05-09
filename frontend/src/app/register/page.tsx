@@ -1,67 +1,53 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { UserRole } from '@/types';
-import { Globe, Eye, EyeOff, ArrowRight, User, Briefcase, CheckCircle2, Shield, Zap, BarChart3 } from 'lucide-react';
 
 export default function RegisterPage() {
-  const router = useRouter();
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'free_trader' | 'buyer'>('free_trader');
-  const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState('supplier');
+  const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    if (password !== confirmPassword) return;
     setLoading(true);
-    setError('');
     try {
-      await signUp(email, password, role as UserRole);
-      router.push(role === 'buyer' ? '/buyer/dashboard' : '/dashboard');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      await signUp(email, password);
+    } catch {
     } finally {
       setLoading(false);
     }
   };
 
-  const benefits = [
-    { icon: Zap, text: 'AI-powered buyer matching' },
-    { icon: Shield, text: 'Verified supplier network' },
-    { icon: BarChart3, text: 'Trade intelligence insights' },
-  ];
-
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel */}
-      <div className="hidden lg:flex flex-1 gradient-bg items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl" />
-        <div className="relative text-center text-white max-w-md">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-8">
-            <Globe className="w-8 h-8 text-white" />
+    <div className="min-h-screen flex bg-surface">
+      {/* Left Panel - Brand */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-secondary via-primary to-primary-container relative overflow-hidden items-center justify-center p-16">
+        <div className="absolute top-0 left-0 w-full h-full">
+          <div className="absolute bottom-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        </div>
+        <div className="relative z-10 text-center text-white max-w-lg">
+          <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm">
+            <span className="text-4xl font-extrabold text-white">G</span>
           </div>
-          <h2 className="text-4xl font-bold mb-4">Join Grawizah</h2>
-          <p className="text-primary-100 text-lg leading-relaxed mb-8">
-            Start discovering global trade opportunities with AI-powered intelligence. Free to get started.
-          </p>
-          <div className="space-y-3 text-left">
-            {benefits.map((b, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-3">
-                <b.icon className="w-5 h-5 text-accent-300 flex-shrink-0" />
-                <span className="text-sm text-white/90">{b.text}</span>
+          <h2 className="text-4xl font-display font-extrabold mb-4">Join Grawizah</h2>
+          <p className="text-lg text-white/80 leading-relaxed">Start your journey in global trade intelligence. Get verified, get discovered, get trading.</p>
+          <div className="mt-12 space-y-4">
+            {[
+              { icon: 'verified_user', text: 'Instant supplier verification' },
+              { icon: 'insights', text: 'AI-powered market intelligence' },
+              { icon: 'public', text: 'Connect with buyers in 150+ countries' },
+            ].map((item) => (
+              <div key={item.text} className="flex items-center gap-3 text-left bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <span className="material-symbols-outlined text-primary-fixed">{item.icon}</span>
+                <span className="text-white/90 text-sm">{item.text}</span>
               </div>
             ))}
           </div>
@@ -69,88 +55,74 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
+      <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <Link href="/" className="flex items-center space-x-2 mb-10 lg:hidden">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary-700 to-accent-500 rounded-lg flex items-center justify-center">
-              <Globe className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-primary-700">Grawizah</span>
-          </Link>
-
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-          <p className="text-gray-500 mb-8">Choose your role and get started for free</p>
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
-              <span className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">!</span>
-              {error}
-            </div>
-          )}
-
-          {/* Role Selection */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => setRole('free_trader')}
-              className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${role === 'free_trader'
-                  ? 'border-primary-500 bg-primary-50 shadow-md shadow-primary-500/10'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                }`}
-            >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${role === 'free_trader' ? 'bg-primary-100' : 'bg-gray-100'}`}>
-                <Briefcase className={`w-6 h-6 ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-400'}`} />
-              </div>
-              <span className={`text-sm font-semibold ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-600'}`}>Supplier / Trader</span>
-              <span className="text-[10px] text-gray-400">Sell & export products</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('buyer')}
-              className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${role === 'buyer'
-                  ? 'border-primary-500 bg-primary-50 shadow-md shadow-primary-500/10'
-                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-                }`}
-            >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${role === 'buyer' ? 'bg-primary-100' : 'bg-gray-100'}`}>
-                <User className={`w-6 h-6 ${role === 'buyer' ? 'text-primary-700' : 'text-gray-400'}`} />
-              </div>
-              <span className={`text-sm font-semibold ${role === 'buyer' ? 'text-primary-700' : 'text-gray-600'}`}>Buyer</span>
-              <span className="text-[10px] text-gray-400">Source & import goods</span>
-            </button>
-          </div>
+          <Link href="/" className="text-2xl font-display font-extrabold gradient-text mb-2 block lg:hidden">Grawizah</Link>
+          <h1 className="text-3xl font-display font-bold text-on-surface mb-2">Create Account</h1>
+          <p className="text-on-surface-variant mb-8">Start your global trade journey today.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Role Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="you@company.com" required />
+              <label className="block text-sm font-medium text-on-surface mb-2">I am a</label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'supplier', icon: 'factory', label: 'Supplier' },
+                  { value: 'buyer', icon: 'shopping_cart', label: 'Buyer' },
+                ].map((r) => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setRole(r.value)}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold transition-all ${
+                      role === r.value
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-surface-variant text-on-surface-variant hover:border-outline'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">{r.icon}</span> {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-on-surface mb-2">Company Name</label>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="input-field pr-12" placeholder="Min. 8 characters" required minLength={6} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">business</span>
+                <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="input-field pl-10" placeholder="Your Company Ltd." />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="••••••••" required />
+              <label className="block text-sm font-medium text-on-surface mb-2">Email Address</label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">mail</span>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-field pl-10" placeholder="you@company.com" required />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-2">Password</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-field" placeholder="••••••••" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-on-surface mb-2">Confirm</label>
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="••••••••" required />
+              </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 py-3.5">
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>Create Account <ArrowRight className="w-4 h-4" /></>
-              )}
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary mt-0.5" required />
+              <span className="text-sm text-on-surface-variant">I agree to the <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link></span>
+            </label>
+
+            <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2" style={{ boxShadow: '0 8px 24px rgba(109,40,217,0.25)' }}>
+              {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-8">
-            Already have an account?{' '}
-            <Link href="/login" className="text-primary-700 font-semibold hover:underline">Sign in</Link>
+          <p className="text-center text-on-surface-variant text-sm mt-8">
+            Already have an account? <Link href="/login" className="text-primary font-semibold hover:underline">Sign in</Link>
           </p>
         </div>
       </div>

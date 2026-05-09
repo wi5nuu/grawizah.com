@@ -1,211 +1,177 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, Search, Clock, CheckCircle, XCircle, Send, Bot, TrendingUp, Award, Filter, Inbox } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { InquiryService } from '@/services/InquiryService';
-import { Inquiry, InquiryAnalytics as IAnalytics } from '@/types/inquiry';
-import { InquiryAnalytics } from '@/components/InquiryAnalytics';
 
-const inquiryService = new InquiryService();
+type InquiryStatus = 'pending' | 'responded' | 'converted' | 'open' | 'closed';
 
-const MOCK_INQUIRIES: Inquiry[] = [
-  { id: '1', supplier_id: 'u1', buyer_id: 'b1', product_id: 'p1', buyer_name: 'Global Foods Inc', buyer_country: 'USA', product_name: 'Virgin Coconut Oil', message: 'We are interested in purchasing 20MT of your virgin coconut oil. Please share your FOB price and available certifications.', status: 'open', source: 'chat', created_at: '2026-05-08T10:00:00Z', updated_at: '2026-05-08T10:00:00Z', response_time_hours: 0, converted_to_deal: false },
-  { id: '2', supplier_id: 'u1', buyer_id: 'b2', product_id: 'p2', buyer_name: 'Shanghai Trading Co', buyer_country: 'China', product_name: 'Arabica Coffee', message: 'Looking for Grade 1 Arabica coffee beans, 500kg sample first. What is your MOQ for regular orders?', status: 'responded', source: 'whatsapp', created_at: '2026-05-07T08:00:00Z', updated_at: '2026-05-07T12:30:00Z', response_time_hours: 4.5, converted_to_deal: false },
-  { id: '3', supplier_id: 'u1', buyer_id: 'b3', product_id: 'p3', buyer_name: 'Euro Import GmbH', buyer_country: 'Germany', product_name: 'Organic Turmeric', message: 'Do you have EU Organic certification for your turmeric powder? We need 5MT monthly supply.', status: 'open', source: 'email', created_at: '2026-05-07T14:00:00Z', updated_at: '2026-05-07T14:00:00Z', response_time_hours: 0, converted_to_deal: false },
-  { id: '4', supplier_id: 'u1', buyer_id: 'b4', product_id: 'p4', buyer_name: 'Tokyo Mart Ltd', buyer_country: 'Japan', product_name: 'Teak Wood Planks', message: 'Requesting quotes for KD teak planks, 50 cubic meters. JAS certification required.', status: 'closed', source: 'rfq', created_at: '2026-05-06T06:00:00Z', updated_at: '2026-05-06T08:06:00Z', response_time_hours: 2.1, converted_to_deal: true },
-  { id: '5', supplier_id: 'u1', buyer_id: 'b5', product_id: 'p5', buyer_name: 'Australian Organics', buyer_country: 'Australia', product_name: 'Virgin Coconut Oil', message: 'We are looking for USDA organic certified coconut oil. Can you provide private label services?', status: 'responded', source: 'chat', created_at: '2026-05-05T12:00:00Z', updated_at: '2026-05-05T18:18:00Z', response_time_hours: 6.3, converted_to_deal: false },
+const MOCK_INQUIRIES = [
+  { id: '1', buyer_name: 'John Doe', buyer_company: 'Acme Corp', buyer_country: 'USA', product_name: 'Industrial Valves X-200', quantity: '500 units', message: 'We are looking to place a bulk order for the X-200 series for our upcoming...', status: 'pending' as InquiryStatus, created_at: '2024-01-15' },
+  { id: '2', buyer_name: 'Maria Silva', buyer_company: 'Global Tech Imports', buyer_country: 'Brazil', product_name: 'Circuit Boards Model B', quantity: '10,000 units', message: 'Can you confirm the lead time for 10k units shipped via sea freight to...', status: 'responded' as InquiryStatus, created_at: '2024-01-14' },
+  { id: '3', buyer_name: 'Chen Wei', buyer_company: 'Sinopec Trading', buyer_country: 'China', product_name: 'Raw Material Grade A', quantity: '2 Tons', message: 'Please send the MSDS and the latest pricing for Grade A material...', status: 'converted' as InquiryStatus, created_at: '2024-01-12' },
+  { id: '4', buyer_name: 'Aisha Khan', buyer_company: 'Desert Oasis Retail', buyer_country: 'UAE', product_name: 'Textile Samples Lot 4', quantity: 'Requesting Samples', message: 'Interested in feeling the texture of Lot 4 before committing to a larger...', status: 'pending' as InquiryStatus, created_at: '2024-01-10' },
 ];
-
-const MOCK_ANALYTICS: IAnalytics = {
-  total_inquiries: 5,
-  response_rate: 80.0,
-  conversion_rate: 20.0,
-  repeat_buyer_rate: 15.0,
-  avg_response_time_hours: 4.3,
-};
 
 export default function InquiriesPage() {
   const { user } = useAuth();
-  const [filter, setFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedInquiry, setSelectedInquiry] = useState<string | null>(null);
-  const [responseMessage, setResponseMessage] = useState('');
-  const [inquiries, setInquiries] = useState<Inquiry[]>(MOCK_INQUIRIES);
-  const [analytics, setAnalytics] = useState<IAnalytics>(MOCK_ANALYTICS);
-  const [loading, setLoading] = useState(false);
+  const [inquiries, setInquiries] = useState(MOCK_INQUIRIES);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const supplierId = user?.id || 'u1';
-    inquiryService.getInquiriesBySupplier(supplierId)
-      .then(data => { if (Array.isArray(data) && data.length > 0) setInquiries(data); })
-      .catch(() => { });
-    inquiryService.getAnalytics(supplierId)
-      .then(data => { if (data && data.total_inquiries !== undefined) setAnalytics(data); })
-      .catch(() => { });
-  }, [user]);
+    const fetchInquiries = async () => {
+      try {
+        const service = new InquiryService();
+        const data = await service.getInquiriesBySupplier(user?.id || 'mock-supplier');
+        if (data && data.length > 0) setInquiries(data as any);
+      } catch { }
+    };
+    fetchInquiries();
+  }, [user?.id]);
 
-  const filteredInquiries = inquiries.filter((inq) => {
-    const matchFilter = filter === 'all' || inq.status === filter;
-    const matchSearch = !searchQuery || (inq.buyer_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (inq.product_name || '').toLowerCase().includes(searchQuery.toLowerCase());
-    return matchFilter && matchSearch;
-  });
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase();
 
-  const handleRespond = async (inquiryId: string) => {
-    if (!responseMessage.trim()) return;
-    setLoading(true);
-    try {
-      await inquiryService.respondToInquiry(inquiryId, responseMessage);
-      setInquiries(prev => prev.map(inq => inq.id === inquiryId ? { ...inq, status: 'responded' } : inq));
-      setSelectedInquiry(null);
-      setResponseMessage('');
-    } catch (err) {
-      console.error('Failed to respond:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkConverted = async (inquiryId: string) => {
-    try {
-      await inquiryService.markAsConverted(inquiryId);
-      setInquiries(prev => prev.map(inq => inq.id === inquiryId ? { ...inq, converted_to_deal: true, status: 'closed' } : inq));
-    } catch (err) {
-      console.error('Failed to mark as converted:', err);
-    }
-  };
-
-  const handleGetAISuggestion = async (inq: Inquiry) => {
-    try {
-      const res = await fetch('http://localhost:8080/api/ai/response-suggestion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('grawizah_token')}` },
-        body: JSON.stringify({ inquiry_message: inq.message, product_name: inq.product_name, buyer_country: inq.buyer_country }),
-      });
-      const data = await res.json();
-      setResponseMessage(data.data?.suggested_response || data.suggested_response || '');
-    } catch (err) {
-      console.error('Failed to get AI suggestion:', err);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'open': return <Clock className="w-4 h-4 text-amber-500" />;
-      case 'responded': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'closed': return <XCircle className="w-4 h-4 text-gray-400" />;
-      default: return null;
+      case 'pending': return 'bg-error-container/20 text-error';
+      case 'responded': return 'bg-primary-container/20 text-primary';
+      case 'converted': return 'bg-tertiary-container/20 text-tertiary-container';
+      default: return 'bg-surface-variant text-on-surface-variant';
     }
   };
 
-  const getSourceBadge = (source: string) => {
-    const colors: Record<string, string> = { chat: 'badge-primary', whatsapp: 'badge-success', email: 'badge-accent', rfq: 'badge-warning' };
-    return colors[source] || 'badge';
+  const getAvatarColor = (index: number) => {
+    const colors = ['bg-secondary-container/20 text-secondary', 'bg-tertiary-container/20 text-tertiary', 'bg-secondary-fixed-dim/30 text-on-secondary-fixed', 'bg-primary-fixed-dim/30 text-on-primary-fixed'];
+    return colors[index % colors.length];
+  };
+
+  const stats = [
+    { label: 'Pending Inquiries', value: inquiries.filter(i => i.status === 'pending').length, icon: 'schedule', iconStyle: { fontVariationSettings: "'FILL' 1" }, bg: 'bg-error-container text-on-error-container' },
+    { label: 'Responded', value: inquiries.filter(i => i.status === 'responded').length, icon: 'mark_email_read', iconStyle: { fontVariationSettings: "'FILL' 1" }, bg: 'bg-primary-container/20 text-primary' },
+    { label: 'Converted Leads', value: inquiries.filter(i => i.status === 'converted').length, icon: 'check_circle', iconStyle: { fontVariationSettings: "'FILL' 1" }, bg: 'bg-tertiary-container/20 text-tertiary-container' },
+  ];
+
+  const handleConvert = async (id: string) => {
+    try {
+      const service = new InquiryService();
+      await service.markAsConverted(id);
+      setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status: 'converted' as InquiryStatus } : inq));
+    } catch { }
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Inquiry Management</h1>
-        <p className="text-gray-500 mt-1">Track and respond to buyer inquiries across all channels</p>
-      </div>
-
-      {/* Analytics Cards */}
-      <div className="mb-6">
-        <InquiryAnalytics analytics={analytics} />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search buyer or product..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-field pl-10" />
+    <div className="p-8 max-w-[1440px] mx-auto w-full">
+      {/* Header */}
+      <header className="flex justify-between items-end mb-8">
+        <div>
+          <h2 className="text-3xl font-display font-bold text-on-background mb-2">Supplier Inquiries Inbox</h2>
+          <p className="text-on-surface-variant font-body">Manage and respond to buyer requests for quotes and product information.</p>
         </div>
-        <div className="flex gap-2">
-          {['all', 'open', 'responded', 'closed'].map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${filter === f ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {f === 'all' ? 'All' : f}
-            </button>
-          ))}
+        <div className="flex gap-4">
+          <button className="border border-outline text-on-surface font-semibold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+            <span className="material-symbols-outlined text-[20px]">filter_list</span> Filter
+          </button>
+          <button className="border border-outline text-on-surface font-semibold py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+            <span className="material-symbols-outlined text-[20px]">download</span> Export
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Inquiry List */}
-      <div className="space-y-3">
-        {filteredInquiries.map((inq) => (
-          <div key={inq.id} className="card hover:shadow-md transition">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-100 to-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-sm font-bold text-primary-700">{(inq.buyer_name || 'B')[0]}</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h3 className="font-semibold text-gray-900">{inq.buyer_name}</h3>
-                    <span className="text-xs text-gray-400">• {inq.buyer_country}</span>
-                    <span className={`badge text-[10px] capitalize ${getSourceBadge(inq.source || 'chat')}`}>{inq.source || 'chat'}</span>
-                    {inq.converted_to_deal && (
-                      <span className="badge bg-amber-50 text-amber-700 text-[10px] flex items-center gap-0.5">
-                        <Award className="w-3 h-3" /> Converted
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 mb-2">Re: <span className="font-medium text-gray-700">{inq.product_name}</span></p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{inq.message}</p>
-                  {inq.response_time_hours && inq.response_time_hours > 0 && (
-                    <p className="text-xs text-gray-400 mt-2">⏱ Responded in {inq.response_time_hours.toFixed(1)}h</p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                {getStatusIcon(inq.status)}
-                <span className={`badge text-xs capitalize ${inq.status === 'open' ? 'badge-warning' : inq.status === 'responded' ? 'badge-success' : 'bg-gray-100 text-gray-500'}`}>{inq.status}</span>
-              </div>
+      {/* Stats Row */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-6 shadow-sm shadow-primary/5 hover:-translate-y-1 hover:shadow-md transition-all duration-200 flex items-center justify-between">
+            <div>
+              <p className="text-on-surface-variant font-medium mb-1">{stat.label}</p>
+              <h3 className="text-3xl font-bold text-on-background">{stat.value}</h3>
             </div>
-
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              {inq.status === 'open' && (
-                selectedInquiry === inq.id ? (
-                  <div className="space-y-3">
-                    <textarea value={responseMessage} onChange={(e) => setResponseMessage(e.target.value)} className="input-field h-24 resize-none" placeholder="Type your response..." />
-                    <div className="flex items-center justify-between">
-                      <button onClick={() => handleGetAISuggestion(inq)} className="btn-ghost btn-sm flex items-center gap-1 text-accent-600">
-                        <Bot className="w-4 h-4" /> AI Suggestion
-                      </button>
-                      <div className="flex gap-2">
-                        <button onClick={() => setSelectedInquiry(null)} className="btn-ghost btn-sm">Cancel</button>
-                        <button onClick={() => handleRespond(inq.id)} disabled={loading} className="btn-primary btn-sm flex items-center gap-1">
-                          <Send className="w-4 h-4" /> Send
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <button onClick={() => setSelectedInquiry(inq.id)} className="btn-primary btn-sm flex items-center gap-1">
-                    <MessageSquare className="w-4 h-4" /> Respond
-                  </button>
-                )
-              )}
-
-              {inq.status === 'responded' && !inq.converted_to_deal && (
-                <div className="flex gap-2">
-                  <button onClick={() => handleMarkConverted(inq.id)} className="btn-sm flex items-center gap-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg px-3 py-1.5 text-xs font-medium transition">
-                    <TrendingUp className="w-3.5 h-3.5" /> Mark as Converted
-                  </button>
-                </div>
-              )}
+            <div className={`${stat.bg} w-12 h-12 rounded-full flex items-center justify-center`}>
+              <span className="material-symbols-outlined" style={stat.iconStyle}>{stat.icon}</span>
             </div>
           </div>
         ))}
+      </section>
 
-        {filteredInquiries.length === 0 && (
-          <div className="text-center py-16">
-            <Inbox className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-500 mb-1">No inquiries found</p>
-            <p className="text-sm text-gray-400">When buyers contact you, they&apos;ll appear here</p>
+      {/* Inquiries Table */}
+      <section className="bg-surface-container-lowest border border-surface-variant/50 rounded-xl shadow-sm shadow-primary/5 overflow-hidden">
+        <div className="p-6 border-b border-surface-variant/30 flex justify-between items-center">
+          <h3 className="font-display font-semibold text-lg text-on-background">Recent Inquiries</h3>
+          <div className="relative w-64">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+            <input
+              className="w-full pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-lg text-sm focus:ring-2 focus:ring-primary focus:outline-none placeholder:text-on-surface-variant/70 text-on-surface"
+              placeholder="Search inquiries..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-        )}
-      </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low border-b border-surface-variant/30 text-on-surface-variant text-sm font-medium">
+                <th className="p-4 pl-6 w-1/4">Buyer Info</th>
+                <th className="p-4 w-1/4">Product Reference</th>
+                <th className="p-4 w-1/3">Message Snippet</th>
+                <th className="p-4 w-[100px]">Status</th>
+                <th className="p-4 pr-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-surface-variant/20 text-sm">
+              {inquiries.map((inq, index) => (
+                <tr key={inq.id} className="hover:bg-surface-container-low/50 transition-colors">
+                  <td className="p-4 pl-6">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center font-bold`}>
+                        {getInitials(inq.buyer_name)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-on-background">{inq.buyer_name}</p>
+                        <p className="text-xs text-on-surface-variant">{inq.buyer_company} • {inq.buyer_country}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4 text-on-surface">
+                    <p className="font-medium">{inq.product_name}</p>
+                    <p className="text-xs text-on-surface-variant">Qty: {inq.quantity}</p>
+                  </td>
+                  <td className="p-4 text-on-surface-variant truncate max-w-[200px]">
+                    &ldquo;{inq.message}&rdquo;
+                  </td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 ${getStatusBadge(inq.status)} rounded-full text-xs font-semibold whitespace-nowrap capitalize`}>
+                      {inq.status}
+                    </span>
+                  </td>
+                  <td className="p-4 pr-6 text-right">
+                    {inq.status === 'pending' ? (
+                      <button className="text-primary hover:text-primary/80 font-medium flex items-center justify-end gap-1 ml-auto">
+                        Reply <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                      </button>
+                    ) : inq.status === 'responded' ? (
+                      <button onClick={() => handleConvert(inq.id)} className="text-tertiary-container hover:text-tertiary font-medium flex items-center justify-end gap-1 ml-auto">
+                        Convert <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                      </button>
+                    ) : (
+                      <button className="text-on-surface-variant hover:text-on-surface font-medium flex items-center justify-end gap-1 ml-auto">
+                        View <span className="material-symbols-outlined text-[18px]">visibility</span>
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Pagination */}
+        <div className="p-4 border-t border-surface-variant/30 flex items-center justify-between text-sm text-on-surface-variant bg-surface-container-lowest">
+          <span>Showing 1 to {inquiries.length} of {inquiries.length} entries</span>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 border border-outline/50 rounded hover:bg-surface-container-high disabled:opacity-50" disabled>Previous</button>
+            <button className="px-3 py-1 border border-outline/50 rounded hover:bg-surface-container-high">Next</button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
