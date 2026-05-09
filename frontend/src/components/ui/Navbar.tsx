@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Navbar() {
   const pathname = usePathname();
   const { user, isAuthenticated, signOut, isBuyer } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { href: '/features', label: 'Features' },
@@ -21,7 +23,7 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md shadow-sm shadow-primary/5">
+    <nav className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md shadow-sm shadow-primary/5 border-b border-surface-variant/10 dark:border-dark-surface-variant/30 transition-colors duration-300">
       <div className="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
         {/* Logo */}
         <Link href="/" className="text-2xl font-display font-bold gradient-text hover:opacity-80 transition-opacity">
@@ -107,6 +109,16 @@ export default function Navbar() {
               </Link>
             </>
           )}
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-lg bg-surface-container-low dark:bg-dark-surface-container flex items-center justify-center text-on-surface-variant dark:text-dark-on-surface-variant hover:text-primary transition-colors"
+            title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+            </span>
+          </button>
         </div>
 
         {/* Mobile Toggle */}
