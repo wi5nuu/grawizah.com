@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import ProductCard from '@/components/ProductCard';
-import { Search, Filter, Grid, List, SlidersHorizontal, Building2 } from 'lucide-react';
+import { Search, Grid, List, SlidersHorizontal, Building2, X, Sparkles, TrendingUp, Filter } from 'lucide-react';
 import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
 import Link from 'next/link';
 
@@ -21,6 +21,7 @@ export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [sortBy, setSortBy] = useState('relevance');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
@@ -31,62 +32,125 @@ export default function CatalogPage() {
     return matchSearch && matchCategory && matchCountry;
   });
 
+  const activeFilterCount = [selectedCategory, selectedCountry].filter(Boolean).length;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      {/* Hero */}
-      <div className="bg-gradient-to-r from-primary-700 to-accent-600 py-12">
-        <div className="container mx-auto px-6">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Global Product Catalog</h1>
-          <p className="text-primary-100 text-lg">AI-ranked products from verified suppliers worldwide</p>
+      {/* ─── Hero Section ─── */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-accent-700">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        </div>
 
-          <div className="mt-8 flex gap-3">
-            <div className="flex-1 relative">
-              <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products, HS codes, categories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/95 backdrop-blur text-gray-900 placeholder-gray-400 outline-none focus:ring-2 focus:ring-white/50"
-              />
+        <div className="relative container mx-auto px-6 py-14">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-primary-200 mb-6">
+            <Link href="/" className="hover:text-white transition">Home</Link>
+            <span>/</span>
+            <span className="text-white font-medium">Catalog</span>
+          </nav>
+
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur text-white/90 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
+              <Sparkles className="w-3.5 h-3.5" /> AI-Ranked Results
             </div>
-            <button onClick={() => setShowFilters(!showFilters)} className="px-5 py-3.5 bg-white/20 backdrop-blur rounded-xl text-white hover:bg-white/30 transition flex items-center gap-2 font-medium">
-              <SlidersHorizontal className="w-5 h-5" /> Filters
-            </button>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Global Product Catalog</h1>
+            <p className="text-primary-100 text-lg mb-8">
+              Discover AI-ranked products from verified suppliers worldwide
+            </p>
+
+            {/* Search bar */}
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search products, HS codes, categories..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/95 backdrop-blur text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 shadow-lg"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-6 py-3.5 rounded-xl font-medium transition-all shadow-lg ${showFilters || activeFilterCount > 0
+                  ? 'bg-white text-primary-700'
+                  : 'bg-white/20 backdrop-blur text-white hover:bg-white/30'
+                  }`}
+              >
+                <SlidersHorizontal className="w-5 h-5" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="w-5 h-5 bg-primary-600 text-white text-xs rounded-full flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* Filter panel */}
+            {showFilters && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 animate-slide-up">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="px-4 py-2.5 rounded-lg bg-white/90 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <option value="">All Categories</option>
+                  {PRODUCT_CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+                </select>
+                <select
+                  value={selectedCountry}
+                  onChange={(e) => setSelectedCountry(e.target.value)}
+                  className="px-4 py-2.5 rounded-lg bg-white/90 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <option value="">All Countries</option>
+                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-4 py-2.5 rounded-lg bg-white/90 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <option value="relevance">Sort: Relevance</option>
+                  <option value="score">Sort: AI Score</option>
+                  <option value="views">Sort: Most Viewed</option>
+                  <option value="inquiries">Sort: Most Inquired</option>
+                </select>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={() => { setSelectedCategory(''); setSelectedCountry(''); setSearchQuery(''); }}
+                    className="flex items-center gap-1 px-3 py-2.5 text-sm text-white/80 hover:text-white transition"
+                  >
+                    <X className="w-4 h-4" /> Clear all
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Quick stats */}
+          <div className="flex flex-wrap gap-6 mt-8 text-sm">
+            <div className="flex items-center gap-2 text-white/90">
+              <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <span><strong className="text-white">{MOCK_PRODUCTS.length}</strong> Products</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/90">
+              <div className="w-8 h-8 bg-white/15 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <span><strong className="text-white">AI</strong> Ranked</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Filters */}
-        {showFilters && (
-          <div className="card mb-6 animate-slide-up">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category</label>
-                <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="select-field">
-                  <option value="">All Categories</option>
-                  {PRODUCT_CATEGORIES.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Country of Origin</label>
-                <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} className="select-field">
-                  <option value="">All Countries</option>
-                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="flex items-end">
-                <button onClick={() => { setSelectedCategory(''); setSelectedCountry(''); setSearchQuery(''); }} className="btn-ghost text-sm">
-                  Clear All
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Catalog Tabs */}
         <div className="flex items-center gap-4 mb-6 border-b border-gray-200 pb-3">
           <span className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary-100 text-primary-700">
@@ -101,6 +165,7 @@ export default function CatalogPage() {
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-gray-500">
             Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> products
+            {searchQuery && <span> for &ldquo;{searchQuery}&rdquo;</span>}
           </p>
           <div className="flex items-center gap-2">
             <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition ${viewMode === 'grid' ? 'bg-primary-100 text-primary-700' : 'text-gray-400 hover:bg-gray-100'}`}>
@@ -121,9 +186,17 @@ export default function CatalogPage() {
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-20">
-            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+              <Search className="w-10 h-10 text-gray-300" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+            <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
+            <button
+              onClick={() => { setSearchQuery(''); setSelectedCategory(''); setSelectedCountry(''); }}
+              className="btn-primary"
+            >
+              Clear All Filters
+            </button>
           </div>
         )}
       </div>

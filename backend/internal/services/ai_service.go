@@ -2,8 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 )
 
 type AIService struct {
@@ -18,20 +16,8 @@ func NewAIService(groqAPIKey string) *AIService {
 
 // ClassifyHSCode uses Groq AI to classify HS Code
 func (s *AIService) ClassifyHSCode(ctx context.Context, description string, category string) (map[string]interface{}, error) {
-	prompt := fmt.Sprintf(`You are an expert in HS Code classification for international trade.
-
-Product Description: %s
-Category: %s
-
-Provide the most accurate HS Code (6-digit) for this product. Respond in JSON format:
-{
-  "hs_code": "123456",
-  "confidence": 0.95,
-  "description": "Brief description of the HS code",
-  "regulation_notes": "Any relevant import/export regulations"
-}`, description, category)
-
-	// TODO: Call Groq API
+	// TODO: Call Groq API with prompt
+	// prompt := fmt.Sprintf(`You are an expert in HS Code classification...`)
 	// For now, return mock data
 	return map[string]interface{}{
 		"hs_code":          "151311",
@@ -47,27 +33,8 @@ func (s *AIService) GenerateResponseSuggestion(ctx context.Context, inquiryMessa
 		buyerLanguage = "English"
 	}
 
-	prompt := fmt.Sprintf(`Generate a professional response to this buyer inquiry in %s.
-
-Product: %s
-Buyer Country: %s
-Inquiry: %s
-
-Generate a professional, friendly response that:
-1. Thanks the buyer for their interest
-2. Confirms product availability
-3. Asks for specific requirements (quantity, delivery terms)
-4. Offers to provide quotation and samples
-5. Provides contact information
-
-Respond in JSON format:
-{
-  "suggested_response": "The complete response text",
-  "language": "%s",
-  "tone": "professional"
-}`, buyerLanguage, productName, buyerCountry, inquiryMessage, buyerLanguage)
-
-	// TODO: Call Groq API
+	// TODO: Call Groq API with prompt
+	// prompt := fmt.Sprintf(`Generate a professional response...`)
 	// For now, return mock data
 	return map[string]interface{}{
 		"suggested_response": "Thank you for your interest in our products. We are pleased to confirm availability...",
@@ -84,7 +51,7 @@ func (s *AIService) OptimizeListing(ctx context.Context, product interface{}) (m
 	// - Check HS Code
 	// - Suggest keywords
 	// - Calculate score
-	
+
 	return map[string]interface{}{
 		"score": 75,
 		"suggestions": map[string]interface{}{

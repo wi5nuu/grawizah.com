@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/types';
-import { Globe, Eye, EyeOff, ArrowRight, User, Briefcase } from 'lucide-react';
+import { Globe, Eye, EyeOff, ArrowRight, User, Briefcase, CheckCircle2, Shield, Zap, BarChart3 } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -36,25 +36,40 @@ export default function RegisterPage() {
     }
   };
 
+  const benefits = [
+    { icon: Zap, text: 'AI-powered buyer matching' },
+    { icon: Shield, text: 'Verified supplier network' },
+    { icon: BarChart3, text: 'Trade intelligence insights' },
+  ];
+
   return (
     <div className="min-h-screen flex">
       {/* Left Panel */}
       <div className="hidden lg:flex flex-1 gradient-bg items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute top-20 left-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-accent-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary-400/5 rounded-full blur-3xl" />
         <div className="relative text-center text-white max-w-md">
           <div className="w-16 h-16 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-8">
             <Globe className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-4xl font-bold mb-4">Join Grawizah</h2>
-          <p className="text-primary-100 text-lg leading-relaxed">
+          <p className="text-primary-100 text-lg leading-relaxed mb-8">
             Start discovering global trade opportunities with AI-powered intelligence. Free to get started.
           </p>
+          <div className="space-y-3 text-left">
+            {benefits.map((b, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/10 backdrop-blur rounded-xl px-4 py-3">
+                <b.icon className="w-5 h-5 text-accent-300 flex-shrink-0" />
+                <span className="text-sm text-white/90">{b.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center p-8 bg-gray-50">
         <div className="w-full max-w-md">
           <Link href="/" className="flex items-center space-x-2 mb-10 lg:hidden">
             <div className="w-9 h-9 bg-gradient-to-br from-primary-700 to-accent-500 rounded-lg flex items-center justify-center">
@@ -67,7 +82,8 @@ export default function RegisterPage() {
           <p className="text-gray-500 mb-8">Choose your role and get started for free</p>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
+              <span className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">!</span>
               {error}
             </div>
           )}
@@ -77,22 +93,30 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => setRole('free_trader')}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                role === 'free_trader' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${role === 'free_trader'
+                  ? 'border-primary-500 bg-primary-50 shadow-md shadow-primary-500/10'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                }`}
             >
-              <Briefcase className={`w-6 h-6 ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-400'}`} />
-              <span className={`text-sm font-medium ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-600'}`}>Supplier / Trader</span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${role === 'free_trader' ? 'bg-primary-100' : 'bg-gray-100'}`}>
+                <Briefcase className={`w-6 h-6 ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-400'}`} />
+              </div>
+              <span className={`text-sm font-semibold ${role === 'free_trader' ? 'text-primary-700' : 'text-gray-600'}`}>Supplier / Trader</span>
+              <span className="text-[10px] text-gray-400">Sell & export products</span>
             </button>
             <button
               type="button"
               onClick={() => setRole('buyer')}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                role === 'buyer' ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`flex flex-col items-center gap-2 p-5 rounded-xl border-2 transition-all ${role === 'buyer'
+                  ? 'border-primary-500 bg-primary-50 shadow-md shadow-primary-500/10'
+                  : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+                }`}
             >
-              <User className={`w-6 h-6 ${role === 'buyer' ? 'text-primary-700' : 'text-gray-400'}`} />
-              <span className={`text-sm font-medium ${role === 'buyer' ? 'text-primary-700' : 'text-gray-600'}`}>Buyer</span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${role === 'buyer' ? 'bg-primary-100' : 'bg-gray-100'}`}>
+                <User className={`w-6 h-6 ${role === 'buyer' ? 'text-primary-700' : 'text-gray-400'}`} />
+              </div>
+              <span className={`text-sm font-semibold ${role === 'buyer' ? 'text-primary-700' : 'text-gray-600'}`}>Buyer</span>
+              <span className="text-[10px] text-gray-400">Source & import goods</span>
             </button>
           </div>
 
@@ -115,7 +139,7 @@ export default function RegisterPage() {
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="input-field" placeholder="••••••••" required />
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
+            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 py-3.5">
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (

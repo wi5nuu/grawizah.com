@@ -2,9 +2,6 @@ package services
 
 import (
 	"context"
-	"time"
-
-	"github.com/grawizah/backend/internal/models"
 )
 
 type InquiryService struct {
@@ -48,7 +45,7 @@ func (s *InquiryService) GetAnalytics(ctx context.Context, supplierID string) (m
 	// - Calculate conversion rate
 	// - Calculate repeat buyer rate
 	// - Calculate avg response time
-	
+
 	return map[string]interface{}{
 		"total_inquiries":         0,
 		"response_rate":           0.0,

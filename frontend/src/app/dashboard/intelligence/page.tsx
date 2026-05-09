@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Brain, Bot, Target, Crown, Zap, Bell, Languages } from 'lucide-react';
+import { Brain, Bot, Target, Crown, Zap, Bell, Languages, Sparkles, TrendingUp, AlertTriangle, Globe, RefreshCw, Download } from 'lucide-react';
 import BuyerRadarTable from '@/components/BuyerRadarTable';
 import { MarketOpportunityAlerts } from '@/components/MarketOpportunityAlerts';
 
@@ -13,7 +13,6 @@ export default function IntelligencePage() {
   const [optimizerInput, setOptimizerInput] = useState({ product_id: '1', current_description: '', product_name: '' });
   const [optimizerResult, setOptimizerResult] = useState<any>(null);
   const [optimizerLoading, setOptimizerLoading] = useState(false);
-  // Translator state
   const [transText, setTransText] = useState('');
   const [transSource, setTransSource] = useState('');
   const [transTarget, setTransTarget] = useState('en');
@@ -99,37 +98,69 @@ export default function IntelligencePage() {
   ];
 
   const tabs = [
-    { id: 'radar' as const, icon: Target, label: 'Buyer Radar' },
-    { id: 'hs-code' as const, icon: Bot, label: 'HS Code Classifier' },
-    { id: 'optimizer' as const, icon: Zap, label: 'Listing Optimizer' },
-    { id: 'alerts' as const, icon: Bell, label: 'Market Alerts' },
-    { id: 'translator' as const, icon: Languages, label: 'AI Translator' },
+    { id: 'radar' as const, icon: Target, label: 'Buyer Radar', desc: 'Active buyers' },
+    { id: 'hs-code' as const, icon: Bot, label: 'HS Code', desc: 'Classify products' },
+    { id: 'optimizer' as const, icon: Zap, label: 'Optimizer', desc: 'Improve listings' },
+    { id: 'alerts' as const, icon: Bell, label: 'Market Alerts', desc: 'Opportunities' },
+    { id: 'translator' as const, icon: Languages, label: 'Translator', desc: '15+ languages' },
   ];
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center">
-          <Brain className="w-5 h-5 text-white" />
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-accent-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+            <Brain className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              Premium Intelligence Hub
+              <Crown className="w-5 h-5 text-amber-500" />
+            </h1>
+            <p className="text-gray-500 text-sm">AI-powered tools for competitive advantages in global trade</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            Premium Intelligence Hub
-            <Crown className="w-5 h-5 text-amber-500" />
-          </h1>
-          <p className="text-gray-500">AI-powered tools for competitive advantages in global trade</p>
+        <div className="flex items-center gap-2">
+          <button className="btn-ghost flex items-center gap-2 text-sm">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button className="btn-ghost flex items-center gap-2 text-sm">
+            <Download className="w-4 h-4" /> Export
+          </button>
         </div>
       </div>
 
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: 'Active Buyers', value: '24', icon: Target, color: 'primary' },
+          { label: 'HS Codes Classified', value: '12', icon: Bot, color: 'accent' },
+          { label: 'Market Alerts', value: '8', icon: Bell, color: 'amber' },
+          { label: 'Languages', value: '15+', icon: Globe, color: 'green' },
+        ].map((s, i) => (
+          <div key={i} className="stat-card hover:shadow-md transition">
+            <div className="flex items-center justify-between mb-2">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color === 'primary' ? 'bg-primary-100' : s.color === 'accent' ? 'bg-accent-100' : s.color === 'amber' ? 'bg-amber-100' : 'bg-green-100'
+                }`}>
+                <s.icon className={`w-5 h-5 ${s.color === 'primary' ? 'text-primary-700' : s.color === 'accent' ? 'text-accent-600' : s.color === 'amber' ? 'text-amber-600' : 'text-green-600'
+                  }`} />
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+            <p className="text-sm text-gray-500">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200 pb-3 overflow-x-auto">
+      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-              activeTab === tab.id ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:bg-gray-100'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
           >
             <tab.icon className="w-4 h-4" /> {tab.label}
           </button>
@@ -137,51 +168,68 @@ export default function IntelligencePage() {
       </div>
 
       {/* === Buyer Radar Tab === */}
-      {activeTab === 'radar' && <BuyerRadarTable />}
+      {activeTab === 'radar' && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-primary-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Active Buyer Radar</h2>
+            <span className="badge badge-primary text-xs ml-2">Live</span>
+          </div>
+          <BuyerRadarTable />
+        </div>
+      )}
 
       {/* === HS Code Classifier Tab === */}
       {activeTab === 'hs-code' && (
         <div className="max-w-2xl">
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Bot className="w-5 h-5 text-primary-700" /> AI HS Code Classifier
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Enter a product description to automatically classify the HS Code.
-              Calls <code className="bg-gray-100 text-xs px-1 py-0.5 rounded">POST /api/ai/hs-code</code>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                <Bot className="w-5 h-5 text-primary-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">AI HS Code Classifier</h2>
+                <p className="text-sm text-gray-500">Enter a product description to automatically classify the HS Code</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-6">
+              Calls <code className="bg-gray-100 text-xs px-1.5 py-0.5 rounded">POST /api/ai/hs-code</code>
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product Description *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Product Description *</label>
                 <textarea
                   value={hsInput.description}
-                  onChange={(e) => setHsInput({...hsInput, description: e.target.value})}
+                  onChange={(e) => setHsInput({ ...hsInput, description: e.target.value })}
                   className="input-field h-24 resize-none"
                   placeholder="e.g. Fresh coconut oil, virgin, organic, cold-pressed"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Category (optional)</label>
-                <input value={hsInput.category} onChange={(e) => setHsInput({...hsInput, category: e.target.value})} className="input-field" placeholder="e.g. Agriculture" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Category (optional)</label>
+                <input value={hsInput.category} onChange={(e) => setHsInput({ ...hsInput, category: e.target.value })} className="input-field" placeholder="e.g. Agriculture" />
               </div>
               <button onClick={classifyHSCode} disabled={!hsInput.description || hsLoading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
                 {hsLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Bot className="w-4 h-4" /> Classify HS Code</>}
               </button>
             </div>
             {hsResult && (
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-xl animate-slide-up">
-                <h3 className="font-semibold text-green-800 mb-3">Classification Result</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-green-600">HS Code</p>
+              <div className="mt-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl animate-slide-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-green-600" />
+                  <h3 className="font-semibold text-green-800">Classification Result</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div className="bg-white/70 rounded-lg p-3">
+                    <p className="text-xs text-green-600 mb-0.5">HS Code</p>
                     <p className="text-2xl font-bold text-green-800">{hsResult.hs_code}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-green-600">Confidence</p>
+                  <div className="bg-white/70 rounded-lg p-3">
+                    <p className="text-xs text-green-600 mb-0.5">Confidence</p>
                     <p className="text-2xl font-bold text-green-800">{((hsResult.confidence || 0) * 100).toFixed(0)}%</p>
                   </div>
                 </div>
-                <p className="text-sm text-green-700 mt-3"><strong>Description:</strong> {hsResult.description}</p>
+                <p className="text-sm text-green-700"><strong>Description:</strong> {hsResult.description}</p>
                 {hsResult.regulation_notes && (
                   <p className="text-sm text-green-700 mt-1"><strong>Regulation:</strong> {hsResult.regulation_notes}</p>
                 )}
@@ -195,17 +243,22 @@ export default function IntelligencePage() {
       {activeTab === 'optimizer' && (
         <div className="max-w-2xl">
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-accent-600" /> AI Listing Optimizer
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Analyze your product listing and get suggestions.
-              Calls <code className="bg-gray-100 text-xs px-1 py-0.5 rounded">POST /api/ai/optimize-listing</code>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center">
+                <Zap className="w-5 h-5 text-accent-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">AI Listing Optimizer</h2>
+                <p className="text-sm text-gray-500">Analyze your product listing and get improvement suggestions</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-6">
+              Calls <code className="bg-gray-100 text-xs px-1.5 py-0.5 rounded">POST /api/ai/optimize-listing</code>
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product ID</label>
-                <input value={optimizerInput.product_id} onChange={(e) => setOptimizerInput({...optimizerInput, product_id: e.target.value})} className="input-field" placeholder="Product ID" />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Product ID</label>
+                <input value={optimizerInput.product_id} onChange={(e) => setOptimizerInput({ ...optimizerInput, product_id: e.target.value })} className="input-field" placeholder="Product ID" />
               </div>
               <button onClick={optimizeListing} disabled={optimizerLoading} className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50">
                 {optimizerLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Zap className="w-4 h-4" /> Analyze Listing</>}
@@ -213,19 +266,23 @@ export default function IntelligencePage() {
             </div>
             {optimizerResult && (
               <div className="mt-6 space-y-4 animate-slide-up">
-                <div className="flex items-center gap-4 p-4 bg-accent-50 border border-accent-200 rounded-xl">
+                <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-accent-50 to-primary-50 border border-accent-200 rounded-xl">
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-accent-700">{optimizerResult.score}</p>
+                    <p className="text-4xl font-bold text-accent-700">{optimizerResult.score}</p>
                     <p className="text-xs text-accent-600">Score</p>
                   </div>
                   <div className="flex-1">
                     <div className="progress-bar h-3"><div className="progress-bar-fill bg-accent-500" style={{ width: `${optimizerResult.score}%` }} /></div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {optimizerResult.score >= 80 ? 'Excellent listing!' : optimizerResult.score >= 60 ? 'Good, but can be improved' : 'Needs optimization'}
+                    </p>
                   </div>
                 </div>
                 {optimizerResult.suggestions && (
                   <div className="space-y-2">
+                    <p className="text-sm font-medium text-gray-700">Suggestions</p>
                     {Object.entries(optimizerResult.suggestions).map(([key, value]) => (
-                      <div key={key} className="p-3 bg-gray-50 rounded-lg">
+                      <div key={key} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                         <p className="text-sm font-medium text-gray-900 capitalize">{key.replace(/_/g, ' ')}</p>
                         <p className="text-sm text-gray-600">{Array.isArray(value) ? (value as string[]).join(', ') : String(value)}</p>
                       </div>
@@ -240,23 +297,35 @@ export default function IntelligencePage() {
 
       {/* === Market Opportunity Alerts Tab === */}
       {activeTab === 'alerts' && (
-        <MarketOpportunityAlerts />
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-green-500" />
+            <h2 className="text-lg font-semibold text-gray-900">Market Opportunity Alerts</h2>
+            <span className="badge badge-success text-xs ml-2">Real-time</span>
+          </div>
+          <MarketOpportunityAlerts />
+        </div>
       )}
 
       {/* === AI Translator Tab === */}
       {activeTab === 'translator' && (
         <div className="max-w-2xl">
           <div className="card">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Languages className="w-5 h-5 text-primary-700" /> AI Translator
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Translate trade communications across 15+ languages.
-              Calls <code className="bg-gray-100 text-xs px-1 py-0.5 rounded">POST /api/ai/translate</code> &amp; <code className="bg-gray-100 text-xs px-1 py-0.5 rounded">POST /api/ai/detect-language</code>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                <Languages className="w-5 h-5 text-primary-700" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">AI Translator</h2>
+                <p className="text-sm text-gray-500">Translate trade communications across 15+ languages</p>
+              </div>
+            </div>
+            <p className="text-xs text-gray-400 mb-6">
+              Calls <code className="bg-gray-100 text-xs px-1.5 py-0.5 rounded">POST /api/ai/translate</code> &amp; <code className="bg-gray-100 text-xs px-1.5 py-0.5 rounded">POST /api/ai/detect-language</code>
             </p>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Text to translate *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Text to translate *</label>
                 <textarea
                   value={transText}
                   onChange={(e) => setTransText(e.target.value)}
@@ -266,7 +335,7 @@ export default function IntelligencePage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source Language</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Source Language</label>
                   <div className="flex gap-2">
                     <select value={transSource} onChange={(e) => setTransSource(e.target.value)} className="select-field flex-1">
                       <option value="">Auto-detect</option>
@@ -277,13 +346,14 @@ export default function IntelligencePage() {
                     </button>
                   </div>
                   {detectResult && (
-                    <p className="text-xs text-green-600 mt-1">
+                    <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
                       Detected: <strong>{LANGUAGES.find(l => l.code === detectResult.language)?.name || detectResult.language}</strong> ({((detectResult.confidence || 0) * 100).toFixed(0)}%)
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Target Language *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Target Language *</label>
                   <select value={transTarget} onChange={(e) => setTransTarget(e.target.value)} className="select-field">
                     {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
                   </select>
@@ -294,14 +364,17 @@ export default function IntelligencePage() {
               </button>
             </div>
             {transResult && (
-              <div className="mt-6 p-4 bg-primary-50 border border-primary-200 rounded-xl animate-slide-up">
-                <h3 className="font-semibold text-primary-800 mb-2">Translation Result</h3>
-                <p className="text-gray-800 bg-white p-3 rounded-lg border border-primary-100 leading-relaxed">{transResult.translatedText}</p>
+              <div className="mt-6 p-5 bg-gradient-to-r from-primary-50 to-accent-50 border border-primary-200 rounded-xl animate-slide-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="w-4 h-4 text-primary-600" />
+                  <h3 className="font-semibold text-primary-800">Translation Result</h3>
+                </div>
+                <p className="text-gray-800 bg-white p-4 rounded-lg border border-primary-100 leading-relaxed">{transResult.translatedText}</p>
                 <div className="flex items-center gap-4 mt-3 text-xs text-primary-600">
                   <span>From: {LANGUAGES.find(l => l.code === transResult.sourceLang)?.name || transResult.sourceLang || 'Auto'}</span>
                   <span>→</span>
                   <span>To: {LANGUAGES.find(l => l.code === transResult.targetLang)?.name || transResult.targetLang}</span>
-                  <span>Confidence: {((transResult.confidence || 0) * 100).toFixed(0)}%</span>
+                  <span className="ml-auto">Confidence: {((transResult.confidence || 0) * 100).toFixed(0)}%</span>
                 </div>
               </div>
             )}

@@ -19,24 +19,20 @@ func NewInquiryHandler(inquiryService *services.InquiryService) *InquiryHandler 
 
 // GetInquiriesBySupplier handles GET /api/inquiries/supplier/:id
 func (h *InquiryHandler) GetInquiriesBySupplier(c *gin.Context) {
-	supplierID := c.Param("id")
-
-	// TODO: Call service
+	// TODO: Call service with c.Param("id")
 	c.JSON(http.StatusOK, []interface{}{})
 }
 
 // GetInquiriesByBuyer handles GET /api/inquiries/buyer/:id
 func (h *InquiryHandler) GetInquiriesByBuyer(c *gin.Context) {
-	buyerID := c.Param("id")
-
-	// TODO: Call service
+	// TODO: Call service with c.Param("id")
 	c.JSON(http.StatusOK, []interface{}{})
 }
 
 // CreateInquiry handles POST /api/inquiries
 func (h *InquiryHandler) CreateInquiry(c *gin.Context) {
 	var input map[string]interface{}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -55,7 +51,7 @@ func (h *InquiryHandler) RespondToInquiry(c *gin.Context) {
 	var input struct {
 		Message string `json:"message" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -70,9 +66,7 @@ func (h *InquiryHandler) RespondToInquiry(c *gin.Context) {
 
 // GetAnalytics handles GET /api/inquiries/analytics/:supplier_id
 func (h *InquiryHandler) GetAnalytics(c *gin.Context) {
-	supplierID := c.Param("supplier_id")
-
-	// TODO: Call service
+	// TODO: Call service with c.Param("supplier_id")
 	c.JSON(http.StatusOK, gin.H{
 		"total_inquiries":         0,
 		"response_rate":           0.0,

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageSquare, Search, Clock, CheckCircle, XCircle, Send, Bot, TrendingUp, Award } from 'lucide-react';
+import { MessageSquare, Search, Clock, CheckCircle, XCircle, Send, Bot, TrendingUp, Award, Filter, Inbox } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { InquiryService } from '@/services/InquiryService';
 import { Inquiry, InquiryAnalytics as IAnalytics } from '@/types/inquiry';
@@ -9,7 +9,6 @@ import { InquiryAnalytics } from '@/components/InquiryAnalytics';
 
 const inquiryService = new InquiryService();
 
-// Fallback mock data in case backend isn't running
 const MOCK_INQUIRIES: Inquiry[] = [
   { id: '1', supplier_id: 'u1', buyer_id: 'b1', product_id: 'p1', buyer_name: 'Global Foods Inc', buyer_country: 'USA', product_name: 'Virgin Coconut Oil', message: 'We are interested in purchasing 20MT of your virgin coconut oil. Please share your FOB price and available certifications.', status: 'open', source: 'chat', created_at: '2026-05-08T10:00:00Z', updated_at: '2026-05-08T10:00:00Z', response_time_hours: 0, converted_to_deal: false },
   { id: '2', supplier_id: 'u1', buyer_id: 'b2', product_id: 'p2', buyer_name: 'Shanghai Trading Co', buyer_country: 'China', product_name: 'Arabica Coffee', message: 'Looking for Grade 1 Arabica coffee beans, 500kg sample first. What is your MOQ for regular orders?', status: 'responded', source: 'whatsapp', created_at: '2026-05-07T08:00:00Z', updated_at: '2026-05-07T12:30:00Z', response_time_hours: 4.5, converted_to_deal: false },
@@ -36,24 +35,19 @@ export default function InquiriesPage() {
   const [analytics, setAnalytics] = useState<IAnalytics>(MOCK_ANALYTICS);
   const [loading, setLoading] = useState(false);
 
-  // Try fetching real data from backend
   useEffect(() => {
     const supplierId = user?.id || 'u1';
-    
     inquiryService.getInquiriesBySupplier(supplierId)
       .then(data => { if (Array.isArray(data) && data.length > 0) setInquiries(data); })
-      .catch(() => {}); // Use mock on failure
-
+      .catch(() => { });
     inquiryService.getAnalytics(supplierId)
       .then(data => { if (data && data.total_inquiries !== undefined) setAnalytics(data); })
-      .catch(() => {});
+      .catch(() => { });
   }, [user]);
 
   const filteredInquiries = inquiries.filter((inq) => {
     const matchFilter = filter === 'all' || inq.status === filter;
-    const matchSearch = !searchQuery || 
-      (inq.buyer_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (inq.product_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchSearch = !searchQuery || (inq.buyer_name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (inq.product_name || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchFilter && matchSearch;
   });
 
@@ -62,9 +56,7 @@ export default function InquiriesPage() {
     setLoading(true);
     try {
       await inquiryService.respondToInquiry(inquiryId, responseMessage);
-      setInquiries(prev => prev.map(inq => 
-        inq.id === inquiryId ? { ...inq, status: 'responded' } : inq
-      ));
+      setInquiries(prev => prev.map(inq => inq.id === inquiryId ? { ...inq, status: 'responded' } : inq));
       setSelectedInquiry(null);
       setResponseMessage('');
     } catch (err) {
@@ -77,9 +69,7 @@ export default function InquiriesPage() {
   const handleMarkConverted = async (inquiryId: string) => {
     try {
       await inquiryService.markAsConverted(inquiryId);
-      setInquiries(prev => prev.map(inq =>
-        inq.id === inquiryId ? { ...inq, converted_to_deal: true, status: 'closed' } : inq
-      ));
+      setInquiries(prev => prev.map(inq => inq.id === inquiryId ? { ...inq, converted_to_deal: true, status: 'closed' } : inq));
     } catch (err) {
       console.error('Failed to mark as converted:', err);
     }
@@ -120,7 +110,7 @@ export default function InquiriesPage() {
         <p className="text-gray-500 mt-1">Track and respond to buyer inquiries across all channels</p>
       </div>
 
-      {/* Analytics Cards – uses InquiryAnalytics component + GET /api/inquiries/analytics/:supplier_id */}
+      {/* Analytics Cards */}
       <div className="mb-6">
         <InquiryAnalytics analytics={analytics} />
       </div>
@@ -134,7 +124,7 @@ export default function InquiriesPage() {
         <div className="flex gap-2">
           {['all', 'open', 'responded', 'closed'].map((f) => (
             <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-lg text-sm font-medium transition capitalize ${filter === f ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {f}
+              {f === 'all' ? 'All' : f}
             </button>
           ))}
         </div>
@@ -169,13 +159,10 @@ export default function InquiriesPage() {
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                 {getStatusIcon(inq.status)}
-                <span className={`badge text-xs capitalize ${inq.status === 'open' ? 'badge-warning' : inq.status === 'responded' ? 'badge-success' : 'bg-gray-100 text-gray-500'}`}>
-                  {inq.status}
-                </span>
+                <span className={`badge text-xs capitalize ${inq.status === 'open' ? 'badge-warning' : inq.status === 'responded' ? 'badge-success' : 'bg-gray-100 text-gray-500'}`}>{inq.status}</span>
               </div>
             </div>
 
-            {/* Action bar */}
             <div className="mt-4 pt-4 border-t border-gray-100">
               {inq.status === 'open' && (
                 selectedInquiry === inq.id ? (
@@ -200,7 +187,6 @@ export default function InquiriesPage() {
                 )
               )}
 
-              {/* Mark as Converted – calls PUT /api/inquiries/:id/convert */}
               {inq.status === 'responded' && !inq.converted_to_deal && (
                 <div className="flex gap-2">
                   <button onClick={() => handleMarkConverted(inq.id)} className="btn-sm flex items-center gap-1 bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg px-3 py-1.5 text-xs font-medium transition">
@@ -213,9 +199,10 @@ export default function InquiriesPage() {
         ))}
 
         {filteredInquiries.length === 0 && (
-          <div className="text-center py-12">
-            <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-500">No inquiries found</p>
+          <div className="text-center py-16">
+            <Inbox className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-gray-500 mb-1">No inquiries found</p>
+            <p className="text-sm text-gray-400">When buyers contact you, they&apos;ll appear here</p>
           </div>
         )}
       </div>

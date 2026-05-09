@@ -11,7 +11,7 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		
+
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
@@ -48,12 +48,11 @@ func AuthMiddleware() gin.HandlerFunc {
 func OptionalAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
-		
+
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
-				token := parts[1]
-				// TODO: Validate and extract user info
+				// TODO: Validate token and extract user info
 				c.Set("user_id", "sample-user-id")
 				c.Set("user_role", "free_trader")
 			}

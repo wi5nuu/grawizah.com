@@ -19,16 +19,12 @@ func NewProductHandler(productService *services.ProductService) *ProductHandler 
 
 // GetProducts handles GET /api/products
 func (h *ProductHandler) GetProducts(c *gin.Context) {
-	page := c.DefaultQuery("page", "1")
-	limit := c.DefaultQuery("limit", "20")
-	category := c.Query("category")
-
-	// TODO: Parse pagination params and call service
+	// TODO: Parse pagination params (page, limit, category) and call service
 	c.JSON(http.StatusOK, gin.H{
 		"data":  []interface{}{},
 		"total": 0,
-		"page":  page,
-		"limit": limit,
+		"page":  1,
+		"limit": 20,
 	})
 }
 
@@ -46,7 +42,7 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 // CreateProduct handles POST /api/products
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var input map[string]interface{}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -63,7 +59,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
 	var input map[string]interface{}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -93,7 +89,7 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 		Query   string                 `json:"query"`
 		Filters map[string]interface{} `json:"filters"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

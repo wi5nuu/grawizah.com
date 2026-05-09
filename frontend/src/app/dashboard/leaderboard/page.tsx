@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Star, BarChart3, RefreshCw } from 'lucide-react';
 import { LeaderboardService } from '@/services/LeaderboardService';
 
 interface LeaderboardEntry {
@@ -34,7 +34,6 @@ export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(MOCK_LEADERBOARD);
   const [loading, setLoading] = useState(false);
 
-  // Try fetching real data from GET /api/leaderboard
   useEffect(() => {
     setLoading(true);
     leaderboardService.getLeaderboard()
@@ -54,7 +53,7 @@ export default function LeaderboardPage() {
           })));
         }
       })
-      .catch(() => {}) // Use mock on failure
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -75,19 +74,60 @@ export default function LeaderboardPage() {
     if (score >= 80) return { label: 'Excellent', color: 'badge-success' };
     if (score >= 60) return { label: 'Good', color: 'badge-primary' };
     if (score >= 40) return { label: 'Average', color: 'badge-warning' };
-    return { label: 'Needs Work', color: 'badge-danger' };
+    return { label: 'Needs Work', color: 'bg-red-50 text-red-700' };
   };
+
+  const topScore = leaderboard.length > 0 ? Math.max(...leaderboard.map(e => e.total_score)) : 0;
+  const avgConversion = leaderboard.length > 0 ? (leaderboard.reduce((s, e) => s + e.conversion_rate, 0) / leaderboard.length).toFixed(1) : '0';
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Trophy className="w-7 h-7 text-amber-500" /> Leaderboard
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Benchmark your performance against other suppliers.
-          Data from <code className="bg-gray-100 text-xs px-1 py-0.5 rounded">GET /api/leaderboard</code>
-        </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+            <Trophy className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              Leaderboard <Crown className="w-5 h-5 text-amber-500" />
+            </h1>
+            <p className="text-gray-500 text-sm">Benchmark your performance against other suppliers</p>
+          </div>
+        </div>
+        <button className="btn-ghost flex items-center gap-2 text-sm">
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="stat-card">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center"><Trophy className="w-5 h-5 text-amber-600" /></div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{topScore.toFixed(1)}</p>
+              <p className="text-xs text-gray-500">Top Score</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center"><BarChart3 className="w-5 h-5 text-primary-700" /></div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{leaderboard.length}</p>
+              <p className="text-xs text-gray-500">Suppliers Ranked</p>
+            </div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center"><TrendingUp className="w-5 h-5 text-green-600" /></div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{avgConversion}%</p>
+              <p className="text-xs text-gray-500">Avg Conversion</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {loading && (
@@ -100,30 +140,38 @@ export default function LeaderboardPage() {
       {/* Top 3 Cards */}
       <div className="grid md:grid-cols-3 gap-5 mb-8">
         {leaderboard.slice(0, 3).map((entry) => (
-          <div key={entry.rank} className={`card relative overflow-hidden ${entry.rank === 1 ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50' : 'hover:shadow-md'} transition-all`}>
-            <div className="text-center">
-              <span className="text-4xl">{getMedal(entry.rank)}</span>
-              <h3 className="text-lg font-bold text-gray-900 mt-2">{entry.company_name}</h3>
+          <div key={entry.rank} className={`card relative overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ${entry.rank === 1 ? 'border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-yellow-50 to-white' : 'border border-gray-100'}`}>
+            {entry.rank === 1 && (
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-amber-200/30 to-transparent rounded-bl-full" />
+            )}
+            <div className="text-center relative">
+              <span className="text-5xl">{getMedal(entry.rank)}</span>
+              <h3 className="text-lg font-bold text-gray-900 mt-3">{entry.company_name}</h3>
               <p className="text-sm text-gray-500">{entry.country}</p>
-              <p className="text-3xl font-extrabold gradient-text mt-3">{entry.total_score.toFixed(1)}</p>
-              <p className="text-xs text-gray-400">Total Score</p>
+              <p className="text-4xl font-extrabold gradient-text mt-3">{entry.total_score.toFixed(1)}</p>
+              <p className="text-xs text-gray-400 mb-4">Total Score</p>
+              <div className="progress-bar h-2 mb-4">
+                <div className="progress-bar-fill bg-gradient-to-r from-primary-500 to-accent-500" style={{ width: `${entry.total_score}%` }} />
+              </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
               <div className="text-center">
                 <p className="text-sm font-semibold text-gray-900">{entry.conversion_rate}%</p>
-                <p className="text-xs text-gray-500">Conversion</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Conversion</p>
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-gray-900">{entry.response_rate}%</p>
-                <p className="text-xs text-gray-500">Response</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Response</p>
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-gray-900">{entry.repeat_buyer_rate}%</p>
-                <p className="text-xs text-gray-500">Repeat Buyers</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Repeat</p>
               </div>
               <div className="text-center">
-                <p className="text-sm font-semibold text-gray-900">⭐ {entry.buyer_rating}</p>
-                <p className="text-xs text-gray-500">Rating</p>
+                <p className="text-sm font-semibold text-gray-900 flex items-center justify-center gap-0.5">
+                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> {entry.buyer_rating}
+                </p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide">Rating</p>
               </div>
             </div>
           </div>
@@ -137,10 +185,10 @@ export default function LeaderboardPage() {
             <tr>
               <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Rank</th>
               <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Company</th>
-              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Total Score</th>
+              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Score</th>
               <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Conversion</th>
-              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Response Rate</th>
-              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Repeat Buyers</th>
+              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Response</th>
+              <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Repeat</th>
               <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Rating</th>
               <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">7d Trend</th>
               <th className="text-center px-6 py-3 text-xs font-semibold text-gray-500 uppercase">Tier</th>
@@ -174,7 +222,9 @@ export default function LeaderboardPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center text-sm font-medium text-gray-900">{entry.repeat_buyer_rate}%</td>
-                  <td className="px-6 py-4 text-center text-sm text-gray-900">⭐ {entry.buyer_rating}</td>
+                  <td className="px-6 py-4 text-center text-sm text-gray-900">
+                    <span className="flex items-center justify-center gap-0.5"><Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> {entry.buyer_rating}</span>
+                  </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`flex items-center justify-center gap-1 text-sm font-medium ${trend.color}`}>
                       <TrendIcon className="w-4 h-4" /> {trend.label}
