@@ -26,93 +26,62 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
 
   if (viewMode === 'list') {
     return (
-      <>
-        <div className="card flex gap-6 hover:shadow-md transition" onClick={handleView}>
-          <div className="w-40 h-28 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Package className="w-10 h-10 text-primary-300" />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="badge-primary text-[10px]">HS: {product.hs_code}</span>
-                  <span className="badge bg-gray-100 text-gray-600 text-[10px]">{product.category}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-                <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
-              </div>
-              <span className={`${getScoreColor(product.listing_score || 0)} text-white text-xs font-bold px-2.5 py-1 rounded-lg`}>
-                {product.listing_score}
-              </span>
-            </div>
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-4 text-xs text-gray-400">
-                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {product.country_origin}</span>
-                <span>MOQ: {product.moq}</span>
-                <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {product.view_count}</span>
-                <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {product.inquiry_count}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-primary-700 font-semibold text-sm">
-                  ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} {product.currency}/MT
-                </span>
-                <button onClick={(e) => { e.stopPropagation(); setInquiryOpen(true); }} className="btn-primary btn-sm text-xs">
-                  Send Inquiry
-                </button>
-              </div>
-            </div>
-          </div>
+      <div className="card flex gap-6 hover:shadow-md transition cursor-pointer" onClick={handleView}>
+        <div className="w-40 h-28 bg-surface-container rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+          {product.images && product.images.length > 0 ? (
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+          ) : (
+            <Package className="w-10 h-10 text-on-surface-variant/50" />
+          )}
+          {product.listing_score && product.listing_score >= 80 && (
+             <div className="absolute top-2 left-2 bg-[#dbeafe] text-[#1d4ed8] text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1">
+               <span className="material-symbols-outlined text-[10px]">verified</span> Verified
+             </div>
+          )}
         </div>
-        <SendInquiryModal isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} productId={product.id} productName={product.name} />
-      </>
+        <div className="flex-1 flex flex-col justify-center">
+          <span className="text-[#5300b7] text-[11px] font-bold mb-1 tracking-wide">HS: {product.hs_code}</span>
+          <h3 className="text-[15px] font-bold text-on-surface mb-1">{product.name}</h3>
+          <p className="text-sm text-on-surface-variant flex items-center gap-1.5 mb-2">
+            <span className="material-symbols-outlined text-[14px]">storefront</span>
+            {product.company_id === 'c1' ? 'TechCorp Global Mfg.' : product.company_id === 'c2' ? 'Nexus Robotics Ltd.' : 'CloudNet Infrastructure'}
+          </p>
+          <p className="text-[#5300b7] font-bold text-[15px]">
+            ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} <span className="text-[11px] text-on-surface-variant font-normal">/ unit</span>
+          </p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="card-hover group" onClick={handleView}>
-        {/* Image */}
-        <div className="relative h-44 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl mb-4 flex items-center justify-center overflow-hidden">
-          <Package className="w-14 h-14 text-primary-200 group-hover:scale-110 transition-transform" />
-          <span className={`absolute top-3 right-3 ${getScoreColor(product.listing_score || 0)} text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow`}>
-            {product.listing_score}
-          </span>
-        </div>
-
-        {/* Tags */}
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <span className="badge-primary text-[10px]">HS: {product.hs_code}</span>
-          <span className="badge bg-gray-100 text-gray-600 text-[10px]">{product.category}</span>
-        </div>
-
-        {/* Title */}
-        <h3 className="font-semibold text-gray-900 group-hover:text-primary-700 transition mb-1">{product.name}</h3>
-        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{product.description}</p>
-
-        {/* Origin & MOQ */}
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-          <MapPin className="w-3 h-3" /> {product.country_origin}
-          <span className="mx-1">•</span>
-          MOQ: {product.moq}
-        </div>
-
-        {/* Price */}
-        <p className="text-primary-700 font-semibold text-sm mb-4">
-          ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} {product.currency}/MT
-        </p>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-3 text-xs text-gray-400">
-            <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {product.view_count}</span>
-            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {product.inquiry_count}</span>
-          </div>
-          <button onClick={(e) => { e.stopPropagation(); setInquiryOpen(true); }} className="btn-primary btn-sm text-xs">
-            Send Inquiry
-          </button>
-        </div>
+    <div className="bg-surface-container-lowest border border-surface-variant/50 rounded-xl overflow-hidden hover:shadow-ambient transition-all cursor-pointer group" onClick={handleView}>
+      {/* Image */}
+      <div className="relative h-44 bg-surface-container flex items-center justify-center overflow-hidden">
+        {product.images && product.images.length > 0 ? (
+          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <Package className="w-14 h-14 text-on-surface-variant/50 group-hover:scale-110 transition-transform duration-500" />
+        )}
+        {product.listing_score && product.listing_score >= 80 && (
+           <div className="absolute top-3 left-3 bg-[#dbeafe]/90 backdrop-blur-sm text-[#1d4ed8] text-[11px] font-bold px-2.5 py-1 rounded flex items-center gap-1">
+             <span className="material-symbols-outlined text-[12px]">verified</span> Verified
+           </div>
+        )}
       </div>
-      <SendInquiryModal isOpen={inquiryOpen} onClose={() => setInquiryOpen(false)} productId={product.id} productName={product.name} />
-    </>
+
+      {/* Content */}
+      <div className="p-5 flex flex-col h-[160px]">
+        <span className="text-[#5300b7] text-[11px] font-bold mb-1 tracking-wide">HS: {product.hs_code}</span>
+        <h3 className="font-bold text-[15px] text-on-surface leading-snug mb-2 line-clamp-2">{product.name}</h3>
+        <p className="text-[13px] text-on-surface-variant flex items-center gap-1.5 mt-auto mb-4 truncate">
+          <span className="material-symbols-outlined text-[15px]">domain</span>
+          {product.company_id === 'c1' ? 'TechCorp Global Mfg.' : product.company_id === 'c2' ? 'Nexus Robotics Ltd.' : 'CloudNet Infrastructure'}
+        </p>
+        <p className="text-[#5300b7] font-bold text-[15px]">
+          ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} <span className="text-xs text-on-surface-variant font-normal">/ unit</span>
+        </p>
+      </div>
+    </div>
   );
 }

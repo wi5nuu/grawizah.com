@@ -1,188 +1,161 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
-import Link from 'next/link';
-import { MapPin, Calendar, Globe, Shield, Package, Award, MessageSquare, ExternalLink, Star, CheckCircle2, Building2, Clock } from 'lucide-react';
 
-const MOCK_SUPPLIER = {
-  id: 'c1', name: 'PT Nusantara Agro Export', country: 'Indonesia', verified: true,
-  description: 'Leading exporter of premium Indonesian agricultural products including coconut oil, spices, and coffee beans. ISO 9001:2015 and USDA Organic certified with 12 years of export experience. We pride ourselves on sustainable farming practices and direct partnerships with local farmers across Sumatra and Java.',
-  export_experience_years: 12, export_countries: ['USA', 'Japan', 'Germany', 'Australia', 'Singapore', 'China'],
-  certifications: ['ISO 9001:2015', 'USDA Organic', 'HACCP', 'MUI Halal'],
-  website: 'www.nusantara-agro.com', contact_email: 'export@nusantara-agro.com',
-  rating: 4.8, response_rate: 95, response_time: '< 2 hours',
-  products: [
-    { id: '1', name: 'Premium Virgin Coconut Oil', category: 'Agriculture', price: '$800 - $1,200/MT', views: 1247 },
-    { id: '2', name: 'Arabica Coffee Beans - Grade 1', category: 'Food & Beverage', price: '$3,500 - $5,000/MT', views: 892 },
-    { id: '4', name: 'Organic Turmeric Powder', category: 'Agriculture', price: '$2,000 - $3,500/MT', views: 543 },
-  ],
-};
-
-export default function SupplierPage() {
-  const params = useParams();
-
+export default function SupplierProfilePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-dark-background">
       <Navbar />
 
-      {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-primary-800 to-accent-700">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-primary-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-        </div>
-
-        <div className="relative container mx-auto px-6 py-12">
-          <div className="flex flex-col md:flex-row items-start gap-6">
-            <div className="w-20 h-20 bg-white/15 backdrop-blur rounded-2xl flex items-center justify-center flex-shrink-0 border border-white/20">
-              <span className="text-3xl font-bold text-white">{MOCK_SUPPLIER.name[0]}</span>
+      <div className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
+        
+        {/* Left Column (Main Content) */}
+        <div className="flex-1 bg-white dark:bg-dark-surface rounded-2xl shadow-sm border border-gray-100 dark:border-dark-surface-variant/30 overflow-hidden">
+          
+          {/* Hero Header */}
+          <div className="h-32 bg-[#f3e8ff] dark:bg-[#d0bcff]/10" />
+          <div className="px-8 pb-8 relative">
+            <div className="w-24 h-24 bg-[#0f172a] dark:bg-[#18181b] border-4 border-white dark:border-dark-surface rounded-xl absolute -top-12 flex items-center justify-center shadow-md overflow-hidden">
+               <span className="material-symbols-outlined text-white text-[40px]">precision_manufacturing</span>
             </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold text-white">{MOCK_SUPPLIER.name}</h1>
-                {MOCK_SUPPLIER.verified && (
-                  <span className="bg-green-400/20 text-green-100 badge text-xs flex items-center gap-1 border border-green-400/30">
-                    <Shield className="w-3 h-3" /> Verified
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-4 text-primary-100 text-sm mb-4">
-                <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {MOCK_SUPPLIER.country}</span>
-                <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {MOCK_SUPPLIER.export_experience_years} years experience</span>
-                <span className="flex items-center gap-1"><Globe className="w-4 h-4" /> {MOCK_SUPPLIER.export_countries.length} export markets</span>
-              </div>
-              {/* Quick Stats */}
-              <div className="flex flex-wrap gap-4">
-                <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 flex items-center gap-2">
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span className="text-white text-sm font-medium">{MOCK_SUPPLIER.rating} Rating</span>
-                </div>
-                <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-400" />
-                  <span className="text-white text-sm font-medium">{MOCK_SUPPLIER.response_rate}% Response Rate</span>
-                </div>
-                <div className="bg-white/10 backdrop-blur rounded-lg px-3 py-2 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-accent-300" />
-                  <span className="text-white text-sm font-medium">Responds {MOCK_SUPPLIER.response_time}</span>
-                </div>
-              </div>
+            
+            <div className="mt-14 flex items-center gap-2 mb-2">
+              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-dark-on-surface">Apex Global Manufacturing</h1>
+              <span className="material-symbols-outlined text-[#2563eb] dark:text-blue-400 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
-            <div className="flex gap-3 flex-shrink-0">
-              <button className="btn-primary flex items-center gap-2 bg-white text-primary-700 hover:bg-gray-50">
-                <MessageSquare className="w-4 h-4" /> Send Inquiry
-              </button>
+            <p className="text-[14px] text-gray-600 dark:text-dark-on-surface-variant mb-4 max-w-2xl">
+              Leading provider of precision engineered components for aerospace and automotive industries.
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-6 text-[13px] text-gray-500 dark:text-gray-400 font-medium">
+              <div className="flex items-center gap-1 text-gray-900 dark:text-dark-on-surface">
+                <span className="material-symbols-outlined text-[#5300b7] dark:text-[#d0bcff] text-[18px]">star</span>
+                <span className="font-extrabold">4.9</span> <span className="text-gray-500 dark:text-gray-500 font-normal">(124 Reviews)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[18px]">location_on</span>
+                Shenzhen, China
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                Est. 2005
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* About */}
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary-500" /> About
-              </h2>
-              <p className="text-gray-600 leading-relaxed">{MOCK_SUPPLIER.description}</p>
-            </div>
+          {/* Tabs */}
+          <div className="px-8 border-b border-gray-100 dark:border-dark-surface-variant/30 flex gap-6">
+            <button className="py-4 text-[#5300b7] dark:text-[#d0bcff] font-extrabold text-[14px] border-b-2 border-[#5300b7] dark:border-[#d0bcff]">Overview</button>
+            <button className="py-4 text-gray-500 dark:text-dark-on-surface-variant hover:text-gray-900 dark:hover:text-white font-bold text-[14px] transition-colors">Products</button>
+            <button className="py-4 text-gray-500 dark:text-dark-on-surface-variant hover:text-gray-900 dark:hover:text-white font-bold text-[14px] transition-colors">Certifications</button>
+          </div>
 
-            {/* Products */}
-            <div className="card">
+          <div className="p-8 space-y-10">
+            {/* About Us */}
+            <section>
+              <h2 className="text-[18px] font-extrabold text-gray-900 dark:text-dark-on-surface mb-3">About Us</h2>
+              <p className="text-[14px] text-gray-600 dark:text-dark-on-surface-variant leading-relaxed mb-6">
+                Apex Global Manufacturing specializes in high-precision CNC machining, die casting, and plastic injection molding. With over 15 years of experience, we deliver top-tier components to Fortune 500 companies across the globe. Our state-of-the-art facilities ensure rigorous quality control and efficient production cycles, making us a trusted partner for complex engineering challenges.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#f9f5ff] dark:bg-[#d0bcff]/10 rounded-xl p-4">
+                  <p className="text-[11px] text-gray-500 dark:text-dark-on-surface-variant mb-1 font-bold">Response Time</p>
+                  <p className="text-[16px] font-extrabold text-[#5300b7] dark:text-[#d0bcff]">&lt; 24h</p>
+                </div>
+                <div className="bg-[#f9f5ff] dark:bg-[#d0bcff]/10 rounded-xl p-4">
+                  <p className="text-[11px] text-gray-500 dark:text-dark-on-surface-variant mb-1 font-bold">Delivery Rate</p>
+                  <p className="text-[16px] font-extrabold text-[#5300b7] dark:text-[#d0bcff]">98.5%</p>
+                </div>
+                <div className="bg-[#f9f5ff] dark:bg-[#d0bcff]/10 rounded-xl p-4">
+                  <p className="text-[11px] text-gray-500 dark:text-dark-on-surface-variant mb-1 font-bold">Total Employees</p>
+                  <p className="text-[16px] font-extrabold text-[#5300b7] dark:text-[#d0bcff]">500+</p>
+                </div>
+                <div className="bg-[#f9f5ff] dark:bg-[#d0bcff]/10 rounded-xl p-4">
+                  <p className="text-[11px] text-gray-500 dark:text-dark-on-surface-variant mb-1 font-bold">Annual Revenue</p>
+                  <p className="text-[16px] font-extrabold text-[#5300b7] dark:text-[#d0bcff]">$50M+</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Featured Products */}
+            <section>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary-500" /> Products ({MOCK_SUPPLIER.products.length})
-                </h2>
-                <Link href={`/supplier/${params.id}/products`} className="text-sm text-primary-600 font-medium hover:underline flex items-center gap-1">
-                  View All →
-                </Link>
+                <h2 className="text-[18px] font-extrabold text-gray-900 dark:text-dark-on-surface">Featured Products</h2>
+                <button className="text-[#5300b7] dark:text-[#d0bcff] font-bold text-[13px] flex items-center gap-1 hover:underline">
+                  View All <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
               </div>
-              <div className="space-y-3">
-                {MOCK_SUPPLIER.products.map((product) => (
-                  <div key={product.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition border border-gray-100 group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary-50 to-accent-50 rounded-xl flex items-center justify-center group-hover:scale-105 transition">
-                        <Package className="w-6 h-6 text-primary-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                        <p className="text-xs text-gray-500">{product.category} • {product.views.toLocaleString()} views</p>
-                      </div>
-                    </div>
-                    <p className="text-sm font-semibold text-primary-700">{product.price}</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+                  <img src="/images/product-cnc.png" alt="Custom CNC" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute bottom-4 left-4 z-20">
+                    <p className="text-white font-extrabold text-[14px]">Custom CNC Aluminum Housings</p>
+                    <p className="text-gray-300 text-[11px] font-medium">MOQ: 100 units</p>
                   </div>
-                ))}
+                </div>
+                <div className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
+                  <img src="/images/product-zinc.png" alt="Zinc Die" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <div className="absolute bottom-4 left-4 z-20">
+                    <p className="text-white font-extrabold text-[14px]">Zinc Die Casting</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-[#f9f5ff] dark:bg-[#d0bcff]/10 h-48 flex flex-col items-center justify-center text-[#5300b7] dark:text-[#d0bcff] cursor-pointer hover:bg-[#f3e8ff] dark:hover:bg-[#d0bcff]/20 transition-colors border border-purple-100 dark:border-purple-900/30">
+                  <span className="material-symbols-outlined text-[32px] mb-2">grid_view</span>
+                  <p className="font-bold text-[14px]">Explore Catalog</p>
+                </div>
               </div>
-            </div>
-
-            {/* Certifications */}
-            <div className="card">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-amber-500" /> Certifications
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {MOCK_SUPPLIER.certifications.map((cert) => (
-                  <span key={cert} className="badge bg-green-50 text-green-700 border border-green-200 flex items-center gap-1.5 px-3 py-1.5">
-                    <Award className="w-3.5 h-3.5" /> {cert}
-                  </span>
-                ))}
-              </div>
-            </div>
+            </section>
           </div>
+        </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <div className="card">
-              <h3 className="font-semibold mb-4">Contact Supplier</h3>
-              <button className="btn-primary w-full flex items-center justify-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4" /> Send Inquiry
+        {/* Right Column (Contact Sidebar) */}
+        <div className="w-full lg:w-80 shrink-0 space-y-6">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-sm border border-gray-100 dark:border-dark-surface-variant/30 p-6">
+            <h3 className="font-extrabold text-gray-900 dark:text-dark-on-surface text-[15px] mb-4">Contact Supplier</h3>
+            
+            <button className="w-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold py-2.5 rounded-md text-[13px] flex items-center justify-center gap-2 mb-3 transition-colors">
+              <span className="material-symbols-outlined text-[18px]">mail</span> Contact Supplier
+            </button>
+            <button className="w-full border border-[#5300b7] dark:border-[#d0bcff] text-[#5300b7] dark:text-[#d0bcff] hover:bg-[#5300b7] hover:text-white dark:hover:bg-[#d0bcff] dark:hover:text-[#381e72] font-bold py-2.5 rounded-md text-[13px] flex items-center justify-center gap-2 transition-colors mb-6">
+              <span className="material-symbols-outlined text-[18px]">forum</span> WhatsApp Chat
+            </button>
+
+            <div className="pt-6 border-t border-gray-100 dark:border-dark-surface-variant/30">
+              <h4 className="text-[10px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Send Inquiry</h4>
+              <select className="w-full border border-gray-200 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface-container rounded-md px-3 py-2 text-[13px] text-gray-600 dark:text-dark-on-surface mb-3 focus:outline-none focus:border-[#5300b7] dark:focus:border-[#d0bcff]">
+                <option>Select Product Category..</option>
+              </select>
+              <textarea 
+                className="w-full border border-gray-200 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface-container rounded-md px-3 py-2 text-[13px] text-gray-600 dark:text-dark-on-surface mb-3 h-24 resize-none focus:outline-none focus:border-[#5300b7] dark:focus:border-[#d0bcff]"
+                placeholder="Describe your requirements, MOQ, and timeline.."
+              />
+              <button className="w-full bg-[#e8def8] dark:bg-[#d0bcff]/20 hover:bg-[#d0bcff] dark:hover:bg-[#d0bcff]/40 text-[#381e72] dark:text-[#d0bcff] font-bold py-2.5 rounded-md text-[13px] transition-colors">
+                Send Inquiry
               </button>
-              <a href={`https://${MOCK_SUPPLIER.website}`} target="_blank" rel="noopener" className="btn-outline w-full flex items-center justify-center gap-2 text-sm">
-                <ExternalLink className="w-4 h-4" /> Visit Website
-              </a>
             </div>
 
-            <div className="card">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-accent-500" /> Export Markets
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {MOCK_SUPPLIER.export_countries.map((c) => (
-                  <span key={c} className="badge bg-accent-50 text-accent-700 text-xs px-3 py-1.5">{c}</span>
-                ))}
+            <div className="pt-6 mt-6 border-t border-gray-100 dark:border-dark-surface-variant/30 space-y-3">
+              <div className="flex items-center gap-2 text-[12px] font-bold text-gray-700 dark:text-gray-300">
+                <span className="material-symbols-outlined text-[#2563eb] dark:text-blue-400 text-[16px]">verified</span>
+                ISO 9001:2015
               </div>
-            </div>
-
-            <div className="card">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-green-500" /> Trust Signals
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Verified Status</span>
-                  <span className="badge-success text-xs flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Verified</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Response Rate</span>
-                  <span className="font-medium text-gray-900">{MOCK_SUPPLIER.response_rate}%</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Avg Response Time</span>
-                  <span className="font-medium text-gray-900">{MOCK_SUPPLIER.response_time}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Export Experience</span>
-                  <span className="font-medium text-gray-900">{MOCK_SUPPLIER.export_experience_years} years</span>
-                </div>
+              <div className="flex items-center gap-2 text-[12px] font-bold text-gray-700 dark:text-gray-300">
+                <span className="material-symbols-outlined text-[#2563eb] dark:text-blue-400 text-[16px]">verified</span>
+                ISO 14001:2015
+              </div>
+              <div className="flex items-center gap-2 text-[12px] font-bold text-gray-700 dark:text-gray-300">
+                <span className="material-symbols-outlined text-[#2563eb] dark:text-blue-400 text-[16px]">verified</span>
+                IATF 16949
               </div>
             </div>
           </div>
         </div>
       </div>
-
+      
       <Footer />
     </div>
   );

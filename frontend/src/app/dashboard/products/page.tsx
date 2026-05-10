@@ -3,43 +3,45 @@
 import { useState } from 'react';
 
 const MOCK_PRODUCTS = [
-  { id: '1', name: 'Precision Titanium Gear Assembly', sku: 'IND-TG-4092', category: 'Machinery Parts', price: '$1,250.00', unit: 'unit', inventory: '450 in stock', status: 'active', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuC-z4xugnbst_GNW5NQUZF5z3_IFLzR8Uplc5_snvoNk20-xmyNeRLZhUGAM2kI9-1wehaJdHqamtV-nZqMY2uUbfT_jPf73GVE3Wu48xrNPWsnXiA86H9NCBCP_B4U1AK_tqv1cXMQGkjNaY1ayLvphx686aW7ggwLSeK78EWJgRnhxCrZjNmtdpQkT6Q9FhFgCkOBigrb92VxmXntbqdeHxj9p8NmAPbi7X1npXOx1G1Ipg8BYYHLuaf5424OabmRB95h_M0EGsC4' },
-  { id: '2', name: 'Enterprise Microcontroller M-Series', sku: 'EL-MC-881', category: 'Electronics', price: '$45.50', unit: 'unit', inventory: '12,000 in stock', status: 'active', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCHFjiumDaLjI_qcMttTeahxj6_VZ0S6WqCstPgcX58wPzHLSpKoDeAtbkyGCryqO_vlKk_6PaULr-T0EugC0VgRYQfXwUzO4Mx8PYbY7kE7BDg1Q9ow0WBtR844NCOUkuuKCRGyPPugEa7C6-M7CiWgx2znCkfMc8BZ62oT6H_42-eXVW93RMu6SG8YtXEdKnBueefvdhoVCSUEm2w6es2FgV3iLb3zAiFqmpIRthWc5V9uygfSRiHv4kyPRrtc8NJdvI30IzvrQuK' },
-  { id: '3', name: 'Industrial Grade Synthetic Lubricant', sku: 'CH-SL-204', category: 'Chemicals', price: '$120.00', unit: 'barrel', inventory: '0 in stock', status: 'draft', image: '' },
+  { id: '1', name: 'Precision Titanium Gear Assembly', sku: 'IND-TG-4092', category: 'Machinery Parts', price: '$1,250.00 / unit', inventory: '450 in stock', status: 'Active', image: '/images/product-gear.png' },
+  { id: '2', name: 'Enterprise Microcontroller M-Series', sku: 'EL-MC-881', category: 'Electronics', price: '$45.50 / unit', inventory: '12,000 in stock', status: 'Active', image: '/images/product-chip.png' },
+  { id: '3', name: 'Industrial Grade Synthetic Lubricant', sku: 'CH-SL-204', category: 'Chemicals', price: '$120.00 / barrel', inventory: '0 in stock', status: 'Draft', image: '' },
 ];
 
 export default function ProductsPage() {
   const [search, setSearch] = useState('');
 
   return (
-    <div className="p-8 max-w-[1440px] mx-auto w-full">
+    <div className="p-8 max-w-[1440px] mx-auto w-full min-h-screen bg-[#fafafa] dark:bg-dark-background">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h2 className="text-3xl font-display font-bold text-on-surface">Products Management</h2>
-          <p className="text-on-surface-variant mt-2 font-body">Manage your global trade catalog and product listings.</p>
+          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">Products Management</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[14px]">Manage your global trade catalog and product listings.</p>
         </div>
-        <button className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all hover:scale-[1.02]">
-          <span className="material-symbols-outlined">add</span> Add Product
+        <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-md font-bold text-[14px] flex items-center gap-2 transition-colors">
+          <span className="material-symbols-outlined text-[20px]">add</span> Add Product
         </button>
       </header>
 
       {/* Stats Row */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {[
-          { label: 'Total Products', value: '1,248', icon: 'inventory_2', change: '+12% from last month', bg: 'bg-primary-fixed text-primary' },
-          { label: 'Active Listings', value: '1,105', icon: 'check_circle', change: '+5% from last month', bg: 'bg-secondary-fixed text-secondary' },
-          { label: 'Total Views', value: '45.2K', icon: 'visibility', change: '+18% from last month', bg: 'bg-tertiary-fixed text-tertiary' },
-          { label: 'Avg. Quality Score', value: '94/100', icon: 'star', change: 'Stable this month', bg: 'bg-primary-fixed text-primary', stable: true },
-        ].map((stat) => (
-          <div key={stat.label} className="bg-white p-6 rounded-[16px] border border-surface-container-high shadow-ambient hover-lift transition-all">
-            <div className="flex justify-between items-start mb-4">
-              <p className="text-on-surface-variant text-sm font-medium">{stat.label}</p>
-              <span className={`material-symbols-outlined ${stat.bg} p-2 rounded-lg`}>{stat.icon}</span>
+          { label: 'Total Products', value: '1,248', icon: 'receipt_long', change: '+12% from last month', iconColor: 'text-[#5300b7] dark:text-[#d0bcff]' },
+          { label: 'Active Listings', value: '1,105', icon: 'check_circle', change: '+5% from last month', iconColor: 'text-blue-500 dark:text-blue-400' },
+          { label: 'Total Views', value: '45.2K', icon: 'visibility', change: '+18% from last month', iconColor: 'text-orange-500 dark:text-orange-400' },
+          { label: 'Avg. Quality Score', value: '94/100', icon: 'star', change: 'Stable this month', iconColor: 'text-[#5300b7] dark:text-[#d0bcff]' },
+        ].map((stat, idx) => (
+          <div key={idx} className="bg-white dark:bg-dark-surface rounded-xl p-6 shadow-sm border border-gray-100 dark:border-dark-surface-variant/30 flex flex-col">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-gray-500 dark:text-dark-on-surface-variant font-bold text-[13px]">{stat.label}</p>
+              <div className={`p-1 ${stat.iconColor} bg-opacity-10 dark:bg-opacity-20 rounded-md flex items-center justify-center`}>
+                 <span className="material-symbols-outlined text-[20px] opacity-80">{stat.icon}</span>
+              </div>
             </div>
-            <h3 className="text-3xl font-bold text-on-surface">{stat.value}</h3>
-            <p className={`text-sm flex items-center mt-2 font-medium ${stat.stable ? 'text-on-surface-variant' : 'text-secondary'}`}>
-              {!stat.stable && <span className="material-symbols-outlined text-[16px] mr-1">trending_up</span>}
+            <h3 className={`text-3xl font-extrabold mb-2 ${idx === 0 ? 'text-[#5300b7] dark:text-[#d0bcff]' : idx === 1 ? 'text-gray-600 dark:text-gray-300' : idx === 2 ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>{stat.value}</h3>
+            <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 flex items-center">
+              <span className="material-symbols-outlined text-[14px] mr-1">show_chart</span>
               {stat.change}
             </p>
           </div>
@@ -47,79 +49,75 @@ export default function ProductsPage() {
       </section>
 
       {/* Search and Filter Bar */}
-      <section className="bg-white p-4 rounded-[16px] border border-surface-container-high shadow-ambient mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+      <section className="bg-white dark:bg-dark-surface p-4 rounded-xl shadow-sm border border-gray-100 dark:border-dark-surface-variant/30 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="relative w-full md:w-96">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:border-secondary focus:ring-2 focus:ring-secondary/20 focus:outline-none transition-all text-sm" placeholder="Search products, SKUs..." />
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">search</span>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-[#18181b] border border-gray-200 dark:border-dark-surface-variant/50 rounded-full text-sm text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-[#d0bcff]" placeholder="Search products, SKUs..." />
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <select className="px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:border-secondary focus:outline-none text-sm text-on-surface flex-1 md:flex-none cursor-pointer">
-            <option>All Categories</option><option>Electronics</option><option>Machinery</option><option>Textiles</option>
-          </select>
-          <select className="px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:border-secondary focus:outline-none text-sm text-on-surface flex-1 md:flex-none cursor-pointer">
-            <option>All Status</option><option>Active</option><option>Draft</option><option>Archived</option>
-          </select>
-          <button className="px-4 py-2 border border-outline-variant rounded-lg text-on-surface flex items-center gap-2 hover:bg-surface-container-low transition-colors text-sm font-medium">
-            <span className="material-symbols-outlined text-[18px]">filter_list</span> More Filters
+          <button className="px-5 py-2 bg-gray-900 dark:bg-[#18181b] hover:bg-gray-800 dark:hover:bg-[#27272a] text-white rounded-full text-[13px] font-bold transition-colors">All Categories</button>
+          <button className="px-5 py-2 bg-gray-900 dark:bg-[#18181b] hover:bg-gray-800 dark:hover:bg-[#27272a] text-white rounded-full text-[13px] font-bold transition-colors">All Status</button>
+          <button className="px-5 py-2 bg-white dark:bg-transparent border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-dark-surface-container rounded-full text-[13px] font-bold flex items-center gap-2 transition-colors">
+            <span className="material-symbols-outlined text-[16px]">filter_list</span> More Filters
           </button>
         </div>
       </section>
 
       {/* Products Table */}
-      <section className="bg-white rounded-[16px] border border-surface-container-high shadow-ambient overflow-hidden">
+      <section className="bg-white dark:bg-[#18181b] rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-container-low border-b border-surface-variant/50">
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider w-10"><input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" /></th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Product</th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Category</th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Price (USD)</th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Inventory</th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 text-xs font-semibold text-on-surface-variant uppercase tracking-wider text-right">Actions</th>
+              <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-[#18181b]">
+                <th className="py-4 px-5 w-12"><input type="checkbox" className="rounded bg-white dark:bg-[#27272a] border-gray-300 dark:border-gray-600 text-[#2563eb] focus:ring-[#2563eb]" /></th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Product</th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Price (USD)</th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Inventory</th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                <th className="py-4 px-5 text-[12px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-variant/50">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {MOCK_PRODUCTS.map((p) => (
-                <tr key={p.id} className="hover:bg-surface-container-lowest transition-colors">
-                  <td className="py-4 px-6"><input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" /></td>
-                  <td className="py-4 px-6">
+                <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-[#27272a] transition-colors">
+                  <td className="py-4 px-5"><input type="checkbox" className="rounded bg-white dark:bg-[#27272a] border-gray-300 dark:border-gray-600 text-[#2563eb] focus:ring-[#2563eb]" /></td>
+                  <td className="py-4 px-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-surface-container overflow-hidden shrink-0 border border-surface-variant flex items-center justify-center">
-                        {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-outline-variant text-2xl">image</span>}
+                      <div className="w-10 h-10 rounded bg-gray-100 dark:bg-[#27272a] border border-gray-200 dark:border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                        {p.image ? <img src={p.image} alt={p.name} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-gray-400 dark:text-gray-500">image</span>}
                       </div>
                       <div>
-                        <p className="font-semibold text-on-surface text-sm">{p.name}</p>
-                        <p className="text-xs text-on-surface-variant mt-0.5">SKU: {p.sku}</p>
+                        <p className="font-bold text-[14px] text-gray-900 dark:text-gray-300">{p.name}</p>
+                        <p className="text-[12px] text-gray-500 dark:text-gray-500 mt-0.5">{p.sku}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-sm text-on-surface">{p.category}</td>
-                  <td className="py-4 px-6 text-sm font-medium text-on-surface">{p.price} <span className="text-xs text-on-surface-variant font-normal">/ {p.unit}</span></td>
-                  <td className="py-4 px-6 text-sm text-on-surface">{p.inventory}</td>
-                  <td className="py-4 px-6">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${p.status === 'active' ? 'bg-secondary/10 text-secondary' : 'bg-outline-variant/30 text-on-surface-variant'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${p.status === 'active' ? 'bg-secondary' : 'bg-outline'}`} />
-                      {p.status === 'active' ? 'Active' : 'Draft'}
+                  <td className="py-4 px-5 text-[13px] text-gray-600 dark:text-gray-400 font-medium">{p.category}</td>
+                  <td className="py-4 px-5 text-[13px] text-gray-600 dark:text-gray-400 font-medium">{p.price}</td>
+                  <td className="py-4 px-5 text-[13px] text-gray-600 dark:text-gray-400 font-medium">{p.inventory}</td>
+                  <td className="py-4 px-5">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-bold ${p.status === 'Active' ? 'text-blue-600 dark:text-[#60a5fa]' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${p.status === 'Active' ? 'bg-blue-600 dark:bg-[#3b82f6]' : 'bg-gray-400 dark:bg-gray-500'}`} />
+                      {p.status}
                     </span>
                   </td>
-                  <td className="py-4 px-6 text-right">
-                    <button className="text-outline hover:text-primary transition-colors p-1"><span className="material-symbols-outlined text-[20px]">edit</span></button>
-                    <button className="text-outline hover:text-primary transition-colors p-1 ml-2"><span className="material-symbols-outlined text-[20px]">more_vert</span></button>
+                  <td className="py-4 px-5 text-right">
+                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors p-1"><span className="material-symbols-outlined text-[18px]">edit</span></button>
+                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors p-1 ml-1"><span className="material-symbols-outlined text-[18px]">more_vert</span></button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="px-6 py-4 border-t border-surface-variant/50 flex items-center justify-between bg-surface-container-lowest">
-          <p className="text-sm text-on-surface-variant">Showing <span className="font-semibold text-on-surface">1</span> to <span className="font-semibold text-on-surface">3</span> of <span className="font-semibold text-on-surface">1,248</span> results</p>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 border border-outline-variant rounded text-on-surface-variant disabled:opacity-50 text-sm" disabled>Previous</button>
-            <button className="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded font-medium text-sm">1</button>
-            <button className="px-3 py-1 border border-outline-variant rounded text-on-surface hover:bg-surface-container-low transition-colors text-sm">2</button>
-            <button className="px-3 py-1 border border-outline-variant rounded text-on-surface-variant hover:bg-surface-container-low text-sm">Next</button>
+        <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400">Showing <span className="font-bold text-gray-900 dark:text-white">1</span> to <span className="font-bold text-gray-900 dark:text-white">3</span> of <span className="font-bold text-gray-900 dark:text-white">1,248</span> results</p>
+          <div className="flex gap-1">
+            <button className="px-3 py-1 border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#18181b] hover:bg-gray-50 rounded text-gray-600 dark:text-gray-500 text-[13px] font-bold transition-colors">Previous</button>
+            <button className="px-3 py-1 bg-gray-100 dark:bg-[#27272a] rounded text-gray-900 dark:text-gray-400 text-[13px] font-bold">1</button>
+            <button className="px-3 py-1 bg-transparent hover:bg-gray-50 dark:hover:bg-transparent rounded text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 text-[13px] font-bold transition-colors">2</button>
+            <button className="px-3 py-1 bg-transparent hover:bg-gray-50 dark:hover:bg-transparent rounded text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 text-[13px] font-bold transition-colors">Next</button>
           </div>
         </div>
       </section>

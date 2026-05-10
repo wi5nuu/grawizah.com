@@ -34,25 +34,21 @@ export default function CatalogPage() {
     <div className="min-h-screen flex flex-col bg-background text-on-background">
       <Navbar />
 
-      <main className="flex-1 mt-24 mb-16 max-w-[1440px] w-full mx-auto px-8 lg:px-16 flex flex-col gap-16">
+      <main className="flex-1 mt-10 mb-16 max-w-[1440px] w-full mx-auto px-8 lg:px-16 flex flex-col gap-10">
         {/* Hero & Search */}
-        <section className="bg-gradient-to-r from-primary to-secondary rounded-xl p-12 text-on-primary flex flex-col items-center justify-center text-center relative overflow-hidden" style={{ boxShadow: '0 4px 24px rgba(109,40,217,0.15)' }}>
-          <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
-          <h1 className="font-display font-extrabold text-5xl mb-4 relative z-10">Product Catalog</h1>
-          <p className="font-body text-lg text-primary-fixed-dim max-w-2xl mb-8 relative z-10">Discover verified global trade products, suppliers, and market intelligence.</p>
-          <div className="w-full max-w-3xl relative z-10 flex flex-col md:flex-row gap-4 bg-surface rounded-xl p-4 shadow-lg items-center">
-            <div className="flex-1 flex items-center bg-surface-container-low rounded-lg px-4 py-3 border border-surface-variant focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all">
-              <span className="material-symbols-outlined text-outline mr-3">search</span>
-              <input
-                className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body outline-none text-sm"
-                placeholder="Search by product name, HS Code, or supplier..."
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <button className="bg-primary text-on-primary px-8 py-3 rounded-lg font-bold font-label hover:bg-primary/90 transition-colors whitespace-nowrap">
+        <section className="bg-gradient-to-r from-[#5300b7] to-[#2563eb] rounded-xl p-12 text-white flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg">
+          <h1 className="font-display font-extrabold text-4xl mb-4 relative z-10">Product Catalog</h1>
+          <p className="font-body text-base text-white/90 max-w-2xl mb-8 relative z-10">Discover verified global trade products, suppliers, and market intelligence.</p>
+          <div className="w-full max-w-2xl relative z-10 flex bg-white rounded-lg p-2 shadow-xl items-center">
+            <span className="material-symbols-outlined text-gray-400 ml-3 mr-2">search</span>
+            <input
+              className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-body outline-none text-sm"
+              placeholder="Search by product name, HS Code, or supplier..."
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button className="bg-[#5300b7] hover:bg-[#430099] text-white px-6 py-2.5 rounded-md font-bold text-sm transition-colors whitespace-nowrap">
               Search Products
             </button>
           </div>
