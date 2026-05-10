@@ -2,7 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"os"
+
 	"github.com/gin-gonic/gin"
+	"github.com/twilio/twilio-go"
+	api "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 // ChatHandler handles chat and WhatsApp bridge operations
@@ -65,16 +69,21 @@ func (h *ChatHandler) SendWhatsAppMessage(c *gin.Context) {
 		return
 	}
 
-	// TODO: Integrate with WhatsApp Business API
-	// Example: Twilio WhatsApp API, Meta WhatsApp Business API, or Vonage
-	
-	/*
-	Example integration with Twilio:
-	
+	// Integrate with Twilio WhatsApp Business API
 	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
 	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
 	whatsappFrom := os.Getenv("TWILIO_WHATSAPP_FROM")
 	
+	if accountSid == "" || authToken == "" {
+		// Mock behavior if Twilio is not configured
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "WhatsApp message simulated (Twilio credentials not found)",
+			"to": req.To,
+		})
+		return
+	}
+
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: accountSid,
 		Password: authToken,
@@ -85,16 +94,15 @@ func (h *ChatHandler) SendWhatsAppMessage(c *gin.Context) {
 	params.SetTo("whatsapp:" + req.To)
 	params.SetBody(req.Message)
 	
-	resp, err := client.Api.CreateMessage(params)
+	_, err := client.Api.CreateMessage(params)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send WhatsApp message: " + err.Error()})
 		return
 	}
-	*/
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"message": "WhatsApp message sent",
+		"message": "WhatsApp message sent via Twilio",
 		"to": req.To,
 	})
 }

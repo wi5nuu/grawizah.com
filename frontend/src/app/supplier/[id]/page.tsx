@@ -2,8 +2,33 @@
 
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
+import Link from 'next/link';
 
-export default function SupplierProfilePage() {
+const MOCK_SUPPLIERS: Record<string, any> = {
+  'c1': { name: 'TechCorp Global Mfg.', desc: 'Leading manufacturer of advanced electronic components and processors.', country: 'Shenzhen, China', rating: 4.8, reviews: 342, est: '1998' },
+  'c2': { name: 'Nexus Robotics Ltd.', desc: 'Pioneer in industrial automation and precision robotics.', country: 'Munich, Germany', rating: 4.9, reviews: 156, est: '2005' },
+  'c3': { name: 'CloudNet Infrastructure', desc: 'Enterprise data center solutions and enterprise networking hardware.', country: 'Austin, USA', rating: 4.7, reviews: 89, est: '2010' },
+  'c4': { name: 'Pacific Textiles Co.', desc: 'Sustainable and organic textile manufacturing.', country: 'Jakarta, Indonesia', rating: 4.5, reviews: 198, est: '2003' },
+  'c5': { name: 'AgriPure Exports', desc: 'Premium organic agricultural products.', country: 'Bali, Indonesia', rating: 4.3, reviews: 145, est: '2012' },
+  '1': { name: 'Nexus Manufacturing', desc: 'Premium engineering and manufacturing.', country: 'Munich, Germany', rating: 4.8, reviews: 124, est: '2001' },
+  '2': { name: 'AeroTech Solutions', desc: 'Aerospace and defense contractor.', country: 'Taipei, Taiwan', rating: 5.0, reviews: 89, est: '1995' },
+  '3': { name: 'BioChem Synthetics', desc: 'Advanced chemical and synthetic materials.', country: 'Mumbai, India', rating: 4.2, reviews: 312, est: '1988' },
+  '4': { name: 'Pacific Textiles Co.', desc: 'Premium organic textiles.', country: 'Jakarta, Indonesia', rating: 4.5, reviews: 198, est: '2003' },
+  '5': { name: 'SteelForge Industries', desc: 'Heavy industrial metal works.', country: 'Shanghai, China', rating: 4.6, reviews: 267, est: '1992' },
+  '6': { name: 'AgriPure Exports', desc: 'Organic agriculture and farming.', country: 'Sao Paulo, Brazil', rating: 4.3, reviews: 145, est: '2012' },
+};
+
+export default function SupplierProfilePage({ params }: { params: { id: string } }) {
+  const supplierId = params?.id || 'default';
+  const supplier = MOCK_SUPPLIERS[supplierId] || {
+    name: 'Apex Global Manufacturing',
+    desc: 'Leading provider of precision engineered components for aerospace and automotive industries.',
+    country: 'Shenzhen, China',
+    rating: 4.9,
+    reviews: 124,
+    est: '2005'
+  };
+
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-dark-background">
       <Navbar />
@@ -15,31 +40,31 @@ export default function SupplierProfilePage() {
           
           {/* Hero Header */}
           <div className="h-32 bg-[#f3e8ff] dark:bg-[#d0bcff]/10" />
-          <div className="px-8 pb-8 relative">
-            <div className="w-24 h-24 bg-[#0f172a] dark:bg-[#18181b] border-4 border-white dark:border-dark-surface rounded-xl absolute -top-12 flex items-center justify-center shadow-md overflow-hidden">
-               <span className="material-symbols-outlined text-white text-[40px]">precision_manufacturing</span>
+          <div className="px-8 pb-8 pt-16 relative">
+            <div className="w-24 h-24 bg-[#0f172a] dark:bg-[#18181b] border-4 border-white dark:border-dark-surface rounded-xl absolute -top-12 left-8 flex items-center justify-center shadow-md overflow-hidden">
+               <img src="/images/android-chrome-192x192.png" alt="Supplier Logo" className="w-16 h-16 object-contain" />
             </div>
             
-            <div className="mt-14 flex items-center gap-2 mb-2">
-              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-dark-on-surface">Apex Global Manufacturing</h1>
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-dark-on-surface">{supplier.name}</h1>
               <span className="material-symbols-outlined text-[#2563eb] dark:text-blue-400 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
             <p className="text-[14px] text-gray-600 dark:text-dark-on-surface-variant mb-4 max-w-2xl">
-              Leading provider of precision engineered components for aerospace and automotive industries.
+              {supplier.desc}
             </p>
             
             <div className="flex flex-wrap items-center gap-6 text-[13px] text-gray-500 dark:text-gray-400 font-medium">
               <div className="flex items-center gap-1 text-gray-900 dark:text-dark-on-surface">
                 <span className="material-symbols-outlined text-[#5300b7] dark:text-[#d0bcff] text-[18px]">star</span>
-                <span className="font-extrabold">4.9</span> <span className="text-gray-500 dark:text-gray-500 font-normal">(124 Reviews)</span>
+                <span className="font-extrabold">{supplier.rating.toFixed(1)}</span> <span className="text-gray-500 dark:text-gray-500 font-normal">({supplier.reviews} Reviews)</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[18px]">location_on</span>
-                Shenzhen, China
+                {supplier.country}
               </div>
               <div className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[18px]">calendar_today</span>
-                Est. 2005
+                Est. {supplier.est}
               </div>
             </div>
           </div>
@@ -88,25 +113,25 @@ export default function SupplierProfilePage() {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer">
+                <Link href="/catalog" className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer block">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                  <img src="/images/product-cnc.png" alt="Custom CNC" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src="/images/product-chip.png" alt="Custom CNC" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute bottom-4 left-4 z-20">
                     <p className="text-white font-extrabold text-[14px]">Custom CNC Aluminum Housings</p>
                     <p className="text-gray-300 text-[11px] font-medium">MOQ: 100 units</p>
                   </div>
-                </div>
-                <div className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer">
+                </Link>
+                <Link href="/catalog" className="relative rounded-xl overflow-hidden bg-gray-900 h-48 group cursor-pointer block">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10" />
-                  <img src="/images/product-zinc.png" alt="Zinc Die" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img src="/images/product-gear.png" alt="Zinc Die" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute bottom-4 left-4 z-20">
                     <p className="text-white font-extrabold text-[14px]">Zinc Die Casting</p>
                   </div>
-                </div>
-                <div className="rounded-xl bg-[#f9f5ff] dark:bg-[#d0bcff]/10 h-48 flex flex-col items-center justify-center text-[#5300b7] dark:text-[#d0bcff] cursor-pointer hover:bg-[#f3e8ff] dark:hover:bg-[#d0bcff]/20 transition-colors border border-purple-100 dark:border-purple-900/30">
+                </Link>
+                <Link href="/catalog" className="rounded-xl bg-[#f9f5ff] dark:bg-[#d0bcff]/10 h-48 flex flex-col items-center justify-center text-[#5300b7] dark:text-[#d0bcff] cursor-pointer hover:bg-[#f3e8ff] dark:hover:bg-[#d0bcff]/20 transition-colors border border-purple-100 dark:border-purple-900/30">
                   <span className="material-symbols-outlined text-[32px] mb-2">grid_view</span>
                   <p className="font-bold text-[14px]">Explore Catalog</p>
-                </div>
+                </Link>
               </div>
             </section>
           </div>

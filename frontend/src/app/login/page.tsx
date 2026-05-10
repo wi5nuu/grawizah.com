@@ -30,8 +30,8 @@ export default function LoginPage() {
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
         <div className="relative z-10 text-center text-white max-w-lg">
-          <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm">
-            <span className="text-4xl font-extrabold text-white">G</span>
+          <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-8 backdrop-blur-sm overflow-hidden">
+            <img src="/images/android-chrome-192x192.png" alt="Grawizah Logo" className="w-14 h-14 object-contain drop-shadow-md" />
           </div>
           <h2 className="text-4xl font-display font-extrabold mb-4">Welcome to Grawizah</h2>
           <p className="text-lg text-white/80 leading-relaxed">Pre-transaction intelligence for global trade. Make smarter decisions backed by deep market data.</p>
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 <input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" />
                 <span className="text-sm text-on-surface-variant">Remember me</span>
               </label>
-              <Link href="#" className="text-sm text-primary font-medium hover:underline">Forgot password?</Link>
+              <Link href="/forgot-password" className="text-sm text-primary font-medium hover:underline">Forgot password?</Link>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2" style={{ boxShadow: '0 8px 24px rgba(109,40,217,0.25)' }}>
               {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Sign In'}

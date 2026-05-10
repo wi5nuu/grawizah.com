@@ -58,12 +58,17 @@ export default function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMo
         {/* Brand Header */}
         <div className={`flex items-center ${collapsed ? 'justify-center py-6' : 'px-6 py-6'} border-b border-transparent`}>
           {!collapsed ? (
-            <div className="overflow-hidden animate-fade-in">
-              <Link href="/" className="text-[22px] font-display font-extrabold text-[#5300b7] dark:text-dark-primary block leading-tight">Grawizah</Link>
-              <p className="text-[11px] text-on-surface-variant dark:text-dark-on-surface-variant mt-1">Global Trade Platform</p>
+            <div className="overflow-hidden animate-fade-in flex items-center gap-2">
+              <img src="/images/android-chrome-192x192.png" alt="Logo" className="w-8 h-8 object-contain shrink-0" />
+              <div>
+                <Link href="/" className="text-[22px] font-display font-extrabold text-[#5300b7] dark:text-dark-primary block leading-tight">Grawizah</Link>
+                <p className="text-[11px] text-on-surface-variant dark:text-dark-on-surface-variant mt-1">Global Trade Platform</p>
+              </div>
             </div>
           ) : (
-             <div className="text-[22px] font-display font-extrabold text-[#5300b7] dark:text-dark-primary leading-tight">G</div>
+             <Link href="/">
+               <img src="/images/android-chrome-192x192.png" alt="Logo" className="w-8 h-8 object-contain" />
+             </Link>
           )}
         </div>
 

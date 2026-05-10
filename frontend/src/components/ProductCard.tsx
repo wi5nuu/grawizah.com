@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Product } from '@/types/product';
 import { Package, MapPin, Eye, MessageSquare } from 'lucide-react';
 import SendInquiryModal from '@/components/SendInquiryModal';
+import Link from 'next/link';
 
 interface ProductCardProps {
   product: Product;
@@ -26,7 +27,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
 
   if (viewMode === 'list') {
     return (
-      <div className="card flex gap-6 hover:shadow-md transition cursor-pointer" onClick={handleView}>
+      <Link href={`/supplier/${product.company_id || 'c1'}`} className="card flex gap-6 hover:shadow-md transition cursor-pointer block" onClick={handleView}>
         <div className="w-40 h-28 bg-surface-container rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden">
           {product.images && product.images.length > 0 ? (
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
@@ -50,12 +51,12 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
             ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} <span className="text-[11px] text-on-surface-variant font-normal">/ unit</span>
           </p>
         </div>
-      </div>
+      </Link>
     );
   }
 
   return (
-    <div className="bg-surface-container-lowest border border-surface-variant/50 rounded-xl overflow-hidden hover:shadow-ambient transition-all cursor-pointer group" onClick={handleView}>
+    <Link href={`/supplier/${product.company_id || 'c1'}`} className="bg-surface-container-lowest border border-surface-variant/50 rounded-xl overflow-hidden hover:shadow-ambient transition-all cursor-pointer group block" onClick={handleView}>
       {/* Image */}
       <div className="relative h-44 bg-surface-container flex items-center justify-center overflow-hidden">
         {product.images && product.images.length > 0 ? (
@@ -82,6 +83,6 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
           ${product.price_range_min?.toLocaleString()} - ${product.price_range_max?.toLocaleString()} <span className="text-xs text-on-surface-variant font-normal">/ unit</span>
         </p>
       </div>
-    </div>
+    </Link>
   );
 }

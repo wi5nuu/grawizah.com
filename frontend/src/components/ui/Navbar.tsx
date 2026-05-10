@@ -8,12 +8,13 @@ import { useTheme } from '@/components/ThemeProvider';
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, isAuthenticated, signOut, isBuyer } = useAuth();
+  const { user, isAuthenticated, signOut, isBuyer, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
+    { href: '/', label: 'Home' },
     { href: '/features', label: 'Features' },
     { href: '/pricing', label: 'Pricing' },
     { href: '/directory', label: 'Directory' },
@@ -26,8 +27,11 @@ export default function Navbar() {
     <nav className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md shadow-sm shadow-primary/5 border-b border-surface-variant/10 dark:border-dark-surface-variant/30 transition-colors duration-300">
       <div className="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
         {/* Logo */}
-        <Link href="/" className="text-2xl font-display font-bold gradient-text hover:opacity-80 transition-opacity">
-          Grawizah
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <img src="/images/android-chrome-192x192.png" alt="Grawizah Logo" className="w-8 h-8 object-contain" />
+          <span className="text-2xl font-display font-bold gradient-text">
+            Grawizah
+          </span>
         </Link>
 
         {/* Desktop Nav */}
@@ -49,7 +53,9 @@ export default function Navbar() {
 
         {/* Right Section */}
         <div className="hidden md:flex items-center gap-4">
-          {isAuthenticated ? (
+          {loading ? (
+            <div className="w-24 h-9 bg-surface-variant/20 dark:bg-dark-surface-variant/20 animate-pulse rounded-lg" />
+          ) : isAuthenticated ? (
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
@@ -144,7 +150,11 @@ export default function Navbar() {
               </Link>
             ))}
             <hr className="my-2 border-surface-variant/30" />
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="py-4 flex justify-center">
+                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : isAuthenticated ? (
               <>
                 <Link href={isBuyer ? '/buyer/dashboard' : '/dashboard'} className="block px-4 py-3 rounded-lg font-medium text-on-surface-variant" onClick={() => setMobileOpen(false)}>
                   Dashboard

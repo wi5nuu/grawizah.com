@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import ProductCard from '@/components/ProductCard';
 import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
 
@@ -20,8 +19,6 @@ export default function DashboardCatalogPage() {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   const filteredProducts = MOCK_PRODUCTS.filter((p) => {
     const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -31,145 +28,124 @@ export default function DashboardCatalogPage() {
   });
 
   return (
-    <div className="flex min-h-screen bg-background text-on-background font-body">
-      <DashboardSidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(!collapsed)}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
-
-      {/* Main Content */}
-      <div
-        className={`
-          flex-1 min-h-screen transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-          ${collapsed ? 'md:ml-[72px]' : 'md:ml-64'}
-        `}
-      >
-        <header className="md:hidden sticky top-0 z-30 h-16 bg-surface/80 backdrop-blur-md border-b flex items-center px-4">
-          <button onClick={() => setMobileOpen(true)} className="w-10 h-10 flex items-center justify-center">
-            <span className="material-symbols-outlined">menu</span>
+    <div className="p-8 max-w-6xl mx-auto flex flex-col gap-10 font-body text-on-background">
+      {/* Hero & Search */}
+      <section className="bg-gradient-to-r from-[#5300b7] to-[#2563eb] rounded-xl p-12 text-white flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg">
+        <h1 className="font-display font-extrabold text-4xl mb-4 relative z-10">Product Catalog</h1>
+        <p className="font-body text-base text-white/90 max-w-2xl mb-8 relative z-10">Discover verified global trade products, suppliers, and market intelligence.</p>
+        <div className="w-full max-w-2xl relative z-10 flex bg-surface dark:bg-dark-surface rounded-lg p-2 shadow-xl items-center">
+          <span className="material-symbols-outlined text-outline ml-3 mr-2">search</span>
+          <input
+            className="flex-1 bg-transparent border-none focus:ring-0 text-on-surface dark:text-dark-on-surface font-body outline-none text-sm placeholder-outline"
+            placeholder="Search by product name, HS Code, or supplier..."
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button className="bg-primary hover:bg-primary-hover text-on-primary px-6 py-2.5 rounded-md font-bold text-sm transition-colors whitespace-nowrap">
+            Search Products
           </button>
-        </header>
+        </div>
+      </section>
 
-        <main className="p-8 max-w-6xl mx-auto flex flex-col gap-10">
-          {/* Hero & Search */}
-          <section className="bg-gradient-to-r from-[#5300b7] to-[#2563eb] rounded-xl p-12 text-white flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg">
-            <h1 className="font-display font-extrabold text-4xl mb-4 relative z-10">Product Catalog</h1>
-            <p className="font-body text-base text-white/90 max-w-2xl mb-8 relative z-10">Discover verified global trade products, suppliers, and market intelligence.</p>
-            <div className="w-full max-w-2xl relative z-10 flex bg-surface dark:bg-dark-surface rounded-lg p-2 shadow-xl items-center">
-              <span className="material-symbols-outlined text-outline ml-3 mr-2">search</span>
-              <input
-                className="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body outline-none text-sm placeholder-outline"
-                placeholder="Search by product name, HS Code, or supplier..."
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button className="bg-primary hover:bg-primary-hover text-on-primary px-6 py-2.5 rounded-md font-bold text-sm transition-colors whitespace-nowrap">
-                Search Products
-              </button>
-            </div>
-          </section>
-
-          {/* Layout Wrapper */}
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* Filter Sidebar */}
-            <aside className="w-full md:w-64 flex-shrink-0 flex flex-col gap-6">
-              <div className="bg-surface-container-lowest rounded-xl border border-surface-variant/50 p-6" style={{ boxShadow: '0 4px 24px rgba(109,40,217,0.04)' }}>
-                <h2 className="font-headline font-bold text-lg mb-4 text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">tune</span>
-                  Filters
-                </h2>
-                {/* Categories */}
-                <div className="mb-6">
-                  <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Category</h3>
-                  <div className="flex flex-col gap-2">
-                    {['Electronics', 'Machinery', 'Textiles', 'Agriculture'].map((cat) => (
-                      <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategory === cat}
-                          onChange={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
-                          className="form-checkbox text-primary rounded border-outline focus:ring-primary/20"
-                        />
-                        <span className="text-sm font-body text-on-surface group-hover:text-primary transition-colors">{cat}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                {/* Country */}
-                <div className="mb-6">
-                  <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Origin Country</h3>
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="w-full bg-surface-container-low border border-surface-variant rounded-lg p-2 text-sm font-body focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none text-on-surface"
-                  >
-                    <option value="">All Countries</option>
-                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                {/* Verification Status */}
-                <div>
-                  <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Supplier Status</h3>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" checked={verifiedOnly} onChange={() => setVerifiedOnly(!verifiedOnly)} className="form-checkbox text-secondary rounded border-outline focus:ring-secondary/20" />
-                    <span className="text-sm font-body text-on-surface group-hover:text-secondary transition-colors font-medium">Verified Suppliers Only</span>
+      {/* Layout Wrapper */}
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Filter Sidebar */}
+        <aside className="w-full md:w-64 flex-shrink-0 flex flex-col gap-6">
+          <div className="bg-surface-container-lowest dark:bg-dark-surface-container-low rounded-xl border border-surface-variant/50 dark:border-dark-surface-variant/30 p-6 shadow-sm">
+            <h2 className="font-headline font-bold text-lg mb-4 text-on-surface dark:text-dark-on-surface flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary dark:text-dark-primary">tune</span>
+              Filters
+            </h2>
+            {/* Categories */}
+            <div className="mb-6">
+              <h3 className="font-label font-semibold text-sm text-on-surface-variant dark:text-dark-on-surface-variant uppercase tracking-wider mb-3">Category</h3>
+              <div className="flex flex-col gap-2">
+                {['Electronics', 'Machinery', 'Textiles', 'Agriculture'].map((cat) => (
+                  <label key={cat} className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategory === cat}
+                      onChange={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
+                      className="form-checkbox text-primary dark:text-dark-primary rounded border-outline dark:border-dark-surface-variant focus:ring-primary/20"
+                    />
+                    <span className="text-sm font-body text-on-surface dark:text-dark-on-surface group-hover:text-primary transition-colors">{cat}</span>
                   </label>
-                </div>
-              </div>
-            </aside>
-
-            {/* Product Grid */}
-            <div className="flex-1 flex flex-col gap-6">
-              {/* Results Header */}
-              <div className="flex justify-between items-center">
-                <span className="font-body text-on-surface-variant text-sm">
-                  Showing <strong className="text-on-surface">1-{filteredProducts.length}</strong> of {MOCK_PRODUCTS.length} products
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="font-body text-sm text-on-surface-variant">Sort by:</span>
-                  <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-sm font-label font-medium text-primary focus:ring-0 cursor-pointer">
-                    <option value="relevance">Relevance</option>
-                    <option value="price_low">Price: Low to High</option>
-                    <option value="price_high">Price: High to Low</option>
-                    <option value="newest">Newest</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product as any} viewMode="grid" />
                 ))}
               </div>
-
-              {filteredProducts.length === 0 && (
-                <div className="text-center py-20">
-                  <span className="material-symbols-outlined text-6xl text-outline-variant mb-4 block">search_off</span>
-                  <h3 className="text-xl font-semibold text-on-surface mb-2">No products found</h3>
-                  <p className="text-on-surface-variant mb-6">Try adjusting your search or filter criteria</p>
-                  <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); setSelectedCountry(''); }} className="btn-primary">Clear All Filters</button>
-                </div>
-              )}
-
-              {/* Pagination */}
-              <div className="mt-8 flex justify-center gap-2">
-                <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">
-                  <span className="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold">1</button>
-                <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">2</button>
-                <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">3</button>
-                <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">
-                  <span className="material-symbols-outlined">chevron_right</span>
-                </button>
-              </div>
+            </div>
+            {/* Country */}
+            <div className="mb-6">
+              <h3 className="font-label font-semibold text-sm text-on-surface-variant dark:text-dark-on-surface-variant uppercase tracking-wider mb-3">Origin Country</h3>
+              <select
+                value={selectedCountry}
+                onChange={(e) => setSelectedCountry(e.target.value)}
+                className="w-full bg-surface-container-low dark:bg-dark-surface-container border border-surface-variant dark:border-dark-surface-variant rounded-lg p-2 text-sm font-body focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none text-on-surface dark:text-dark-on-surface"
+              >
+                <option value="">All Countries</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            {/* Verification Status */}
+            <div>
+              <h3 className="font-label font-semibold text-sm text-on-surface-variant dark:text-dark-on-surface-variant uppercase tracking-wider mb-3">Supplier Status</h3>
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" checked={verifiedOnly} onChange={() => setVerifiedOnly(!verifiedOnly)} className="form-checkbox text-secondary dark:text-dark-secondary rounded border-outline dark:border-dark-surface-variant focus:ring-secondary/20" />
+                <span className="text-sm font-body text-on-surface dark:text-dark-on-surface group-hover:text-secondary transition-colors font-medium">Verified Suppliers Only</span>
+              </label>
             </div>
           </div>
-        </main>
+        </aside>
+
+        {/* Product Grid */}
+        <div className="flex-1 flex flex-col gap-6">
+          {/* Results Header */}
+          <div className="flex justify-between items-center">
+            <span className="font-body text-on-surface-variant dark:text-dark-on-surface-variant text-sm">
+              Showing <strong className="text-on-surface dark:text-dark-on-surface">1-{filteredProducts.length}</strong> of {MOCK_PRODUCTS.length} products
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-body text-sm text-on-surface-variant dark:text-dark-on-surface-variant">Sort by:</span>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-sm font-label font-medium text-primary dark:text-dark-primary focus:ring-0 cursor-pointer">
+                <option value="relevance">Relevance</option>
+                <option value="price_low">Price: Low to High</option>
+                <option value="price_high">Price: High to Low</option>
+                <option value="newest">Newest</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product as any} viewMode="grid" />
+            ))}
+          </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-20">
+              <span className="material-symbols-outlined text-6xl text-outline-variant mb-4 block">search_off</span>
+              <h3 className="text-xl font-semibold text-on-surface dark:text-dark-on-surface mb-2">No products found</h3>
+              <p className="text-on-surface-variant dark:text-dark-on-surface-variant mb-6">Try adjusting your search or filter criteria</p>
+              <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); setSelectedCountry(''); }} className="btn-primary">Clear All Filters</button>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {filteredProducts.length > 0 && (
+            <div className="mt-8 flex justify-center gap-2">
+              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant dark:border-dark-surface-variant text-on-surface-variant dark:text-dark-on-surface-variant hover:border-primary hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">chevron_left</span>
+              </button>
+              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold">1</button>
+              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant dark:border-dark-surface-variant text-on-surface-variant dark:text-dark-on-surface-variant hover:border-primary hover:text-primary transition-colors">2</button>
+              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant dark:border-dark-surface-variant text-on-surface-variant dark:text-dark-on-surface-variant hover:border-primary hover:text-primary transition-colors">3</button>
+              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant dark:border-dark-surface-variant text-on-surface-variant dark:text-dark-on-surface-variant hover:border-primary hover:text-primary transition-colors">
+                <span className="material-symbols-outlined">chevron_right</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

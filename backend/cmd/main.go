@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/grawizah/backend/internal/handlers"
+	"github.com/grawizah/backend/internal/middleware"
 	"github.com/grawizah/backend/internal/services"
 )
 
@@ -23,6 +24,9 @@ func main() {
 	buyerService := services.NewBuyerService()
 	inquiryService := services.NewInquiryService()
 
+	leaderboardService := services.NewLeaderboardService()
+	companyService := services.NewCompanyService()
+
 	// Initialize handlers
 	productHandler := handlers.NewProductHandler(productService)
 	buyerHandler := handlers.NewBuyerHandler(buyerService)
@@ -30,6 +34,8 @@ func main() {
 	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
 	chatHandler := handlers.NewChatHandler()
 	authHandler := handlers.NewAuthHandler()
+	leaderboardHandler := handlers.NewLeaderboardHandler(leaderboardService)
+	companyHandler := handlers.NewCompanyHandler(companyService)
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -101,6 +107,7 @@ func main() {
 
 		// AI routes
 		ai := api.Group("/ai")
+		ai.Use(middleware.AIRateLimitMiddleware())
 		{
 			ai.POST("/hs-code", aiHandler.ClassifyHSCode)
 			ai.POST("/response-suggestion", aiHandler.GetResponseSuggestion)
@@ -110,20 +117,12 @@ func main() {
 		}
 
 		// Leaderboard routes
-		api.GET("/leaderboard", func(c *gin.Context) {
-			c.JSON(200, []interface{}{})
-		})
-		api.GET("/leaderboard/company/:id", func(c *gin.Context) {
-			c.JSON(200, gin.H{})
-		})
+		api.GET("/leaderboard", leaderboardHandler.GetLeaderboard)
+		api.GET("/leaderboard/company/:id", leaderboardHandler.GetCompanyRank)
 
 		// Company routes
-		api.GET("/companies/:id", func(c *gin.Context) {
-			c.JSON(200, gin.H{})
-		})
-		api.GET("/companies/me", func(c *gin.Context) {
-			c.JSON(200, gin.H{})
-		})
+		api.GET("/companies/:id", companyHandler.GetCompanyByID)
+		api.GET("/companies/me", companyHandler.GetMyCompany)
 
 		// Chat & WhatsApp Bridge routes
 		chat := api.Group("/chat")
