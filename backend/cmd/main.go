@@ -23,12 +23,12 @@ func main() {
 	productService := services.NewProductService(nil) // TODO: Pass repository
 	buyerService := services.NewBuyerService()
 	inquiryService := services.NewInquiryService()
-
+	rankingService := services.NewRankingService()
 	leaderboardService := services.NewLeaderboardService()
 	companyService := services.NewCompanyService()
 
 	// Initialize handlers
-	productHandler := handlers.NewProductHandler(productService)
+	productHandler := handlers.NewProductHandler(productService, rankingService)
 	buyerHandler := handlers.NewBuyerHandler(buyerService)
 	aiHandler := handlers.NewAIHandler(aiService)
 	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
@@ -136,6 +136,21 @@ func main() {
 			whatsapp.POST("/send", chatHandler.SendWhatsAppMessage)
 			whatsapp.POST("/webhook", chatHandler.ReceiveWhatsAppWebhook)
 		}
+
+		// Competitor routes
+		competitorService := services.NewCompetitorService()
+		competitorHandler := handlers.NewCompetitorHandler(competitorService)
+		api.GET("/competitor/benchmark", competitorHandler.GetBenchmark)
+
+		// Buyer Quality routes
+		buyerQualityService := services.NewBuyerQualityService()
+		buyerQualityHandler := handlers.NewBuyerQualityHandler(buyerQualityService)
+		api.GET("/buyers/:id/quality-score", buyerQualityHandler.GetQualityScore)
+
+		// Market Alert routes
+		marketAlertService := services.NewMarketAlertService()
+		marketAlertHandler := handlers.NewMarketAlertHandler(marketAlertService)
+		api.GET("/alerts/market", marketAlertHandler.GetAlerts)
 	}
 
 	// Start server

@@ -9,20 +9,35 @@ import (
 
 type ProductHandler struct {
 	productService *services.ProductService
+	rankingService *services.RankingService
 }
 
-func NewProductHandler(productService *services.ProductService) *ProductHandler {
+func NewProductHandler(productService *services.ProductService, rankingService *services.RankingService) *ProductHandler {
 	return &ProductHandler{
 		productService: productService,
+		rankingService: rankingService,
 	}
 }
 
 // GetProducts handles GET /api/products
 func (h *ProductHandler) GetProducts(c *gin.Context) {
-	// TODO: Parse pagination params (page, limit, category) and call service
+	sortType := c.Query("sort")
+	
+	// Mock products
+	products := []map[string]interface{}{
+		{"id": "p1", "name": "Industrial Valves X-200", "supplier": "TechCorp", "price": 250.0},
+		{"id": "p2", "name": "Zinc Die Casting Parts", "supplier": "Nexus Robotics", "price": 45.0},
+		{"id": "p3", "name": "Organic Coconut Oil", "supplier": "GreenEarth", "price": 12.5},
+		{"id": "p4", "name": "Solar Panel Mono 450W", "supplier": "EcoEnergy", "price": 180.0},
+	}
+
+	if sortType == "ai" {
+		products = h.rankingService.RankSuppliers(products, "")
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"data":  []interface{}{},
-		"total": 0,
+		"data":  products,
+		"total": len(products),
 		"page":  1,
 		"limit": 20,
 	})

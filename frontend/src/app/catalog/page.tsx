@@ -22,13 +22,38 @@ export default function CatalogPage() {
   const [selectedCountry, setSelectedCountry] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [loading, setLoading] = useState(false);
 
-  const filteredProducts = MOCK_PRODUCTS.filter((p) => {
+  const filteredProducts = products.filter((p) => {
     const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCategory = !selectedCategory || p.category === selectedCategory;
     const matchCountry = !selectedCountry || p.country_origin === selectedCountry;
     return matchSearch && matchCategory && matchCountry;
   });
+
+  const handleSortChange = async (val: string) => {
+    setSortBy(val);
+    if (val === 'ai') {
+      setLoading(true);
+      try {
+        const res = await fetch(`http://localhost:8080/api/products?sort=ai`);
+        const result = await res.json();
+        // Map backend mock to frontend mock structure if needed
+        if (result.data) {
+          // Merge with some mock data for display since backend mock is sparse
+          const aiRanked = result.data.map((p: any) => ({
+             ...MOCK_PRODUCTS.find(mp => mp.id === p.id.replace('p', '')), // Match ID
+             ai_score: p.ai_score,
+             ai_metrics: p.ai_metrics
+          })).filter((p: any) => p.id);
+          setProducts(aiRanked.length > 0 ? aiRanked : MOCK_PRODUCTS);
+        }
+      } catch {} finally { setLoading(false); }
+    } else {
+      setProducts(MOCK_PRODUCTS);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-on-background">
@@ -112,8 +137,9 @@ export default function CatalogPage() {
               </span>
               <div className="flex items-center gap-2">
                 <span className="font-body text-sm text-on-surface-variant">Sort by:</span>
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-transparent border-none text-sm font-label font-medium text-primary focus:ring-0 cursor-pointer">
+                <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} className="bg-transparent border-none text-sm font-label font-medium text-primary focus:ring-0 cursor-pointer">
                   <option value="relevance">Relevance</option>
+                  <option value="ai">AI Ranked (Smart Match)</option>
                   <option value="price_low">Price: Low to High</option>
                   <option value="price_high">Price: High to Low</option>
                   <option value="newest">Newest</option>
@@ -121,12 +147,20 @@ export default function CatalogPage() {
               </div>
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product as any} viewMode="grid" />
-              ))}
-            </div>
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-on-surface-variant font-medium animate-pulse">AI is calculating optimal matches...</p>
+              </div>
+            )}
+
+            {!loading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product as any} viewMode="grid" />
+                ))}
+              </div>
+            )}
 
             {filteredProducts.length === 0 && (
               <div className="text-center py-20">

@@ -18,6 +18,7 @@ export default function InquiriesPage() {
   const [inquiries, setInquiries] = useState(MOCK_INQUIRIES);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [qualityScores, setQualityScores] = useState<Record<string, any>>({});
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -25,7 +26,17 @@ export default function InquiriesPage() {
       try {
         const service = new InquiryService();
         const data = await service.getInquiriesBySupplier(user?.id || 'mock-supplier');
-        if (data && data.length > 0) setInquiries(data as any);
+        if (data && data.length > 0) {
+          setInquiries(data as any);
+          // Fetch quality scores for each buyer
+          data.forEach(async (inq: any) => {
+            try {
+              const res = await fetch(`http://localhost:8080/api/buyers/${inq.id}/quality-score`);
+              const scoreData = await res.json();
+              setQualityScores(prev => ({ ...prev, [inq.id]: scoreData }));
+            } catch {}
+          });
+        }
       } catch { }
     };
     fetchInquiries();
@@ -139,6 +150,7 @@ export default function InquiriesPage() {
                 <th className="p-4 pl-6 w-1/4">Buyer Info</th>
                 <th className="p-4 w-1/4">Product Reference</th>
                 <th className="p-4 w-1/3">Message Snippet</th>
+                <th className="p-4 w-[120px]">Buyer Quality</th>
                 <th className="p-4 w-[100px]">Status</th>
                 <th className="p-4 pr-6 text-right">Actions</th>
               </tr>
@@ -163,6 +175,23 @@ export default function InquiriesPage() {
                   </td>
                   <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
                     &ldquo;{inq.message}&rdquo;
+                  </td>
+                  <td className="p-4">
+                    {qualityScores[inq.id] ? (
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                          qualityScores[inq.id].overall_score >= 80 ? 'bg-emerald-100 text-emerald-700' : 
+                          qualityScores[inq.id].overall_score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {qualityScores[inq.id].overall_score}
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                          {qualityScores[inq.id].verified_status ? 'Verified' : 'Standard'}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 bg-gray-100 animate-pulse rounded-lg" />
+                    )}
                   </td>
                   <td className="p-4">
                     <span className={`px-3 py-1 ${getStatusBadge(inq.status)} rounded-full text-xs font-semibold whitespace-nowrap capitalize`}>

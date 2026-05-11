@@ -15,7 +15,7 @@ const LANGUAGES = [
 ];
 
 export default function IntelligencePage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'radar' | 'hs-code' | 'optimizer' | 'alerts' | 'translator'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'radar' | 'hs-code' | 'optimizer' | 'alerts' | 'translator' | 'benchmark'>('overview');
   const [hsInput, setHsInput] = useState({ description: '', category: '' });
   const [hsResult, setHsResult] = useState<any>(null);
   const [hsLoading, setHsLoading] = useState(false);
@@ -28,6 +28,10 @@ export default function IntelligencePage() {
   const [transResult, setTransResult] = useState<any>(null);
   const [transLoading, setTransLoading] = useState(false);
   const [detectResult, setDetectResult] = useState<any>(null);
+  
+  const [benchmarkQuery, setBenchmarkQuery] = useState('');
+  const [benchmarkResult, setBenchmarkResult] = useState<any>(null);
+  const [benchmarkLoading, setBenchmarkLoading] = useState(false);
 
   const classifyHSCode = async () => {
     setHsLoading(true);
@@ -66,11 +70,22 @@ export default function IntelligencePage() {
     } catch { }
   };
 
+  const fetchBenchmark = async () => {
+    if (!benchmarkQuery) return;
+    setBenchmarkLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/competitor/benchmark?product=${encodeURIComponent(benchmarkQuery)}`);
+      const data = await res.json();
+      setBenchmarkResult(data);
+    } catch { } finally { setBenchmarkLoading(false); }
+  };
+
   const tabs = [
     { id: 'overview' as const, icon: 'explore', label: 'Overview' },
     { id: 'radar' as const, icon: 'target', label: 'Buyer Radar' },
     { id: 'hs-code' as const, icon: 'smart_toy', label: 'HS Code' },
     { id: 'optimizer' as const, icon: 'bolt', label: 'Optimizer' },
+    { id: 'benchmark' as const, icon: 'monitoring', label: 'Benchmark' },
     { id: 'alerts' as const, icon: 'notifications', label: 'Alerts' },
     { id: 'translator' as const, icon: 'translate', label: 'Translator' },
   ];
@@ -320,55 +335,98 @@ export default function IntelligencePage() {
         </div>
       )}
 
-      {/* === AI Translator Tab === */}
-      {activeTab === 'translator' && (
-        <div className="max-w-2xl">
-          <div className="card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center"><span className="material-symbols-outlined text-primary">translate</span></div>
-              <div>
-                <h2 className="text-lg font-semibold text-on-surface">AI Translator</h2>
-                <p className="text-sm text-on-surface-variant">Translate trade communications across 15+ languages</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-on-surface mb-1.5">Text to translate *</label>
-                <textarea value={transText} onChange={(e) => setTransText(e.target.value)} className="input-field h-28 resize-none" placeholder="Enter text to translate..." />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-on-surface mb-1.5">Source Language</label>
-                  <div className="flex gap-2">
-                    <select value={transSource} onChange={(e) => setTransSource(e.target.value)} className="select-field flex-1">
-                      <option value="">Auto-detect</option>
-                      {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}
-                    </select>
-                    <button onClick={detectLanguage} disabled={!transText} className="btn-ghost btn-sm text-xs whitespace-nowrap disabled:opacity-50">Detect</button>
+      {/* === Competitor Benchmark Tab === */}
+      {activeTab === 'benchmark' && (
+        <div className="space-y-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <div className="card">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <span className="material-symbols-outlined">monitoring</span>
                   </div>
-                  {detectResult && (
-                    <p className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-                      Detected: <strong>{LANGUAGES.find(l => l.code === detectResult.language)?.name || detectResult.language}</strong>
-                    </p>
-                  )}
+                  <div>
+                    <h2 className="text-xl font-headline font-extrabold text-on-surface">Competitor Benchmarking</h2>
+                    <p className="text-sm text-on-surface-variant font-body">Real-time global price comparison</p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-on-surface mb-1.5">Target Language *</label>
-                  <select value={transTarget} onChange={(e) => setTransTarget(e.target.value)} className="select-field">{LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}</select>
+                <div className="flex gap-4">
+                  <input 
+                    value={benchmarkQuery}
+                    onChange={(e) => setBenchmarkQuery(e.target.value)}
+                    className="input-field flex-1" 
+                    placeholder="Enter product name (e.g. Zinc Die Casting)" 
+                  />
+                  <button 
+                    onClick={fetchBenchmark}
+                    disabled={benchmarkLoading || !benchmarkQuery}
+                    className="btn-primary flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
+                  >
+                    {benchmarkLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined">analytics</span> Run Benchmark</>}
+                  </button>
                 </div>
               </div>
-              <button onClick={translateText} disabled={!transText || transLoading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
-                {transLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[18px]">translate</span> Translate</>}
-              </button>
             </div>
-            {transResult && (
-              <div className="mt-6 p-5 bg-gradient-to-r from-primary-50 to-blue-50 border border-primary-200 rounded-xl animate-slide-up">
-                <div className="flex items-center gap-2 mb-3"><span className="material-symbols-outlined text-primary">auto_awesome</span><h3 className="font-semibold text-primary">Translation Result</h3></div>
-                <p className="text-on-surface bg-white p-4 rounded-lg border border-primary-100 leading-relaxed">{transResult.translatedText}</p>
+
+            {benchmarkResult && (
+              <div className="md:w-80 flex flex-col gap-4">
+                <div className="bg-primary text-on-primary p-6 rounded-xl shadow-ambient">
+                  <p className="text-xs opacity-80 uppercase tracking-widest font-bold mb-1">Market Average</p>
+                  <p className="text-3xl font-extrabold">${benchmarkResult.avgPrice.toFixed(2)}</p>
+                </div>
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-surface-variant/50 flex justify-between">
+                  <div>
+                    <p className="text-xs text-on-surface-variant font-medium">Lowest</p>
+                    <p className="text-xl font-bold text-emerald-600">${benchmarkResult.minPrice.toFixed(2)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-on-surface-variant font-medium">Highest</p>
+                    <p className="text-xl font-bold text-red-600">${benchmarkResult.maxPrice.toFixed(2)}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
+
+          {benchmarkResult && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+              <div className="card">
+                <h3 className="font-headline font-bold text-on-surface mb-6 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">bar_chart</span> Price Distribution
+                </h3>
+                <div className="h-64 flex items-end gap-2 px-4">
+                  {benchmarkResult.prices.map((p: any, i: number) => (
+                    <div key={i} className="flex-1 flex flex-col items-center group">
+                      <div className="w-full bg-primary/20 rounded-t-lg transition-all group-hover:bg-primary/40 relative" style={{ height: `${(p.price / benchmarkResult.maxPrice) * 100}%` }}>
+                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition shadow-sm font-bold">${p.price.toFixed(0)}</div>
+                      </div>
+                      <p className="text-[10px] text-on-surface-variant mt-2 font-medium">{p.source}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="card">
+                <h3 className="font-headline font-bold text-on-surface mb-6 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">public</span> Regional Pricing
+                </h3>
+                <div className="space-y-4">
+                  {benchmarkResult.prices.map((p: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-variant/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-surface flex items-center justify-center text-xs font-bold text-on-surface-variant">{p.region[0]}</div>
+                        <div>
+                          <p className="text-sm font-bold text-on-surface">{p.region}</p>
+                          <p className="text-xs text-on-surface-variant">{p.source}</p>
+                        </div>
+                      </div>
+                      <p className="font-bold text-primary">${p.price.toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

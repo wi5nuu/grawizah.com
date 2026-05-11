@@ -30,56 +30,22 @@ export const MarketOpportunityAlerts: React.FC = () => {
   const loadAlerts = async () => {
     try {
       setLoading(true);
+      const res = await fetch('http://localhost:8080/api/alerts/market');
+      const data = await res.json();
       
-      // TODO: Fetch from AI service
-      const mockAlerts: MarketAlert[] = [
-        {
-          id: '1',
-          type: 'price_surge',
-          title: 'Palm Oil Price Surge in EU Market',
-          description: 'CPO prices in Rotterdam increased 12% in last 7 days due to supply constraints',
-          impact: 'high',
-          market: 'European Union',
-          product: 'Crude Palm Oil',
-          actionable: 'Consider increasing export volume to EU. Current buyers showing 15% higher purchase intent.',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        },
-        {
-          id: '2',
-          type: 'demand_spike',
-          title: 'Coconut Product Demand Rising in USA',
-          description: 'Search volume for coconut-based products up 28% in North America',
-          impact: 'high',
-          market: 'United States',
-          product: 'Coconut Products',
-          actionable: 'Target US buyers. 3 high-quality leads identified in your Buyer Radar.',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-        },
-        {
-          id: '3',
-          type: 'new_market',
-          title: 'New Import Regulations in Japan',
-          description: 'Japan simplified import process for ASEAN organic products',
-          impact: 'medium',
-          market: 'Japan',
-          product: 'Organic Products',
-          actionable: 'If you have organic certifications, this is a good time to enter Japanese market.',
-          timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-        },
-        {
-          id: '4',
-          type: 'competitor_gap',
-          title: 'Competitor Supply Gap in Middle East',
-          description: 'Major competitor reduced shipments to UAE by 40% this month',
-          impact: 'medium',
-          market: 'United Arab Emirates',
-          product: 'Spices',
-          actionable: 'Opportunity to capture market share. 5 UAE buyers actively searching.',
-          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        },
-      ];
+      const mappedAlerts: MarketAlert[] = data.map((a: any) => ({
+        id: a.id,
+        type: a.type,
+        title: a.title,
+        description: a.message,
+        impact: a.type === 'demand_surge' ? 'high' : 'medium',
+        market: a.country,
+        product: a.product,
+        actionable: 'Analyze current buyer intent in ' + a.country + ' for ' + a.product + '.',
+        timestamp: new Date(a.timestamp),
+      }));
       
-      setAlerts(mockAlerts);
+      setAlerts(mappedAlerts);
     } catch (error) {
       console.error('Failed to load alerts:', error);
     } finally {
