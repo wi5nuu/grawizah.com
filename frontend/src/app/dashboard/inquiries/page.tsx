@@ -15,10 +15,17 @@ const MOCK_INQUIRIES = [
 
 export default function InquiriesPage() {
   const { user } = useAuth();
-  const [inquiries, setInquiries] = useState(MOCK_INQUIRIES);
+  const [inquiries, setInquiries] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [qualityScores, setQualityScores] = useState<Record<string, any>>({});
+  
+  // Reply Modal States
+  const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
+  const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
+  const [replyMessage, setReplyMessage] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
   const itemsPerPage = 5;
 
   useEffect(() => {
@@ -31,7 +38,7 @@ export default function InquiriesPage() {
           // Fetch quality scores for each buyer
           data.forEach(async (inq: any) => {
             try {
-              const res = await fetch(`http://localhost:8080/api/buyers/${inq.id}/quality-score`);
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/buyers/${inq.id}/quality-score`);
               const scoreData = await res.json();
               setQualityScores(prev => ({ ...prev, [inq.id]: scoreData }));
             } catch {}
@@ -72,9 +79,36 @@ export default function InquiriesPage() {
     } catch { }
   };
 
-  const handleReply = (id: string) => {
-    alert(`Opening reply dialog for inquiry #${id}`);
-    setInquiries(prev => prev.map(inq => inq.id === id ? { ...inq, status: 'responded' as InquiryStatus } : inq));
+  const handleReply = (inq: any) => {
+    setSelectedInquiry(inq);
+    setReplyMessage('');
+    setIsReplyModalOpen(true);
+  };
+
+  const generateAiResponse = async () => {
+    if (!selectedInquiry) return;
+    setIsAiLoading(true);
+    try {
+      const service = new InquiryService();
+      const result = await service.getAIResponseSuggestion(selectedInquiry.id);
+      setReplyMessage(result.suggested_response);
+    } catch (err) {
+      console.error('AI Suggestion failed:', err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleSendReply = async () => {
+    if (!selectedInquiry || !replyMessage) return;
+    try {
+      const service = new InquiryService();
+      await service.respondToInquiry(selectedInquiry.id, replyMessage);
+      setInquiries(prev => prev.map(inq => inq.id === selectedInquiry.id ? { ...inq, status: 'responded' as InquiryStatus } : inq));
+      setIsReplyModalOpen(false);
+    } catch (err) {
+      console.error('Failed to send reply:', err);
+    }
   };
 
   const handleView = (id: string) => {
@@ -156,65 +190,77 @@ export default function InquiriesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-dark-surface-variant/20 text-sm">
-              {displayedInquiries.map((inq, index) => (
-                <tr key={inq.id} className="hover:bg-gray-50/50 dark:hover:bg-dark-surface-container-high/50 transition-colors">
-                  <td className="p-4 pl-6">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center font-bold`}>
-                        {getInitials(inq.buyer_name)}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 dark:text-white">{inq.buyer_name}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{inq.buyer_company} • {inq.buyer_country}</p>
-                      </div>
+              {displayedInquiries.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-gray-500 dark:text-gray-400">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="material-symbols-outlined text-4xl opacity-20">mail_outline</span>
+                      <p className="font-medium">No inquiries found yet.</p>
+                      <p className="text-xs">Your real buyer requests will appear here once they start coming in.</p>
                     </div>
                   </td>
-                  <td className="p-4 text-gray-700 dark:text-gray-300">
-                    <p className="font-medium">{inq.product_name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Qty: {inq.quantity}</p>
-                  </td>
-                  <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
-                    &ldquo;{inq.message}&rdquo;
-                  </td>
-                  <td className="p-4">
-                    {qualityScores[inq.id] ? (
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
-                          qualityScores[inq.id].overall_score >= 80 ? 'bg-emerald-100 text-emerald-700' : 
-                          qualityScores[inq.id].overall_score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                        }`}>
-                          {qualityScores[inq.id].overall_score}
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                          {qualityScores[inq.id].verified_status ? 'Verified' : 'Standard'}
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 bg-gray-100 animate-pulse rounded-lg" />
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <span className={`px-3 py-1 ${getStatusBadge(inq.status)} rounded-full text-xs font-semibold whitespace-nowrap capitalize`}>
-                      {inq.status}
-                    </span>
-                  </td>
-                  <td className="p-4 pr-6 text-right">
-                    {inq.status === 'pending' ? (
-                      <button onClick={() => handleReply(inq.id)} className="text-primary dark:text-primary-400 hover:text-primary/80 font-medium flex items-center justify-end gap-1 ml-auto">
-                        Reply <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-                      </button>
-                    ) : inq.status === 'responded' ? (
-                      <button onClick={() => handleConvert(inq.id)} className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium flex items-center justify-end gap-1 ml-auto">
-                        Convert <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                      </button>
-                    ) : (
-                      <button onClick={() => handleView(inq.id)} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium flex items-center justify-end gap-1 ml-auto">
-                        View <span className="material-symbols-outlined text-[18px]">visibility</span>
-                      </button>
-                    )}
-                  </td>
                 </tr>
-              ))}
+              ) : (
+                displayedInquiries.map((inq, index) => (
+                  <tr key={inq.id} className="hover:bg-gray-50/50 dark:hover:bg-dark-surface-container-high/50 transition-colors">
+                    <td className="p-4 pl-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full ${getAvatarColor(index)} flex items-center justify-center font-bold`}>
+                          {getInitials(inq.buyer_name || 'U')}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 dark:text-white">{inq.buyer_name || 'Unknown Buyer'}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{inq.buyer_company || 'New Partner'} • {inq.buyer_country || 'Global'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">
+                      <p className="font-medium">{inq.product_name || 'General Inquiry'}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Qty: {inq.quantity || 'N/A'}</p>
+                    </td>
+                    <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-[200px]">
+                      &ldquo;{inq.message}&rdquo;
+                    </td>
+                    <td className="p-4">
+                      {qualityScores[inq.id] ? (
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${
+                            qualityScores[inq.id].overall_score >= 80 ? 'bg-emerald-100 text-emerald-700' : 
+                            qualityScores[inq.id].overall_score >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {qualityScores[inq.id].overall_score}
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                            {qualityScores[inq.id].verified_status ? 'Verified' : 'Standard'}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 bg-gray-100 animate-pulse rounded-lg" />
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 ${getStatusBadge(inq.status)} rounded-full text-xs font-semibold whitespace-nowrap capitalize`}>
+                        {inq.status}
+                      </span>
+                    </td>
+                    <td className="p-4 pr-6 text-right">
+                      {inq.status === 'pending' ? (
+                        <button onClick={() => handleReply(inq)} className="text-primary dark:text-primary-400 hover:text-primary/80 font-medium flex items-center justify-end gap-1 ml-auto">
+                          Reply <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                        </button>
+                      ) : inq.status === 'responded' ? (
+                        <button onClick={() => handleConvert(inq.id)} className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-medium flex items-center justify-end gap-1 ml-auto">
+                          Convert <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        </button>
+                      ) : (
+                        <button onClick={() => handleView(inq.id)} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 font-medium flex items-center justify-end gap-1 ml-auto">
+                          View <span className="material-symbols-outlined text-[18px]">visibility</span>
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -239,6 +285,57 @@ export default function InquiriesPage() {
           </div>
         </div>
       </section>
+
+      {/* Reply Modal */}
+      {isReplyModalOpen && selectedInquiry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-dark-surface rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-scale-in">
+            <div className="p-6 border-b border-gray-100 dark:border-dark-surface-variant/30 flex justify-between items-center bg-gray-50 dark:bg-dark-surface-container">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Reply to Inquiry</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Buyer: {selectedInquiry.buyer_name} ({selectedInquiry.buyer_company})</p>
+              </div>
+              <button onClick={() => setIsReplyModalOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Original Message */}
+              <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/20">
+                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase mb-2">Original Inquiry</p>
+                <p className="text-sm italic text-gray-700 dark:text-gray-300">"{selectedInquiry.message}"</p>
+              </div>
+
+              {/* Reply Textarea */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Your Response</label>
+                  <button 
+                    onClick={generateAiResponse}
+                    disabled={isAiLoading}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold hover:bg-purple-200 transition-colors disabled:opacity-50"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{isAiLoading ? 'sync' : 'auto_awesome'}</span>
+                    {isAiLoading ? 'AI is thinking...' : 'Generate AI Suggestion'}
+                  </button>
+                </div>
+                <textarea 
+                  value={replyMessage}
+                  onChange={(e) => setReplyMessage(e.target.value)}
+                  className="w-full h-48 p-4 rounded-xl border border-gray-200 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface-container-high focus:ring-2 focus:ring-primary focus:outline-none text-sm text-gray-900 dark:text-white transition-all"
+                  placeholder="Type your response here or use AI to generate one..."
+                />
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 dark:bg-dark-surface-container flex justify-end gap-3">
+              <button onClick={() => setIsReplyModalOpen(false)} className="px-6 py-2 rounded-lg text-sm font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-200 transition-colors">Cancel</button>
+              <button onClick={handleSendReply} disabled={!replyMessage} className="px-8 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-lg hover:bg-primary/90 disabled:opacity-50 transition-all">Send Response</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

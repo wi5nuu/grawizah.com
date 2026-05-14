@@ -1,17 +1,58 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function SettingsPage() {
   const { user } = useAuth();
-  const [firstName, setFirstName] = useState('James');
-  const [lastName, setLastName] = useState('Chen');
-  const [email, setEmail] = useState(user?.email || 'j.chen@globaltrade.co');
-  const [companyName, setCompanyName] = useState('Chen Manufacturing Ltd.');
-  const [regNumber, setRegNumber] = useState('CN-9842100-XYZ');
+  const [loading, setLoading] = useState(true);
+  
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [regNumber, setRegNumber] = useState('N/A');
   const [industry, setIndustry] = useState('Electronics & Components');
-  const [certs, setCerts] = useState(['ISO 9001', 'CE Marked']);
+  const [certs, setCerts] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user) {
+      // Derive name from email
+      const nameParts = user.email.split('@')[0].split(/[._-]/);
+      setFirstName(nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1));
+      setLastName(nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : '');
+      setEmail(user.email);
+
+      // Fetch company info
+      const fetchCompany = async () => {
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+          const response = await fetch(`${apiUrl}/api/companies/me?user_id=${user.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setCompanyName(data.name || '');
+            setIndustry(data.industry || 'Electronics & Components');
+          } else {
+            // Fallback for demo: use a default company name based on user
+            setCompanyName(`${nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)} Trading Co.`);
+          }
+        } catch (err) {
+          console.error('Failed to fetch company:', err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchCompany();
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const removeCert = (cert: string) => setCerts(certs.filter(c => c !== cert));
 

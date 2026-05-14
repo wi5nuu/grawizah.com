@@ -10,7 +10,7 @@ export abstract class BaseService {
   protected baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,

@@ -6,8 +6,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"github.com/grawizah/backend/internal/db"
 	"github.com/grawizah/backend/internal/handlers"
 	"github.com/grawizah/backend/internal/middleware"
+	"github.com/grawizah/backend/internal/repository"
 	"github.com/grawizah/backend/internal/services"
 )
 
@@ -17,22 +19,38 @@ func main() {
 		log.Println("No .env file found")
 	}
 
+	// Initialize database connection
+	database, err := db.Connect()
+	if err != nil {
+		log.Fatalf("❌ Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
+	// Initialize repositories
+	productRepo := repository.NewProductRepository(database)
+	buyerRepo := repository.NewBuyerRepository(database)
+	inquiryRepo := repository.NewInquiryRepository(database)
+	leaderboardRepo := repository.NewLeaderboardRepository(database)
+	chatRepo := repository.NewChatRepository(database)
+	companyRepo := repository.NewCompanyRepository(database)
+
 	// Initialize services
 	groqAPIKey := os.Getenv("GROQ_API_KEY")
 	aiService := services.NewAIService(groqAPIKey)
-	productService := services.NewProductService(nil) // TODO: Pass repository
-	buyerService := services.NewBuyerService()
-	inquiryService := services.NewInquiryService()
+	notificationService := services.NewNotificationService(database)
+	productService := services.NewProductService(productRepo)
+	buyerService := services.NewBuyerService(buyerRepo)
+	inquiryService := services.NewInquiryService(inquiryRepo, notificationService)
 	rankingService := services.NewRankingService()
-	leaderboardService := services.NewLeaderboardService()
-	companyService := services.NewCompanyService()
+	leaderboardService := services.NewLeaderboardService(leaderboardRepo)
+	companyService := services.NewCompanyService(companyRepo)
 
 	// Initialize handlers
 	productHandler := handlers.NewProductHandler(productService, rankingService)
 	buyerHandler := handlers.NewBuyerHandler(buyerService)
 	aiHandler := handlers.NewAIHandler(aiService)
 	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
-	chatHandler := handlers.NewChatHandler()
+	chatHandler := handlers.NewChatHandler(chatRepo)
 	authHandler := handlers.NewAuthHandler()
 	leaderboardHandler := handlers.NewLeaderboardHandler(leaderboardService)
 	companyHandler := handlers.NewCompanyHandler(companyService)

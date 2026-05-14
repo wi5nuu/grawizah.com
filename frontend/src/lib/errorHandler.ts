@@ -104,9 +104,16 @@ export function logError(error: unknown, context?: Record<string, any>) {
     }
   }
 
-  // In production, send to error tracking service (e.g., Sentry)
-  if (process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN) {
-    // TODO: Send to Sentry
+  // In production, send to error tracking service
+  if (process.env.NODE_ENV === 'production') {
+    fetch('/api/logs/error', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        error: error instanceof Error ? error.message : String(error), 
+        context 
+      }),
+    }).catch(console.error);
   }
 }
 

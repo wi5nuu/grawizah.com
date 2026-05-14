@@ -37,7 +37,7 @@ export default function CatalogPage() {
     if (val === 'ai') {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:8080/api/products?sort=ai`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/products?sort=ai`);
         const result = await res.json();
         // Map backend mock to frontend mock structure if needed
         if (result.data) {

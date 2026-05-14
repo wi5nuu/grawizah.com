@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
 import { ChatWidget } from '@/components/ChatWidget';
+import { NotificationToast } from '@/components/NotificationToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 
@@ -62,6 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <ChatWidget />
+      <NotificationToast />
     </div>
   );
 }

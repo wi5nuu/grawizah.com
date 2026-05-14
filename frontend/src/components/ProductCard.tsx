@@ -22,7 +22,7 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
 
   // Track view – calls POST /api/products/:id/view
   const handleView = () => {
-    fetch(`http://localhost:8080/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {});
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {});
   };
 
   if (viewMode === 'list') {

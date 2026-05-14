@@ -30,7 +30,7 @@ export const MarketOpportunityAlerts: React.FC = () => {
   const loadAlerts = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:8080/api/alerts/market');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/alerts/market`);
       const data = await res.json();
       
       const mappedAlerts: MarketAlert[] = data.map((a: any) => ({

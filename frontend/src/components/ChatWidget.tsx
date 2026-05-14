@@ -5,6 +5,7 @@ import { MessageCircle, Send, X, Minimize2, Languages } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { TranslatorService } from '@/services/TranslatorService';
 import { ChatService } from '@/services/ChatService';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;
@@ -32,40 +33,73 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const translatorService = new TranslatorService();
 
   useEffect(() => {
-    // Load chat history
-    loadChatHistory();
+    if (isOpen && user) {
+      loadChatHistory();
+    }
     
-    // Setup real-time listener (Supabase Realtime)
-    const subscription = setupRealtimeListener();
+    let subscription: any;
+    if (user && supplierId) {
+      subscription = setupRealtimeListener();
+    }
     
     return () => {
       subscription?.unsubscribe();
     };
-  }, [supplierId]);
+  }, [isOpen, user, supplierId]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const loadChatHistory = async () => {
-    // TODO: Load from Supabase
-    const mockMessages: Message[] = [
-      {
-        id: '1',
-        sender: 'system',
-        message: 'Welcome to Grawizah Chat! How can we help you today?',
-        timestamp: new Date(),
-        read: true,
-      },
-    ];
-    setMessages(mockMessages);
+    if (!user || !supplierId) return;
+
+    try {
+      const history = await chatService.getChatHistory(supplierId, user.id);
+      if (history && history.messages) {
+        const formattedMessages: Message[] = history.messages.map((m: any) => ({
+          id: m.id,
+          sender: m.senderId === user.id ? 'user' : 'supplier',
+          message: m.message,
+          timestamp: new Date(m.createdAt),
+          read: m.isRead,
+        }));
+        setMessages(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Failed to load history:', error);
+    }
   };
 
   const setupRealtimeListener = () => {
-    // TODO: Setup Supabase Realtime subscription
-    return {
-      unsubscribe: () => {},
-    };
+    const channel = supabase
+      .channel(`chat:${supplierId}:${user?.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `supplier_id=eq.${supplierId}&buyer_id=eq.${user?.id}`,
+        },
+        (payload) => {
+          const newMessage = payload.new;
+          if (newMessage.sender_id !== user?.id) {
+            const formattedMessage: Message = {
+              id: newMessage.id,
+              sender: 'supplier',
+              message: newMessage.message,
+              timestamp: new Date(newMessage.created_at),
+              read: newMessage.is_read,
+            };
+            setMessages((prev) => [...prev, formattedMessage]);
+            if (!isOpen) setUnreadCount((prev) => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
+    return channel;
   };
 
   const scrollToBottom = () => {
@@ -75,7 +109,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const chatService = new ChatService();
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !user) return;
 
     let messageToSend = newMessage;
 
@@ -92,8 +126,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
       }
     }
 
+    const tempId = Date.now().toString();
     const message: Message = {
-      id: Date.now().toString(),
+      id: tempId,
       sender: 'user',
       message: messageToSend,
       timestamp: new Date(),
@@ -108,10 +143,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   };
 
   const sendMessageToBackend = async (message: Message) => {
+    if (!user) return;
     try {
       // Send to API via ChatService
       await chatService.sendMessage({
         supplierId,
+        buyerId: user.id,
+        senderId: user.id,
         productId,
         message: message.message,
         channel: 'chat',

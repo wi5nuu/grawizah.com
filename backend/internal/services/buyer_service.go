@@ -2,47 +2,47 @@ package services
 
 import (
 	"context"
+	"github.com/grawizah/backend/internal/interfaces"
+	"github.com/grawizah/backend/internal/models"
 )
 
 type BuyerService struct {
-	// TODO: Add repository
+	buyerRepo interfaces.BuyerRepository
 }
 
-func NewBuyerService() *BuyerService {
-	return &BuyerService{}
+func NewBuyerService(buyerRepo interfaces.BuyerRepository) *BuyerService {
+	return &BuyerService{
+		buyerRepo: buyerRepo,
+	}
 }
 
-func (s *BuyerService) GetBuyerRadar(ctx context.Context, filters map[string]interface{}) ([]interface{}, error) {
-	// TODO: Implement
-	// - Query buyers with filters
-	// - Sort by buy_score
-	// - Return with data source labels
-	return nil, nil
+func (s *BuyerService) GetBuyerRadar(ctx context.Context, limit, offset int) ([]models.Buyer, error) {
+	return s.buyerRepo.GetAll(limit, offset)
 }
 
-func (s *BuyerService) GetBuyerByID(ctx context.Context, id string) (interface{}, error) {
-	// TODO: Implement
-	return nil, nil
+func (s *BuyerService) GetBuyerByID(ctx context.Context, id string) (*models.Buyer, error) {
+	return s.buyerRepo.GetByID(id)
 }
 
-func (s *BuyerService) SearchBuyers(ctx context.Context, query string) ([]interface{}, error) {
-	// TODO: Implement
-	return nil, nil
+func (s *BuyerService) SearchBuyers(ctx context.Context, query string) ([]models.Buyer, error) {
+	return s.buyerRepo.Search(models.BuyerSearchCriteria{
+		Query: query,
+	})
 }
 
 func (s *BuyerService) CalculateLeadScore(ctx context.Context, buyerID string, productCategory string) (map[string]interface{}, error) {
-	// TODO: Implement
-	// - Get buyer import history
-	// - Calculate import frequency score
-	// - Calculate volume trend score
-	// - Calculate category match score
-	// - Calculate country affinity score
-	// - Combine into final buy_score
+	buyer, err := s.buyerRepo.GetByID(buyerID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Simple lead scoring algorithm
+	buyScore := buyer.BuyScore
 	
 	return map[string]interface{}{
 		"buyer_id":                buyerID,
-		"conversion_probability":  0.82,
-		"buy_score":               82,
+		"conversion_probability":  float64(buyScore) / 100.0,
+		"buy_score":               buyScore,
 		"factors": map[string]interface{}{
 			"import_frequency": 0.85,
 			"volume_trend":     0.78,

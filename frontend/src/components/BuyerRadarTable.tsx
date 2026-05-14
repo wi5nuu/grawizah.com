@@ -36,7 +36,7 @@ export default function BuyerRadarTable() {
 
   useEffect(() => {
     // Try fetching from backend
-    fetch('http://localhost:8080/api/buyers/radar')
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/buyers/radar`)
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {

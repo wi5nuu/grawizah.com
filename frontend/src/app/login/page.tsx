@@ -2,23 +2,28 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get('registered');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
       await signIn(email, password);
       router.push('/dashboard');
-    } catch {
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -55,6 +60,20 @@ export default function LoginPage() {
           <Link href="/" className="text-2xl font-display font-extrabold gradient-text mb-2 block lg:hidden">Grawizah</Link>
           <h1 className="text-3xl font-display font-bold text-on-surface mb-2">Sign In</h1>
           <p className="text-on-surface-variant mb-8">Enter your credentials to access your dashboard.</p>
+
+          {registered && (
+            <div className="bg-primary/10 text-primary p-4 rounded-xl mb-6 text-sm flex items-center gap-2 border border-primary/20">
+              <span className="material-symbols-outlined text-[20px]">check_circle</span>
+              Registration successful! Please sign in with your new account.
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-error-container text-on-error-container p-4 rounded-xl mb-6 text-sm flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">error</span>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

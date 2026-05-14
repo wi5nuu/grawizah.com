@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/services"
 )
 
@@ -19,29 +20,42 @@ func NewInquiryHandler(inquiryService *services.InquiryService) *InquiryHandler 
 
 // GetInquiriesBySupplier handles GET /api/inquiries/supplier/:id
 func (h *InquiryHandler) GetInquiriesBySupplier(c *gin.Context) {
-	// TODO: Call service with c.Param("id")
-	c.JSON(http.StatusOK, []interface{}{})
+	id := c.Param("id")
+	inquiries, err := h.inquiryService.GetInquiriesBySupplier(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, inquiries)
 }
 
 // GetInquiriesByBuyer handles GET /api/inquiries/buyer/:id
 func (h *InquiryHandler) GetInquiriesByBuyer(c *gin.Context) {
-	// TODO: Call service with c.Param("id")
-	c.JSON(http.StatusOK, []interface{}{})
+	id := c.Param("id")
+	inquiries, err := h.inquiryService.GetInquiriesByBuyer(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, inquiries)
 }
 
 // CreateInquiry handles POST /api/inquiries
 func (h *InquiryHandler) CreateInquiry(c *gin.Context) {
-	var input map[string]interface{}
-
-	if err := c.ShouldBindJSON(&input); err != nil {
+	var inquiry models.Inquiry
+	if err := c.ShouldBindJSON(&inquiry); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// TODO: Call service
+	if err := h.inquiryService.CreateInquiry(c.Request.Context(), &inquiry); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Inquiry created successfully",
-		"data":    input,
+		"data":    inquiry,
 	})
 }
 
@@ -57,7 +71,11 @@ func (h *InquiryHandler) RespondToInquiry(c *gin.Context) {
 		return
 	}
 
-	// TODO: Call service
+	if err := h.inquiryService.RespondToInquiry(c.Request.Context(), id, input.Message); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Response sent successfully",
 		"id":      id,
@@ -66,21 +84,24 @@ func (h *InquiryHandler) RespondToInquiry(c *gin.Context) {
 
 // GetAnalytics handles GET /api/inquiries/analytics/:supplier_id
 func (h *InquiryHandler) GetAnalytics(c *gin.Context) {
-	// TODO: Call service with c.Param("supplier_id")
-	c.JSON(http.StatusOK, gin.H{
-		"total_inquiries":         0,
-		"response_rate":           0.0,
-		"conversion_rate":         0.0,
-		"repeat_buyer_rate":       0.0,
-		"avg_response_time_hours": 0.0,
-	})
+	id := c.Param("supplier_id")
+	analytics, err := h.inquiryService.GetAnalytics(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, analytics)
 }
 
 // MarkAsConverted handles PUT /api/inquiries/:id/convert
 func (h *InquiryHandler) MarkAsConverted(c *gin.Context) {
 	id := c.Param("id")
 
-	// TODO: Call service
+	if err := h.inquiryService.MarkAsConverted(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Inquiry marked as converted",
 		"id":      id,

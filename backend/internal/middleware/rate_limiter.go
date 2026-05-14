@@ -1,66 +1,62 @@
 package middleware
 
 import (
+	"context"
+	"fmt"
 	"net/http"
-	"sync"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
-type rateLimiter struct {
-	requests map[string][]time.Time
-	mu       sync.Mutex
-	limit    int
-	window   time.Duration
-}
+var rdb *redis.Client
 
-func newRateLimiter(limit int, window time.Duration) *rateLimiter {
-	return &rateLimiter{
-		requests: make(map[string][]time.Time),
-		limit:    limit,
-		window:   window,
+func init() {
+	redisURL := os.Getenv("UPSTASH_REDIS_URL")
+	if redisURL == "" {
+		redisURL = "redis://localhost:6379/0"
+	}
+	
+	opts, err := redis.ParseURL(redisURL)
+	if err != nil {
+		fmt.Printf("Warning: Failed to parse Redis URL: %v\n", err)
+		rdb = redis.NewClient(&redis.Options{
+			Addr: "localhost:6379",
+		})
+	} else {
+		rdb = redis.NewClient(opts)
 	}
 }
 
-func (rl *rateLimiter) allow(key string) bool {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	now := time.Now()
-	windowStart := now.Add(-rl.window)
-
-	// Clean old requests
-	if requests, exists := rl.requests[key]; exists {
-		validRequests := []time.Time{}
-		for _, reqTime := range requests {
-			if reqTime.After(windowStart) {
-				validRequests = append(validRequests, reqTime)
-			}
-		}
-		rl.requests[key] = validRequests
+func checkRateLimit(ctx context.Context, key string, limit int, window time.Duration) bool {
+	if rdb == nil {
+		return true // Fail open if Redis is not configured
 	}
 
-	// Check if limit exceeded
-	if len(rl.requests[key]) >= rl.limit {
-		return false
+	count, err := rdb.Incr(ctx, key).Result()
+	if err != nil {
+		fmt.Printf("Redis error: %v\n", err)
+		return true // Fail open on error
 	}
 
-	// Add new request
-	rl.requests[key] = append(rl.requests[key], now)
-	return true
+	if count == 1 {
+		rdb.Expire(ctx, key, window)
+	}
+
+	return int(count) <= limit
 }
 
 // RateLimitMiddleware limits requests per IP
 func RateLimitMiddleware(limit int, window time.Duration) gin.HandlerFunc {
-	limiter := newRateLimiter(limit, window)
-
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
+		key := fmt.Sprintf("rate_limit:ip:%s", ip)
 
-		if !limiter.allow(ip) {
+		if !checkRateLimit(c.Request.Context(), key, limit, window) {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded",
+				"error":       "Rate limit exceeded",
 				"retry_after": window.Seconds(),
 			})
 			c.Abort()
@@ -73,9 +69,8 @@ func RateLimitMiddleware(limit int, window time.Duration) gin.HandlerFunc {
 
 // AIRateLimitMiddleware limits AI endpoint requests
 func AIRateLimitMiddleware() gin.HandlerFunc {
-	// Free tier: 3 requests per day
-	// Premium: unlimited
-	limiter := newRateLimiter(3, 24*time.Hour)
+	limit := 3
+	window := 24 * time.Hour
 
 	return func(c *gin.Context) {
 		userRole, exists := c.Get("user_role")
@@ -92,11 +87,11 @@ func AIRateLimitMiddleware() gin.HandlerFunc {
 		}
 
 		userID, _ := c.Get("user_id")
-		key := userID.(string)
+		key := fmt.Sprintf("rate_limit:ai:%s", userID.(string))
 
-		if !limiter.allow(key) {
+		if !checkRateLimit(c.Request.Context(), key, limit, window) {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Daily AI request limit exceeded",
+				"error":   "Daily AI request limit exceeded",
 				"message": "Upgrade to Premium for unlimited access",
 			})
 			c.Abort()

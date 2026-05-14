@@ -24,7 +24,7 @@ export default function SendInquiryModal({ isOpen, onClose, productId, productNa
     setSending(true);
     try {
       // POST /api/inquiries – create inquiry
-      await fetch('http://localhost:8080/api/inquiries', {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/inquiries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export default function SendInquiryModal({ isOpen, onClose, productId, productNa
 
       // Also send via chat if channel is chat
       if (channel === 'chat' || channel === 'whatsapp') {
-        await fetch('http://localhost:8080/api/chat/send', {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/chat/send`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

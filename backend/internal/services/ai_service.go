@@ -1,64 +1,120 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 )
 
 type AIService struct {
 	groqAPIKey string
+	apiURL     string
+	model      string
 }
 
 func NewAIService(groqAPIKey string) *AIService {
 	return &AIService{
 		groqAPIKey: groqAPIKey,
+		apiURL:     os.Getenv("GROQ_API_URL"),
+		model:      os.Getenv("GROQ_MODEL"),
 	}
+}
+
+func (s *AIService) callGroq(prompt string) (string, error) {
+	payload := map[string]interface{}{
+		"model": s.model,
+		"messages": []map[string]string{
+			{"role": "user", "content": prompt},
+		},
+		"temperature": 0.7,
+	}
+
+	jsonData, _ := json.Marshal(payload)
+	req, _ := http.NewRequest("POST", s.apiURL+"/chat/completions", bytes.NewBuffer(jsonData))
+	req.Header.Set("Authorization", "Bearer "+s.groqAPIKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	var groqResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.Unmarshal(body, &groqResp); err != nil {
+		return "", err
+	}
+
+	if len(groqResp.Choices) == 0 {
+		return "", fmt.Errorf("no response from AI")
+	}
+
+	return groqResp.Choices[0].Message.Content, nil
 }
 
 // ClassifyHSCode uses Groq AI to classify HS Code
 func (s *AIService) ClassifyHSCode(ctx context.Context, description string, category string) (map[string]interface{}, error) {
-	// TODO: Call Groq API with prompt
-	// prompt := fmt.Sprintf(`You are an expert in HS Code classification...`)
-	// For now, return mock data
-	return map[string]interface{}{
-		"hs_code":          "151311",
-		"confidence":       0.95,
-		"description":      "Coconut oil, virgin",
-		"regulation_notes": "May require phytosanitary certificate",
-	}, nil
+	prompt := fmt.Sprintf(`As an international trade expert, classify the HS Code for:
+Description: %s
+Category: %s
+Return ONLY a JSON object with: hs_code, confidence (0.0-1.0), description, and regulation_notes.`, description, category)
+
+	response, err := s.callGroq(prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	json.Unmarshal([]byte(response), &result)
+	return result, nil
 }
 
 // GenerateResponseSuggestion uses Groq AI to generate inquiry response
 func (s *AIService) GenerateResponseSuggestion(ctx context.Context, inquiryMessage, productName, buyerCountry, buyerLanguage string) (map[string]interface{}, error) {
-	if buyerLanguage == "" {
-		buyerLanguage = "English"
+	prompt := fmt.Sprintf(`Generate a professional export inquiry response for:
+Product: %s
+Buyer Message: %s
+Buyer Country: %s
+Language: %s
+Include a polite greeting, answers to typical trade questions (MOQ, lead time), and a call to action.`, productName, inquiryMessage, buyerCountry, buyerLanguage)
+
+	response, err := s.callGroq(prompt)
+	if err != nil {
+		return nil, err
 	}
 
-	// TODO: Call Groq API with prompt
-	// prompt := fmt.Sprintf(`Generate a professional response...`)
-	// For now, return mock data
 	return map[string]interface{}{
-		"suggested_response": "Thank you for your interest in our products. We are pleased to confirm availability...",
+		"suggested_response": response,
 		"language":           buyerLanguage,
-		"tone":               "professional",
 	}, nil
 }
 
 // OptimizeListing analyzes product listing and provides suggestions
 func (s *AIService) OptimizeListing(ctx context.Context, product interface{}) (map[string]interface{}, error) {
-	// TODO: Implement
-	// - Analyze title
-	// - Analyze description
-	// - Check HS Code
-	// - Suggest keywords
-	// - Calculate score
+	prodJSON, _ := json.Marshal(product)
+	prompt := fmt.Sprintf(`Analyze this product listing for global export readiness:
+%s
+Return a JSON object with: score (0-100) and an object of suggestions for title, description, and keywords.`, string(prodJSON))
 
-	return map[string]interface{}{
-		"score": 75,
-		"suggestions": map[string]interface{}{
-			"title":       "Add more descriptive keywords",
-			"description": "Include technical specifications",
-			"hs_code":     "Verify HS code accuracy",
-			"keywords":    []string{"organic", "premium", "export-grade"},
-		},
-	}, nil
+	response, err := s.callGroq(prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	json.Unmarshal([]byte(response), &result)
+	return result, nil
 }

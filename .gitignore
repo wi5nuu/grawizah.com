@@ -18,6 +18,9 @@ node_modules/
 # Misc
 .DS_Store
 *.pem
+*.key
+.qwen/
+.antigravity/
 
 # Debug
 npm-debug.log*
@@ -31,6 +34,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+credentials.json
+secrets.json
 
 # Vercel
 .vercel

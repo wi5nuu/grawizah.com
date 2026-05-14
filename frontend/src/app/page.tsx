@@ -5,182 +5,189 @@ import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import { useEffect, useRef, useState } from 'react';
 
-// Animated counter for stats
-function AnimatedStat({ value, label }: { value: string; label: string }) {
-  const [display, setDisplay] = useState('0');
-  const ref = useRef<HTMLDivElement>(null);
-  const started = useRef(false);
-
-  useEffect(() => {
-    const numMatch = value.match(/[\d.]+/);
-    if (!numMatch) { setDisplay(value); return; }
-    const end = parseFloat(numMatch[0]);
-    const suffix = value.replace(numMatch[0], '');
-
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
-        started.current = true;
-        const duration = 2000;
-        const startTime = performance.now();
-        const animate = (currentTime: number) => {
-          const elapsed = currentTime - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          const eased = 1 - Math.pow(1 - progress, 3);
-          const current = eased * end;
-          if (end >= 100) setDisplay(Math.floor(current).toLocaleString() + suffix);
-          else setDisplay(current.toFixed(1) + suffix);
-          if (progress < 1) requestAnimationFrame(animate);
-          else setDisplay(value);
-        };
-        requestAnimationFrame(animate);
-      }
-    }, { threshold: 0.3 });
-
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [value]);
-
-  return (
-    <div ref={ref} className="text-center group cursor-default">
-      <div className="font-display font-bold text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-2 tabular-nums group-hover:scale-110 transition-transform duration-500">{display}</div>
-      <div className="font-body text-sm text-on-surface-variant dark:text-gray-400 uppercase tracking-wider font-semibold">{label}</div>
-    </div>
-  );
-}
-
 export default function HomePage() {
+  const [activeTab, setActiveTab] = useState<'supplier' | 'buyer'>('supplier');
+
   return (
-    <div className="min-h-screen flex flex-col bg-surface dark:bg-[#050505] text-on-surface dark:text-white overflow-hidden font-body selection:bg-primary/30">
+    <div className="min-h-screen flex flex-col bg-surface dark:bg-[#000] text-black dark:text-white selection:bg-primary/30 font-sans tracking-tight transition-colors duration-300 relative overflow-hidden">
       <Navbar />
 
-      <main className="flex-grow pt-24 relative">
-        {/* Dynamic Global Background Orbs */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/20 dark:bg-primary/10 blur-[120px] mix-blend-screen animate-float-slow" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-secondary/20 dark:bg-[#3b82f6]/10 blur-[150px] mix-blend-screen animate-float-delayed" />
-          <div className="absolute top-[40%] left-[60%] w-[40vw] h-[40vw] rounded-full bg-[#8b5cf6]/20 dark:bg-[#8b5cf6]/10 blur-[100px] mix-blend-screen animate-float" />
-        </div>
+      {/* Floating Dynamic Orbs (Restored from previous design) */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-primary/20 dark:bg-primary/10 blur-[120px] mix-blend-multiply dark:mix-blend-screen animate-float-slow" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-secondary/20 dark:bg-[#3b82f6]/10 blur-[150px] mix-blend-multiply dark:mix-blend-screen animate-float-delayed" />
+        <div className="absolute top-[40%] left-[60%] w-[40vw] h-[40vw] rounded-full bg-[#8b5cf6]/20 dark:bg-[#8b5cf6]/10 blur-[100px] mix-blend-multiply dark:mix-blend-screen animate-float" />
+      </div>
 
-        {/* Hero Section */}
-        <section className="relative z-10 max-w-[1440px] mx-auto px-8 py-20 md:py-32 flex flex-col items-center text-center">
-          <div className="relative z-10 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 dark:bg-white/5 backdrop-blur-md border border-primary/20 dark:border-white/10 text-primary dark:text-primary-400 font-semibold text-sm mb-8 hover:scale-105 hover:bg-white/10 transition-all cursor-default shadow-[0_0_20px_rgba(83,0,183,0.15)]">
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-              <span>Trusted by 500+ Global Enterprises</span>
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse ml-1" />
-            </div>
+      <main className="flex-grow pt-24 relative z-10">
+        {/* Hero Section - Vercel Style */}
+        <section className="relative px-6 py-20 md:py-32 flex flex-col items-center text-center overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-primary/10 to-transparent opacity-50 blur-[120px] pointer-events-none" />
+          
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 dark:bg-[#111] border border-black/5 dark:border-white/10 text-black/60 dark:text-white/60 text-[11px] font-medium tracking-widest mb-8 animate-fade-in">
+             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+             VERIFIED TRADE NETWORK v2.0
           </div>
 
-          <h1 className="font-display font-extrabold text-5xl md:text-7xl lg:text-[80px] leading-[1.1] mb-6 max-w-5xl tracking-tight relative z-10 animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'backwards' }}>
-            Pre-Transaction <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-[#9d4edd] to-secondary">Intelligence</span> for Global Trade
+          <h1 className="text-5xl md:text-8xl font-medium tracking-tighter leading-[0.9] mb-8 animate-fade-in-up">
+            Global Trade.<br />
+            <span className="text-black/20 dark:text-white/40">Powered by Intelligence.</span>
           </h1>
 
-          <p className="font-body text-xl md:text-2xl text-on-surface-variant dark:text-gray-300 mb-10 max-w-2xl leading-relaxed relative z-10 animate-fade-in-up" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }}>
-            Mitigate risk and discover verified partners with our sophisticated data platform. Make decisions backed by deep market intelligence.
+          <p className="text-lg md:text-xl text-black/50 dark:text-white/50 max-w-2xl mx-auto mb-12 font-normal leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+            The essential infrastructure for modern supply chains. Mitigate risk and discover verified partners with our neural data platform.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto relative z-10 animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'backwards' }}>
-            <Link href="/register" className="px-8 py-4 bg-primary text-white rounded-2xl font-bold text-lg hover:scale-[1.04] hover:shadow-[0_0_40px_rgba(83,0,183,0.5)] transition-all duration-300 relative overflow-hidden group border border-primary-400/50">
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                Start Free Trial
-                <span className="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+          <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <Link href="/register" className="px-8 py-3 bg-black dark:bg-white text-white dark:text-black rounded-sm font-semibold text-sm hover:opacity-90 transition-all">
+              Start Building Trust
             </Link>
-            <Link href="/catalog" className="px-8 py-4 bg-white/5 dark:bg-white/5 backdrop-blur-md text-on-surface dark:text-white border border-surface-variant/50 dark:border-white/10 rounded-2xl font-bold text-lg hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 group flex items-center justify-center gap-2">
-              View Catalog
-              <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform duration-300 text-primary dark:text-primary-400">explore</span>
+            <Link href="/catalog" className="px-8 py-3 bg-white dark:bg-black text-black dark:text-white border border-black/10 dark:border-white/10 rounded-sm font-semibold text-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all">
+              Explore Network
             </Link>
           </div>
         </section>
 
-        {/* Glass Stats Bar */}
-        <section className="relative z-10 max-w-[1440px] mx-auto px-8 py-12 mb-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 bg-white/40 dark:bg-[#111118]/60 backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-3xl p-10 hover:shadow-2xl hover:border-primary/30 transition-all duration-500">
-            <AnimatedStat value="2.4M+" label="Verified Suppliers" />
-            <AnimatedStat value="$50B" label="Trade Volume" />
-            <AnimatedStat value="99.9%" label="Data Accuracy" />
-            <AnimatedStat value="150+" label="Countries Covered" />
+        {/* Stats Grid - Vercel Boxy Style */}
+        <section className="border-t border-black/5 dark:border-white/10 border-b border-black/5 dark:border-white/10 bg-gray-50/50 dark:bg-[#050505]">
+          <div className="max-w-[1440px] mx-auto grid grid-cols-2 md:grid-cols-4 divide-x divide-black/5 dark:divide-white/10">
+            {[
+              { val: '2.4M+', label: 'Verified Partners' },
+              { val: '150+', label: 'Market Jurisdictions' },
+              { val: '$50B+', label: 'Analyzed Trade' },
+              { val: '99.9%', label: 'SLA Uptime' }
+            ].map((stat, i) => (
+              <div key={i} className="p-8 md:p-12">
+                <div className="text-2xl md:text-3xl font-medium mb-1 tracking-tighter">{stat.val}</div>
+                <div className="text-[11px] text-black/40 dark:text-white/40 font-bold uppercase tracking-widest">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Features Bento Grid */}
-        <section className="relative z-10 py-24 px-8">
-          <div className="max-w-[1440px] mx-auto">
-            <div className="text-center mb-16 animate-fade-in-up">
-              <h2 className="font-display font-extrabold text-4xl md:text-5xl mb-4 bg-clip-text text-transparent bg-gradient-to-b from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">Unparalleled Market Visibility</h2>
-              <p className="font-body text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Everything you need to source, verify, and transact with confidence in the global marketplace.</p>
+        {/* Dual Role Benefits - Split Innovation */}
+        <section className="py-24 px-6 max-w-[1200px] mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-16 gap-8">
+            <h2 className="text-3xl md:text-4xl font-medium tracking-tight max-w-md">One Platform. Specialized Portals.</h2>
+            <div className="flex p-1 bg-gray-50 dark:bg-[#111] border border-black/5 dark:border-white/10 rounded-sm">
+               <button onClick={() => setActiveTab('supplier')} className={`px-6 py-2 text-xs font-bold transition-all ${activeTab === 'supplier' ? 'bg-white dark:bg-white text-black dark:text-black shadow-lg' : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'}`}>FOR SUPPLIERS</button>
+               <button onClick={() => setActiveTab('buyer')} className={`px-6 py-2 text-xs font-bold transition-all ${activeTab === 'buyer' ? 'bg-white dark:bg-white text-black dark:text-black shadow-lg' : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'}`}>FOR BUYERS</button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: 'share', title: 'Global Network Mapping', desc: 'Visualize complex supply chains with our interactive node-based mapping tool. Identify vulnerabilities, discover alternative routing, and optimize your global logistics network in real-time.', large: true, gradient: 'from-blue-600/20 to-purple-600/20', img: 'bg-gradient-to-t from-black/80 to-transparent' },
-                { icon: 'insights', title: 'Predictive Analytics', desc: 'Leverage AI-driven forecasting models to predict market trends, demand fluctuations, and potential supply chain disruptions before they occur.', large: false, badge: 'AI Powered', gradient: 'from-emerald-600/20 to-teal-600/20' },
-                { icon: 'security', title: 'Compliance Engine', desc: 'Automated tariff calculation, trade restriction checks, and documentation generation to ensure full compliance across global borders.', large: false, gradient: 'from-orange-600/20 to-red-600/20' },
-                { icon: 'currency_exchange', title: 'Multi-Currency Settlements', desc: 'Execute transactions seamlessly in over 50 currencies with real-time exchange rates and minimized conversion fees.', large: false, gradient: 'from-indigo-600/20 to-blue-600/20' },
-                { icon: 'verified_user', title: 'Supplier Verification', desc: 'Access our rigorously vetted directory of global suppliers, complete with risk scores, financial health metrics, and audit histories.', large: false, gradient: 'from-pink-600/20 to-rose-600/20' },
-                { icon: 'api', title: 'Enterprise API Access', desc: 'Integrate Grawizah\'s powerful data streams directly into your existing ERP, CRM, or custom internal systems with our robust RESTful API.', large: false, link: 'View Documentation →', gradient: 'from-purple-600/20 to-fuchsia-600/20', code: '{ "status": 200, "data": { "nodes": 142, "edges": 305 }, "message": "Success" }' },
-              ].map((f, i) => (
-                <div
-                  key={i}
-                  className={`${f.large ? 'md:col-span-2' : ''} relative group overflow-hidden bg-white/40 dark:bg-[#151520]/80 backdrop-blur-lg p-8 rounded-[2rem] border border-white/40 dark:border-white/10 hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_rgba(83,0,183,0.1)] flex flex-col`}
-                >
-                  {/* Dynamic Gradient Background on Hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${f.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`} />
-                  
-                  <div className="relative z-10 flex-grow">
-                    <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500">
-                      <span className={`material-symbols-outlined text-transparent bg-clip-text bg-gradient-to-br from-primary to-secondary text-3xl`}>{f.icon}</span>
-                    </div>
-                    <h3 className={`font-display font-bold ${f.large ? 'text-3xl' : 'text-2xl'} mb-4 text-gray-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary-400 transition-colors duration-300`}>{f.title}</h3>
-                    <p className="font-body text-gray-600 dark:text-gray-400 leading-relaxed">{f.desc}</p>
-                  </div>
+          </div>
 
-                  {f.badge && (
-                    <div className="mt-8 relative z-10">
-                      <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold border border-primary/20">{f.badge}</span>
-                    </div>
-                  )}
-                  {f.link && (
-                    <div className="mt-8 relative z-10">
-                      <Link href="#" className="font-semibold text-primary hover:text-primary-400 transition-colors flex items-center gap-1">{f.link}</Link>
-                    </div>
-                  )}
-                  {f.code && (
-                    <div className="mt-6 bg-[#0d0d12] border border-white/10 rounded-xl p-4 font-mono text-xs text-gray-400 overflow-hidden relative z-10 group-hover:border-primary/30 transition-colors">
-                      <pre>{f.code}</pre>
-                    </div>
-                  )}
-                  {f.large && (
-                    <div className="mt-8 h-32 rounded-xl bg-gradient-to-r from-gray-200 to-gray-100 dark:from-white/5 dark:to-white/10 relative overflow-hidden">
-                       <div className="absolute inset-0 opacity-20 dark:opacity-40" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '16px 16px' }} />
-                       <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-white dark:from-[#151520] to-transparent" />
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-1 px-1 bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 rounded-sm overflow-hidden">
+            {activeTab === 'supplier' ? (
+              <>
+                <div className="bg-white dark:bg-[#050505] p-10 flex flex-col justify-between group">
+                  <div>
+                    <span className="material-symbols-outlined text-primary mb-6">insights</span>
+                    <h3 className="text-2xl font-medium mb-4">Sell with Certainty</h3>
+                    <p className="text-black/50 dark:text-white/50 text-sm leading-relaxed mb-8">Access AI-powered market benchmarking and optimize your listings to capture high-value global buyers.</p>
+                  </div>
+                  <ul className="space-y-3 text-xs text-black/60 dark:text-white/60">
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-primary" /> Verified Trust Passport v2</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-primary" /> Competitive Pricing Intelligence</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-primary" /> Global Visibility Boost</li>
+                  </ul>
+                </div>
+                <div className="bg-gray-50 dark:bg-[#0a0a0a] p-1 flex items-center justify-center">
+                   <div className="w-full aspect-square bg-white dark:bg-[#000] border border-black/5 dark:border-white/5 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-10 dark:opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                      <div className="z-10 p-6 border border-black/5 dark:border-white/10 bg-gray-50 dark:bg-[#111] font-mono text-[10px] text-primary">
+                         {`// AI Optimizer Running...\nMATCH_FOUND: 42 Buyers\nCONFIDENCE: 98.4%\nROI_ESTIMATE: +12.4%`}
+                      </div>
+                   </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-gray-50 dark:bg-[#0a0a0a] p-1 flex items-center justify-center order-2 md:order-1">
+                   <div className="w-full aspect-square bg-white dark:bg-[#000] border border-black/5 dark:border-white/5 flex items-center justify-center relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-10 dark:opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                      <div className="z-10 p-6 border border-black/5 dark:border-white/10 bg-gray-50 dark:bg-[#111] font-mono text-[10px] text-emerald-600 dark:text-emerald-400">
+                         {`// Sourcing Engine...\nSUPPLIER_VERIFIED: True\nRISK_SCORE: Low (1.2)\nDELIVERY_SYNC: Optimal`}
+                      </div>
+                   </div>
+                </div>
+                <div className="bg-white dark:bg-[#050505] p-10 flex flex-col justify-between group order-1 md:order-2">
+                  <div>
+                    <span className="material-symbols-outlined text-emerald-500 mb-6">verified</span>
+                    <h3 className="text-2xl font-medium mb-4">Source with Confidence</h3>
+                    <p className="text-black/50 dark:text-white/50 text-sm leading-relaxed mb-8">Identify rigorously vetted suppliers with our risk-scoring engine and real-time trade history verification.</p>
+                  </div>
+                  <ul className="space-y-3 text-xs text-black/60 dark:text-white/60">
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-emerald-500" /> Real-time Compliance Checks</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-emerald-500" /> Fraud Prevention Protocol</li>
+                    <li className="flex items-center gap-2"><span className="w-1 h-1 bg-emerald-500" /> Supply Chain Transparency</li>
+                  </ul>
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Feature Box Grid - Vercel Minimalist */}
+        <section className="py-24 border-t border-black/5 dark:border-white/10">
+          <div className="max-w-[1200px] mx-auto px-6">
+            <h2 className="text-center text-xs font-bold uppercase tracking-[0.4em] text-black/40 dark:text-white/40 mb-16">ENGINEERED FOR SCALE</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-1 px-1 bg-black/5 dark:bg-white/10 border border-black/5 dark:border-white/10 rounded-sm">
+              {[
+                { icon: 'hub', title: 'Network Intelligence', desc: 'Visualize complex supply chains with node-based mapping tools to identify vulnerabilities.' },
+                { icon: 'bolt', title: 'Neural Matching', desc: 'Instant partner discovery using our high-performance AI-driven trade matching engine.' },
+                { icon: 'shield_lock', title: 'Security Standard', desc: 'Enterprise-grade encryption and verifiable documentation for cross-border transactions.' },
+                { icon: 'translate', title: 'Global Translation', desc: 'Real-time multi-language translation for seamless international communication.' },
+                { icon: 'monitoring', title: 'Strategic Analytics', desc: 'Data-backed forecasting to stay ahead of market shifts and supply disruptions.' },
+                { icon: 'api', title: 'Native API', desc: 'Integrate Grawizah Intelligence directly into your existing ERP and logistics stack.' },
+              ].map((f, i) => (
+                <div key={i} className="bg-white dark:bg-[#050505] p-8 hover:bg-gray-50 dark:hover:bg-[#0a0a0a] transition-all">
+                   <span className="material-symbols-outlined text-black/40 dark:text-white/40 mb-6 group-hover:text-primary">{f.icon}</span>
+                   <h4 className="text-sm font-bold mb-3 tracking-wide uppercase">{f.title}</h4>
+                   <p className="text-[13px] text-black/40 dark:text-white/40 leading-relaxed">{f.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* CTA Banner */}
-        <section className="py-24 px-8 relative z-10">
-          <div className="max-w-[1200px] mx-auto bg-gradient-to-br from-[#5300b7] via-[#7b2cbf] to-[#3a0ca3] rounded-[3rem] p-16 text-center text-white relative overflow-hidden group shadow-[0_20px_50px_rgba(83,0,183,0.3)]">
-            {/* Animated background decorations */}
-            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/10 rounded-full blur-[60px] group-hover:scale-150 transition-transform duration-1000 pointer-events-none" />
-            
-            <h2 className="font-display font-extrabold text-5xl md:text-6xl mb-6 relative z-10 leading-tight">Ready to secure your supply chain?</h2>
-            <p className="font-body text-xl md:text-2xl mb-12 text-white/90 max-w-2xl mx-auto relative z-10 font-light">Join industry leaders who trust Grawizah for their global trade intelligence.</p>
-            <div className="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
-              <Link href="/register" className="px-10 py-5 bg-white text-primary rounded-2xl font-bold text-xl hover:bg-gray-50 hover:scale-105 transition-all duration-300 shadow-2xl">
-                Get Started Now
-              </Link>
-              <Link href="#" className="px-10 py-5 bg-black/20 backdrop-blur-md border border-white/30 text-white rounded-2xl font-bold text-xl hover:bg-white/20 transition-all duration-300">
-                Contact Sales
-              </Link>
-            </div>
+        {/* Innovation Section - Network Map Preview */}
+        <section className="py-24 bg-gray-50/50 dark:bg-[#050505]">
+          <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+             <div>
+               <h2 className="text-4xl font-medium tracking-tight mb-6 text-black dark:text-white">Visibility is Intelligence.</h2>
+               <p className="text-black/50 dark:text-white/50 text-base leading-relaxed mb-8 font-normal">Our interactive Network Intelligence Map allows you to visualize your entire supply chain, identifying bottlenecks and alternative routing in a single, beautiful interface.</p>
+               <Link href="/dashboard/intelligence" className="text-sm font-bold text-black dark:text-white border-b border-black/20 dark:border-white/20 pb-1 hover:border-black dark:hover:border-white transition-all">
+                 VIEW NETWORK DEMO →
+               </Link>
+             </div>
+             <div className="bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/10 p-1 aspect-video rounded-sm overflow-hidden relative group">
+                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-full h-full bg-white dark:bg-[#000] flex flex-col">
+                   <div className="h-6 bg-gray-100 dark:bg-[#111] border-b border-black/5 dark:border-white/10 flex items-center px-3 gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500/50" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-amber-500/50" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                   </div>
+                   <div className="flex-1 flex items-center justify-center overflow-hidden">
+                      {/* Simple SVG Mock for the Map */}
+                      <svg width="200" height="150" viewBox="0 0 200 150">
+                         <circle cx="100" cy="75" r="4" fill="#6d28d9" />
+                         <circle cx="50" cy="40" r="2" fill="currentColor" opacity="0.3" />
+                         <circle cx="150" cy="110" r="2" fill="currentColor" opacity="0.3" />
+                         <line x1="100" y1="75" x2="50" y2="40" stroke="#6d28d9" strokeWidth="0.5" opacity="0.4" />
+                         <line x1="100" y1="75" x2="150" y2="110" stroke="#6d28d9" strokeWidth="0.5" opacity="0.4" />
+                      </svg>
+                   </div>
+                </div>
+             </div>
           </div>
+        </section>
+
+        {/* Professional Footer CTA */}
+        <section className="py-24 border-t border-black/5 dark:border-white/10 text-center">
+           <h2 className="text-4xl md:text-6xl font-medium tracking-tighter mb-12 text-black dark:text-white">Secure the Future.</h2>
+           <Link href="/register" className="px-12 py-4 bg-black dark:bg-white text-white dark:text-black font-black tracking-widest text-xs uppercase hover:opacity-90 transition-all">
+             GET STARTED NOW
+           </Link>
         </section>
       </main>
 

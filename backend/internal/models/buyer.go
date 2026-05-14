@@ -92,6 +92,7 @@ func (b *Buyer) GetQualityTier() string {
 
 // BuyerSearchCriteria represents search criteria for buyers
 type BuyerSearchCriteria struct {
+	Query        string
 	Country      string
 	MinBuyScore  int
 	MaxBuyScore  int

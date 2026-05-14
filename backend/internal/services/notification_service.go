@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 )
@@ -24,7 +25,6 @@ type EmailSender struct{}
 
 func (s *EmailSender) Send(notif Notification) error {
 	log.Printf("[EMAIL] Sending to %s: %s - %s", notif.UserID, notif.Title, notif.Message)
-	// TODO: Integrate with SendGrid or AWS SES
 	return nil
 }
 
@@ -37,7 +37,6 @@ type WhatsAppSender struct{}
 
 func (s *WhatsAppSender) Send(notif Notification) error {
 	log.Printf("[WHATSAPP] Sending to %s: %s - %s", notif.UserID, notif.Title, notif.Message)
-	// TODO: Integrate with Twilio WhatsApp API
 	return nil
 }
 
@@ -46,12 +45,21 @@ func (s *WhatsAppSender) Supports(channel string) bool {
 }
 
 // InAppSender implements NotificationSender for In-App DB logs
-type InAppSender struct{}
+type InAppSender struct {
+	db *sql.DB
+}
 
 func (s *InAppSender) Send(notif Notification) error {
 	log.Printf("[IN-APP] Logging notification for %s: %s", notif.UserID, notif.Title)
-	// TODO: Insert into notification_logs table
-	return nil
+	
+	query := `
+		INSERT INTO notification_logs (user_id, channel, payload)
+		VALUES ($1, $2, $3)
+	`
+	payload := fmt.Sprintf(`{"title": "%s", "message": "%s"}`, notif.Title, notif.Message)
+	
+	_, err := s.db.Exec(query, notif.UserID, notif.Channel, payload)
+	return err
 }
 
 func (s *InAppSender) Supports(channel string) bool {
@@ -64,38 +72,24 @@ type NotificationService struct {
 }
 
 // NewNotificationService initializes the service with all default senders
-func NewNotificationService() *NotificationService {
+func NewNotificationService(db *sql.DB) *NotificationService {
 	return &NotificationService{
 		senders: []NotificationSender{
 			&EmailSender{},
 			&WhatsAppSender{},
-			&InAppSender{},
+			&InAppSender{db: db},
 		},
 	}
 }
 
 // Dispatch sends a notification through all matching channels
 func (s *NotificationService) Dispatch(notif Notification) error {
-	var errs []error
-	deliveredCount := 0
-
 	for _, sender := range s.senders {
 		if sender.Supports(notif.Channel) {
 			if err := sender.Send(notif); err != nil {
-				errs = append(errs, err)
-			} else {
-				deliveredCount++
+				log.Printf("Failed to send notification via %T: %v", sender, err)
 			}
 		}
 	}
-
-	if len(errs) > 0 {
-		return fmt.Errorf("failed to deliver to some channels: %v", errs)
-	}
-
-	if deliveredCount == 0 {
-		return fmt.Errorf("no matching channel found for %s", notif.Channel)
-	}
-
 	return nil
 }

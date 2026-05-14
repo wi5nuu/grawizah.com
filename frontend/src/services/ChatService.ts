@@ -2,6 +2,8 @@ import { BaseService } from './BaseService';
 
 export interface ChatMessage {
   supplierId?: string;
+  buyerId?: string;
+  senderId?: string;
   productId?: string;
   message: string;
   channel?: string;
@@ -20,8 +22,8 @@ export class ChatService extends BaseService {
     return this.post<any>(`${this.chatEndpoint}/send`, data);
   }
 
-  async getChatHistory(supplierId: string): Promise<any> {
-    return this.get<any>(`${this.chatEndpoint}/history/${supplierId}`);
+  async getChatHistory(supplierId: string, buyerId: string): Promise<any> {
+    return this.get<any>(`${this.chatEndpoint}/history/${supplierId}?buyer_id=${buyerId}`);
   }
 
   async sendWhatsAppMessage(data: WhatsAppMessage): Promise<any> {

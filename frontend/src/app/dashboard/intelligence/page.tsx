@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import BuyerRadarTable from '@/components/BuyerRadarTable';
-import { MarketOpportunityAlerts } from '@/components/MarketOpportunityAlerts';
+import TradeNetworkMap from '@/components/TradeNetworkMap';
 
 const LANGUAGES = [
   { code: 'en', name: 'English' }, { code: 'id', name: 'Indonesian' },
@@ -15,7 +16,8 @@ const LANGUAGES = [
 ];
 
 export default function IntelligencePage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'radar' | 'hs-code' | 'optimizer' | 'alerts' | 'translator' | 'benchmark'>('overview');
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'radar' | 'hs-code' | 'optimizer' | 'alerts' | 'translator' | 'benchmark' | 'matchmaking'>('overview');
   const [hsInput, setHsInput] = useState({ description: '', category: '' });
   const [hsResult, setHsResult] = useState<any>(null);
   const [hsLoading, setHsLoading] = useState(false);
@@ -33,10 +35,32 @@ export default function IntelligencePage() {
   const [benchmarkResult, setBenchmarkResult] = useState<any>(null);
   const [benchmarkLoading, setBenchmarkLoading] = useState(false);
 
+  // Define tabs based on role
+  const supplierTabs = [
+    { id: 'overview' as const, icon: 'explore', label: 'Network Intelligence' },
+    { id: 'matchmaking' as const, icon: 'auto_awesome', label: 'Smart Match' },
+    { id: 'radar' as const, icon: 'target', label: 'Buyer Radar' },
+    { id: 'optimizer' as const, icon: 'bolt', label: 'Optimizer' },
+    { id: 'benchmark' as const, icon: 'monitoring', label: 'Benchmark' },
+    { id: 'hs-code' as const, icon: 'smart_toy', label: 'HS Code' },
+    { id: 'translator' as const, icon: 'translate', label: 'Translator' },
+  ];
+
+  const buyerTabs = [
+    { id: 'overview' as const, icon: 'explore', label: 'Supply Chain Map' },
+    { id: 'matchmaking' as const, icon: 'auto_awesome', label: 'Supplier Match' },
+    { id: 'radar' as const, icon: 'radar', label: 'Supplier Discovery' },
+    { id: 'benchmark' as const, icon: 'monitoring', label: 'Price Benchmark' },
+    { id: 'hs-code' as const, icon: 'smart_toy', label: 'HS Classification' },
+    { id: 'translator' as const, icon: 'translate', label: 'Translator' },
+  ];
+
+  const tabs = user?.role === 'buyer' ? buyerTabs : supplierTabs;
+
   const classifyHSCode = async () => {
     setHsLoading(true);
     try {
-      const res = await fetch('http://localhost:8080/api/ai/hs-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(hsInput) });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/ai/hs-code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(hsInput) });
       const data = await res.json();
       setHsResult(data.data || data);
     } catch { } finally { setHsLoading(false); }
@@ -45,7 +69,7 @@ export default function IntelligencePage() {
   const optimizeListing = async () => {
     setOptimizerLoading(true);
     try {
-      const res = await fetch('http://localhost:8080/api/ai/optimize-listing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: optimizerInput.product_id }) });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/ai/optimize-listing`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: optimizerInput.product_id }) });
       const data = await res.json();
       setOptimizerResult(data);
     } catch { } finally { setOptimizerLoading(false); }
@@ -54,7 +78,7 @@ export default function IntelligencePage() {
   const translateText = async () => {
     setTransLoading(true);
     try {
-      const res = await fetch('http://localhost:8080/api/ai/translate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: transText, sourceLang: transSource, targetLang: transTarget }) });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/ai/translate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: transText, targetLang: transTarget }) });
       const data = await res.json();
       setTransResult(data);
     } catch { } finally { setTransLoading(false); }
@@ -63,7 +87,7 @@ export default function IntelligencePage() {
   const detectLanguage = async () => {
     if (!transText) return;
     try {
-      const res = await fetch('http://localhost:8080/api/ai/detect-language', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: transText }) });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/ai/detect-language`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: transText }) });
       const data = await res.json();
       setDetectResult(data);
       if (data.language) setTransSource(data.language);
@@ -74,177 +98,195 @@ export default function IntelligencePage() {
     if (!benchmarkQuery) return;
     setBenchmarkLoading(true);
     try {
-      const res = await fetch(`http://localhost:8080/api/competitor/benchmark?product=${encodeURIComponent(benchmarkQuery)}`);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/competitor/benchmark?product=${encodeURIComponent(benchmarkQuery)}`);
       const data = await res.json();
       setBenchmarkResult(data);
     } catch { } finally { setBenchmarkLoading(false); }
   };
 
-  const tabs = [
-    { id: 'overview' as const, icon: 'explore', label: 'Overview' },
-    { id: 'radar' as const, icon: 'target', label: 'Buyer Radar' },
-    { id: 'hs-code' as const, icon: 'smart_toy', label: 'HS Code' },
-    { id: 'optimizer' as const, icon: 'bolt', label: 'Optimizer' },
-    { id: 'benchmark' as const, icon: 'monitoring', label: 'Benchmark' },
-    { id: 'alerts' as const, icon: 'notifications', label: 'Alerts' },
-    { id: 'translator' as const, icon: 'translate', label: 'Translator' },
-  ];
-
   return (
-    <div className="max-w-[1440px] mx-auto p-8 relative z-10">
-      {/* Abstract Background */}
-      <div className="absolute top-0 right-0 w-full h-96 bg-gradient-to-b from-surface-container-low to-transparent opacity-50 pointer-events-none" />
-
+    <div className="max-w-[1440px] mx-auto p-8 relative z-10 font-sans">
       {/* Page Header */}
       <header className="flex justify-between items-center mb-8 relative z-10">
         <div>
-          <h1 className="text-3xl font-display font-extrabold text-on-surface mb-2">Trade Intelligence</h1>
-          <p className="text-on-surface-variant font-body">AI-driven insights and market analytics for global commerce.</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter">
+            {user?.role === 'buyer' ? 'Strategic Sourcing Intelligence' : 'Trade Growth Intelligence'}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">AI-driven insights for {user?.role === 'buyer' ? 'secure sourcing' : 'global market expansion'}.</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
-            <input className="pl-10 pr-4 py-2 rounded-lg border-surface-variant bg-surface focus:border-secondary focus:ring-2 focus:ring-secondary/20 w-64 text-sm font-body" placeholder="Search markets..." />
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+            <input className="pl-10 pr-4 py-2 rounded-sm border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 text-sm font-medium w-64" placeholder="Deep search markets..." />
           </div>
-          <button className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary-fixed transition-colors">
+          <button className="w-10 h-10 rounded-sm bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
             <span className="material-symbols-outlined">notifications</span>
           </button>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-surface-container-low rounded-xl p-1 mb-8 overflow-x-auto relative z-10">
+      <div className="flex gap-1 bg-gray-100 dark:bg-white/5 rounded-sm p-1 mb-8 overflow-x-auto relative z-10">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-              activeTab === tab.id ? 'bg-surface-container-lowest text-primary shadow-sm font-semibold' : 'text-on-surface-variant hover:text-primary'
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-sm text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+              activeTab === tab.id ? 'bg-white dark:bg-white text-black dark:text-black shadow-lg scale-105' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'
             }`}
           >
-            <span className="material-symbols-outlined text-[20px]">{tab.icon}</span> {tab.label}
+            <span className="material-symbols-outlined text-[18px]">{tab.icon}</span> {tab.label}
           </button>
         ))}
       </div>
 
-      {/* === Overview Tab (Bento Grid) === */}
+      {/* === Overview Tab (Innovative Intelligence) === */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-          {/* Market Opportunities (Span 8) */}
-          <div className="col-span-1 md:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover-lift transition-all duration-300 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full pointer-events-none" />
-            <div className="flex justify-between items-start mb-6 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
-                  <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>explore</span>
-                </div>
-                <div>
-                  <h2 className="text-xl font-headline font-bold text-on-surface">Market Opportunities</h2>
-                  <p className="text-sm text-on-surface-variant font-body">AI predicted growth vectors for Q3</p>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 animate-fade-in">
+          <div className="col-span-1 md:col-span-8">
+            <TradeNetworkMap />
+          </div>
+
+          <div className="col-span-1 md:col-span-4 bg-white dark:bg-black/40 backdrop-blur-md rounded-sm p-8 border border-gray-100 dark:border-white/10 shadow-sm flex flex-col">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-12 h-12 rounded-sm bg-[#d1fae5] text-[#047857] flex items-center justify-center">
+                <span className="material-symbols-outlined text-2xl font-bold">verified</span>
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white leading-tight tracking-tighter">Trust Score</h3>
+                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">AI-Verified Portfolio</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative w-36 h-36 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" className="text-gray-100 dark:text-white/5" />
+                  <circle cx="72" cy="72" r="64" stroke="currentColor" strokeWidth="12" fill="transparent" strokeDasharray={402} strokeDashoffset={402 * (1 - 0.94)} className="text-primary transition-all duration-1000" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-black text-gray-900 dark:text-white">94</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">AA CLASS</span>
                 </div>
               </div>
-              <span className="px-3 py-1 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-full">High Confidence</span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+
+            <div className="space-y-4 mt-auto">
               {[
-                { label: 'Emerging Sector', value: 'Sustainable Textiles', trend: '+24% YoY' },
-                { label: 'Target Region', value: 'Southeast Asia', trend: '+18% Demand' },
-                { label: 'Price Volatility', value: 'Low Risk', trend: 'Stable Supply', icon: 'check_circle' },
+                { label: 'Documentation Compliance', score: '98%' },
+                { label: 'Trade History Accuracy', score: '100%' },
+                { label: 'Network Reliability', score: '91%' }
               ].map((item) => (
-                <div key={item.label} className="p-4 rounded-lg bg-surface-container-low border border-surface-variant/50">
-                  <div className="text-sm text-on-surface-variant mb-1 font-body">{item.label}</div>
-                  <div className="text-lg font-bold text-primary mb-2">{item.value}</div>
-                  <div className="flex items-center gap-1 text-secondary font-medium text-sm">
-                    <span className="material-symbols-outlined text-sm">{item.icon || 'trending_up'}</span> {item.trend}
-                  </div>
+                <div key={item.label} className="flex justify-between items-center text-[11px] font-bold uppercase tracking-wider">
+                  <span className="text-gray-500 dark:text-gray-400">{item.label}</span>
+                  <span className="text-gray-900 dark:text-white">{item.score}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Buyer Trends (Span 4) */}
-          <div className="col-span-1 md:col-span-4 bg-gradient-to-br from-primary to-secondary rounded-xl p-6 shadow-ambient hover-lift transition-all duration-300 text-on-primary relative overflow-hidden">
-            <div className="absolute top-0 right-0 opacity-20 transform translate-x-4 -translate-y-4">
-              <span className="material-symbols-outlined text-9xl">psychology</span>
+          <div className="col-span-1 md:col-span-8 bg-white dark:bg-black/40 rounded-sm p-8 border border-gray-100 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-3 mb-8">
+              <span className="material-symbols-outlined text-primary text-3xl">psychology</span>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-wider">Strategic Recommendations</h2>
             </div>
-            <div className="relative z-10 h-full flex flex-col">
-              <h2 className="text-xl font-headline font-bold mb-2 flex items-center gap-2">
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>auto_awesome</span> Buyer Trends
-              </h2>
-              <p className="text-primary-fixed-dim text-sm font-body mb-6">Real-time sentiment analysis</p>
-              <div className="mt-auto space-y-4">
-                {[
-                  { label: 'Bulk Orders', status: 'Rising', width: '75%' },
-                  { label: 'Lead Times', status: 'Decreasing', width: '40%' },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium">{item.label}</span><span>{item.status}</span>
-                    </div>
-                    <div className="w-full bg-on-primary/20 rounded-full h-2">
-                      <div className="bg-primary-fixed h-2 rounded-full" style={{ width: item.width }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { title: 'Market Diversification', desc: 'Slight shift to Vietnam market could improve margins by 8.4% based on current HS-Code trends.', color: 'border-blue-500' },
+                { title: 'Logistics Optimization', desc: 'Freight consolidation at Singapore hub identified as highest efficiency path for Q4.', color: 'border-purple-500' },
+              ].map((rec) => (
+                <div key={rec.title} className={`p-6 rounded-sm bg-gray-50/50 dark:bg-white/5 border-l-4 ${rec.color} hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer group`}>
+                  <h3 className="font-black text-[13px] text-gray-900 dark:text-white mb-2 uppercase tracking-wide group-hover:text-primary transition-colors">{rec.title}</h3>
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed font-medium">{rec.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Market Trends Chart (Span 8) */}
-          <div className="col-span-1 md:col-span-8 bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover-lift transition-all duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-headline font-bold text-on-surface">Market Trends Overview</h2>
-              <div className="flex gap-2">
-                {['1W', '1M', '1Y'].map((period, i) => (
-                  <button key={period} className={`px-3 py-1 text-xs font-medium rounded-full ${i === 0 ? 'bg-primary-fixed text-on-primary-fixed' : 'text-on-surface-variant hover:bg-surface-container'}`}>{period}</button>
-                ))}
-              </div>
-            </div>
-            <div className="h-64 relative w-full border-l border-b border-outline-variant/30 flex items-end justify-between px-2 pb-2">
-              <div className="absolute -left-8 top-0 h-full flex flex-col justify-between text-xs text-on-surface-variant py-2"><span>10k</span><span>5k</span><span>0</span></div>
-              <svg className="absolute bottom-2 left-0 w-full h-[95%]" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <defs><linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#6d28d9" stopOpacity="0.2" /><stop offset="100%" stopColor="#6d28d9" stopOpacity="0" /></linearGradient></defs>
-                <path d="M0,80 L10,75 L20,60 L30,65 L40,40 L50,45 L60,20 L70,30 L80,15 L90,25 L100,5" fill="none" stroke="#5300b7" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                <path d="M0,80 L10,75 L20,60 L30,65 L40,40 L50,45 L60,20 L70,30 L80,15 L90,25 L100,5 L100,100 L0,100 Z" fill="url(#chartGradient)" />
-              </svg>
-              <div className="absolute -bottom-6 left-0 w-full flex justify-between text-xs text-on-surface-variant px-4">
-                {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => <span key={d}>{d}</span>)}
-              </div>
-            </div>
-          </div>
-
-          {/* AI Recommendations (Span 4) */}
-          <div className="col-span-1 md:col-span-4 bg-surface-container-lowest rounded-xl p-6 shadow-ambient hover-lift transition-all duration-300">
-            <h2 className="text-lg font-headline font-bold text-on-surface mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>list_alt</span> AI Recommendations
+          <div className="col-span-1 md:col-span-4 bg-white dark:bg-black/40 rounded-sm p-8 border border-gray-100 dark:border-white/10 shadow-sm">
+            <h2 className="text-lg font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-wider">
+              <span className="material-symbols-outlined text-primary">list_alt</span> Smart Insights
             </h2>
             <div className="space-y-4">
               {[
-                { title: 'Optimize Supply Chain', desc: 'Switch to regional suppliers to cut costs by 12%.', color: 'primary' },
-                { title: 'Inventory Alert', desc: 'Electronics category stock is below 15% threshold.', color: 'secondary' },
-                { title: 'Pricing Strategy', desc: 'Increase margins on raw materials by 2%.', color: 'surface-tint' },
+                { title: 'Supply Chain Sync', desc: 'Switch to regional suppliers to cut costs by 12%.', icon: 'sync_alt' },
+                { title: 'Inventory Pulse', desc: 'Electronics category stock is below 15% threshold.', icon: 'analytics' },
               ].map((rec) => (
-                <div key={rec.title} className={`p-3 rounded-lg bg-surface-container-low border-l-4 border-${rec.color} hover:bg-surface-container transition-colors cursor-pointer group`}>
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-sm text-on-surface">{rec.title}</h3>
-                    <span className="material-symbols-outlined text-outline-variant text-sm">chevron_right</span>
+                <div key={rec.title} className="p-4 rounded-sm bg-gray-50/50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer group flex items-start gap-4">
+                  <span className="material-symbols-outlined text-primary text-[24px] mt-0.5">{rec.icon}</span>
+                  <div>
+                    <h3 className="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-tight">{rec.title}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-bold mt-1">{rec.desc}</p>
                   </div>
-                  <p className="text-xs text-on-surface-variant font-body">{rec.desc}</p>
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-2 border border-outline rounded-lg text-primary font-medium text-sm hover:bg-surface-container-high transition-colors">View All Actions</button>
           </div>
         </div>
       )}
 
-      {/* === Buyer Radar Tab === */}
+      {/* === AI Smart Matchmaker Tab (Innovation) === */}
+      {activeTab === 'matchmaking' && (
+        <div className="space-y-8 animate-fade-in">
+          <div className="bg-black dark:bg-white p-12 text-white dark:text-black rounded-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl opacity-50" />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-12">
+              <div className="max-w-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="px-4 py-1 bg-primary text-white rounded-sm text-[10px] font-black uppercase tracking-[0.3em]">AI ENGINE v2.4</span>
+                </div>
+                <h2 className="text-5xl font-black mb-6 leading-[0.9] tracking-tighter">
+                  {user?.role === 'buyer' ? 'Find Vetted Suppliers Instantly' : 'Connect with Global Buyers Instantly'}
+                </h2>
+                <p className="text-gray-400 dark:text-gray-600 text-xl font-medium max-w-lg">Our neural matching engine analyzes {user?.role === 'buyer' ? '300k+ verified factories' : '500k+ global trade leads'} to find your perfect partner.</p>
+              </div>
+              <button className="px-12 py-5 bg-primary text-white rounded-sm font-black text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl">
+                RUN MATCHMAKING
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { name: user?.role === 'buyer' ? 'Global Precision Mfg' : 'InduCorp Global', region: user?.role === 'buyer' ? 'Vietnam' : 'Germany', score: 98, reason: user?.role === 'buyer' ? 'Matches your Q4 sustainability requirements and production volume.' : 'High demand for your specific steel grade in their Q4 manufacturing forecast.', category: user?.role === 'buyer' ? 'Metal Fabrication' : 'Automotive' },
+              { name: user?.role === 'buyer' ? 'Eco-Safe Materials' : 'SkyLine Imports', region: user?.role === 'buyer' ? 'Malaysia' : 'UAE', score: 92, reason: user?.role === 'buyer' ? 'Verified zero-waste facility with active ISO 14001 compliance.' : 'Historical preference for Southeast Asian suppliers with your ISO certifications.', category: user?.role === 'buyer' ? 'Chemicals' : 'Construction' },
+              { name: user?.role === 'buyer' ? 'Apex Components' : 'Nordic Trade Co', region: user?.role === 'buyer' ? 'Thailand' : 'Sweden', score: 87, reason: user?.role === 'buyer' ? 'Top-rated for shipping reliability on the Grawizah Trade Network.' : 'Seeking sustainable raw materials matching your ecological verification.', category: user?.role === 'buyer' ? 'Electronics' : 'Retail' }
+            ].map((match, i) => (
+              <div key={i} className="bg-white dark:bg-black/40 rounded-sm p-10 border border-gray-100 dark:border-white/10 shadow-sm hover:border-primary/50 transition-all group">
+                <div className="flex justify-between items-start mb-8">
+                  <div className="w-20 h-20 bg-gray-50 dark:bg-white/5 rounded-sm flex items-center justify-center text-primary font-black text-3xl group-hover:bg-primary group-hover:text-white transition-all">
+                    {match.name[0]}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-4xl font-black text-primary">{match.score}%</div>
+                    <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Match Score</div>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight uppercase">{match.name}</h3>
+                <p className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">{match.region} • {match.category}</p>
+                <div className="p-5 bg-gray-50 dark:bg-white/5 rounded-sm border-l-4 border-primary mb-8">
+                  <p className="text-[13px] text-gray-600 dark:text-gray-400 font-bold leading-relaxed italic">"{match.reason}"</p>
+                </div>
+                <button className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-sm font-black text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-all flex items-center justify-center gap-3">
+                   {user?.role === 'buyer' ? 'Request Quote' : 'Send Proposal'} <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* === Radar Tab === */}
       {activeTab === 'radar' && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-primary">target</span>
-            <h2 className="text-lg font-semibold text-on-surface">Active Buyer Radar</h2>
-            <span className="badge badge-primary text-xs ml-2">Live</span>
+        <div className="animate-fade-in">
+          <div className="flex items-center gap-3 mb-8">
+            <span className="material-symbols-outlined text-primary text-3xl">radar</span>
+            <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-widest">
+              {user?.role === 'buyer' ? 'Supplier Discovery Radar' : 'Active Buyer Radar'}
+            </h2>
+            <div className="ml-4 px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-sm text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE STREAM
+            </div>
           </div>
           <BuyerRadarTable />
         </div>
@@ -252,181 +294,148 @@ export default function IntelligencePage() {
 
       {/* === HS Code Tab === */}
       {activeTab === 'hs-code' && (
-        <div className="max-w-2xl">
-          <div className="card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center"><span className="material-symbols-outlined text-primary">smart_toy</span></div>
+        <div className="max-w-2xl animate-fade-in">
+          <div className="bg-white dark:bg-black/40 p-10 rounded-sm border border-gray-100 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-sm flex items-center justify-center"><span className="material-symbols-outlined text-3xl">smart_toy</span></div>
               <div>
-                <h2 className="text-lg font-semibold text-on-surface">AI HS Code Classifier</h2>
-                <p className="text-sm text-on-surface-variant">Enter a product description to classify</p>
+                <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-widest">AI HS Code Classification</h2>
+                <p className="text-xs text-gray-500 font-bold uppercase mt-1 tracking-wider">Precision mapping for global trade compliance</p>
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-on-surface mb-1.5">Product Description *</label>
-                <textarea value={hsInput.description} onChange={(e) => setHsInput({ ...hsInput, description: e.target.value })} className="input-field h-24 resize-none" placeholder="e.g. Fresh coconut oil, virgin, organic" />
+                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Product Description *</label>
+                <textarea value={hsInput.description} onChange={(e) => setHsInput({ ...hsInput, description: e.target.value })} className="w-full px-4 py-3 rounded-sm border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 focus:border-primary outline-none text-sm h-32 font-medium" placeholder="e.g. Fresh coconut oil, virgin, organic" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-on-surface mb-1.5">Category (optional)</label>
-                <input value={hsInput.category} onChange={(e) => setHsInput({ ...hsInput, category: e.target.value })} className="input-field" placeholder="e.g. Agriculture" />
-              </div>
-              <button onClick={classifyHSCode} disabled={!hsInput.description || hsLoading} className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50">
-                {hsLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[18px]">smart_toy</span> Classify HS Code</>}
+              <button onClick={classifyHSCode} disabled={!hsInput.description || hsLoading} className="w-full py-4 bg-black dark:bg-white text-white dark:text-black rounded-sm font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-3 disabled:opacity-50">
+                {hsLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[20px]">psychology</span> Analyze Classification</>}
               </button>
             </div>
             {hsResult && (
-              <div className="mt-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl animate-slide-up">
-                <div className="flex items-center gap-2 mb-3"><span className="material-symbols-outlined text-emerald-600">auto_awesome</span><h3 className="font-semibold text-emerald-800">Classification Result</h3></div>
-                <div className="grid grid-cols-2 gap-4 mb-3">
-                  <div className="bg-white/70 rounded-lg p-3"><p className="text-xs text-emerald-600 mb-0.5">HS Code</p><p className="text-2xl font-bold text-emerald-800">{hsResult.hs_code}</p></div>
-                  <div className="bg-white/70 rounded-lg p-3"><p className="text-xs text-emerald-600 mb-0.5">Confidence</p><p className="text-2xl font-bold text-emerald-800">{((hsResult.confidence || 0) * 100).toFixed(0)}%</p></div>
+              <div className="mt-10 p-8 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-sm animate-slide-up">
+                <div className="flex items-center gap-3 mb-6"><span className="material-symbols-outlined text-emerald-500">auto_awesome</span><h3 className="font-black text-xs uppercase tracking-[0.2em]">Classification Output</h3></div>
+                <div className="grid grid-cols-2 gap-8 mb-6">
+                  <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">HS Code</p><p className="text-4xl font-black text-primary tracking-tighter">{hsResult.hs_code}</p></div>
+                  <div><p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Confidence</p><p className="text-4xl font-black text-emerald-500 tracking-tighter">{((hsResult.confidence || 0) * 100).toFixed(0)}%</p></div>
                 </div>
-                <p className="text-sm text-emerald-700"><strong>Description:</strong> {hsResult.description}</p>
+                <div className="pt-6 border-t border-gray-200 dark:border-white/10">
+                  <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Category Description</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 font-bold leading-relaxed">{hsResult.description}</p>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* === Optimizer Tab === */}
-      {activeTab === 'optimizer' && (
-        <div className="max-w-2xl">
-          <div className="card">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center"><span className="material-symbols-outlined text-secondary">bolt</span></div>
+      {/* === Benchmark Tab === */}
+      {activeTab === 'benchmark' && (
+        <div className="space-y-8 animate-fade-in">
+          <div className="bg-white dark:bg-black/40 p-10 rounded-sm border border-gray-100 dark:border-white/10 shadow-sm">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 bg-primary/10 text-primary rounded-sm flex items-center justify-center"><span className="material-symbols-outlined text-3xl">monitoring</span></div>
               <div>
-                <h2 className="text-lg font-semibold text-on-surface">AI Listing Optimizer</h2>
-                <p className="text-sm text-on-surface-variant">Analyze and improve product listings</p>
+                <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-widest">Global Price Benchmarking</h2>
+                <p className="text-xs text-gray-500 font-bold uppercase mt-1 tracking-wider">Real-time market analytics across regions</p>
               </div>
             </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-on-surface mb-1.5">Product ID</label>
-                <input value={optimizerInput.product_id} onChange={(e) => setOptimizerInput({ product_id: e.target.value })} className="input-field" placeholder="Product ID" />
-              </div>
-              <button onClick={optimizeListing} disabled={optimizerLoading} className="btn-secondary w-full flex items-center justify-center gap-2 disabled:opacity-50">
-                {optimizerLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[18px]">bolt</span> Analyze Listing</>}
+            <div className="flex gap-4">
+              <input 
+                value={benchmarkQuery}
+                onChange={(e) => setBenchmarkQuery(e.target.value)}
+                className="flex-1 px-4 py-3 rounded-sm border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 focus:border-primary outline-none text-sm font-medium" 
+                placeholder="Enter product name (e.g. Zinc Die Casting)" 
+              />
+              <button 
+                onClick={fetchBenchmark}
+                disabled={benchmarkLoading || !benchmarkQuery}
+                className="px-10 py-3 bg-black dark:bg-white text-white dark:text-black rounded-sm font-black text-xs uppercase tracking-[0.2em] disabled:opacity-50 flex items-center gap-3 transition-all"
+              >
+                {benchmarkLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined text-[20px]">analytics</span> Run Analysis</>}
               </button>
             </div>
-            {optimizerResult && (
-              <div className="mt-6 space-y-4 animate-slide-up">
-                <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-primary-50 border border-blue-200 rounded-xl">
-                  <div className="text-center"><p className="text-4xl font-bold text-secondary">{optimizerResult.score}</p><p className="text-xs text-secondary">Score</p></div>
-                  <div className="flex-1">
-                    <div className="progress-bar h-3"><div className="progress-bar-fill bg-secondary" style={{ width: `${optimizerResult.score}%` }} /></div>
-                    <p className="text-xs text-on-surface-variant mt-1">{optimizerResult.score >= 80 ? 'Excellent!' : optimizerResult.score >= 60 ? 'Good, can improve' : 'Needs optimization'}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* === Market Alerts Tab === */}
-      {activeTab === 'alerts' && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="material-symbols-outlined text-emerald-500">trending_up</span>
-            <h2 className="text-lg font-semibold text-on-surface">Market Opportunity Alerts</h2>
-            <span className="badge badge-success text-xs ml-2">Real-time</span>
-          </div>
-          <MarketOpportunityAlerts />
-        </div>
-      )}
-
-      {/* === Competitor Benchmark Tab === */}
-      {activeTab === 'benchmark' && (
-        <div className="space-y-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <div className="card">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined">monitoring</span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-headline font-extrabold text-on-surface">Competitor Benchmarking</h2>
-                    <p className="text-sm text-on-surface-variant font-body">Real-time global price comparison</p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <input 
-                    value={benchmarkQuery}
-                    onChange={(e) => setBenchmarkQuery(e.target.value)}
-                    className="input-field flex-1" 
-                    placeholder="Enter product name (e.g. Zinc Die Casting)" 
-                  />
-                  <button 
-                    onClick={fetchBenchmark}
-                    disabled={benchmarkLoading || !benchmarkQuery}
-                    className="btn-primary flex items-center gap-2 whitespace-nowrap disabled:opacity-50"
-                  >
-                    {benchmarkLoading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><span className="material-symbols-outlined">analytics</span> Run Benchmark</>}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {benchmarkResult && (
-              <div className="md:w-80 flex flex-col gap-4">
-                <div className="bg-primary text-on-primary p-6 rounded-xl shadow-ambient">
-                  <p className="text-xs opacity-80 uppercase tracking-widest font-bold mb-1">Market Average</p>
-                  <p className="text-3xl font-extrabold">${benchmarkResult.avgPrice.toFixed(2)}</p>
-                </div>
-                <div className="bg-surface-container-lowest p-6 rounded-xl border border-surface-variant/50 flex justify-between">
-                  <div>
-                    <p className="text-xs text-on-surface-variant font-medium">Lowest</p>
-                    <p className="text-xl font-bold text-emerald-600">${benchmarkResult.minPrice.toFixed(2)}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-on-surface-variant font-medium">Highest</p>
-                    <p className="text-xl font-bold text-red-600">${benchmarkResult.maxPrice.toFixed(2)}</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {benchmarkResult && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
-              <div className="card">
-                <h3 className="font-headline font-bold text-on-surface mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">bar_chart</span> Price Distribution
-                </h3>
-                <div className="h-64 flex items-end gap-2 px-4">
-                  {benchmarkResult.prices.map((p: any, i: number) => (
-                    <div key={i} className="flex-1 flex flex-col items-center group">
-                      <div className="w-full bg-primary/20 rounded-t-lg transition-all group-hover:bg-primary/40 relative" style={{ height: `${(p.price / benchmarkResult.maxPrice) * 100}%` }}>
-                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition shadow-sm font-bold">${p.price.toFixed(0)}</div>
-                      </div>
-                      <p className="text-[10px] text-on-surface-variant mt-2 font-medium">{p.source}</p>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+              <div className="md:col-span-1 space-y-6">
+                <div className="bg-primary p-8 rounded-sm text-white shadow-2xl">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-2">Market Average</p>
+                  <p className="text-5xl font-black tracking-tighter">${benchmarkResult.avgPrice.toFixed(2)}</p>
+                </div>
+                <div className="bg-white dark:bg-black/40 p-8 rounded-sm border border-gray-100 dark:border-white/10 flex justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Lowest</p>
+                    <p className="text-2xl font-black text-emerald-500 tracking-tighter">${benchmarkResult.minPrice.toFixed(2)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Highest</p>
+                    <p className="text-2xl font-black text-red-500 tracking-tighter">${benchmarkResult.maxPrice.toFixed(2)}</p>
+                  </div>
                 </div>
               </div>
               
-              <div className="card">
-                <h3 className="font-headline font-bold text-on-surface mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary">public</span> Regional Pricing
+              <div className="md:col-span-2 bg-white dark:bg-black/40 p-10 rounded-sm border border-gray-100 dark:border-white/10 shadow-sm">
+                <h3 className="text-[14px] font-black text-gray-900 dark:text-white uppercase tracking-[0.2em] mb-12 flex items-center gap-3">
+                  <span className="material-symbols-outlined text-primary">bar_chart</span> Price Distribution Index
                 </h3>
-                <div className="space-y-4">
+                <div className="h-64 flex items-end gap-3 px-4">
                   {benchmarkResult.prices.map((p: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-variant/20">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-surface flex items-center justify-center text-xs font-bold text-on-surface-variant">{p.region[0]}</div>
-                        <div>
-                          <p className="text-sm font-bold text-on-surface">{p.region}</p>
-                          <p className="text-xs text-on-surface-variant">{p.source}</p>
-                        </div>
+                    <div key={i} className="flex-1 flex flex-col items-center group">
+                      <div className="w-full bg-gray-100 dark:bg-white/10 rounded-sm transition-all group-hover:bg-primary relative" style={{ height: `${(p.price / benchmarkResult.maxPrice) * 100}%` }}>
+                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black text-[10px] font-black py-1.5 px-3 rounded-sm opacity-0 group-hover:opacity-100 transition shadow-2xl whitespace-nowrap">${p.price.toFixed(0)}</div>
                       </div>
-                      <p className="font-bold text-primary">${p.price.toFixed(2)}</p>
+                      <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 mt-4 uppercase tracking-tighter truncate w-full text-center">{p.source}</p>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* === Translator Tab === */}
+      {activeTab === 'translator' && (
+        <div className="max-w-4xl animate-fade-in">
+          <div className="bg-white dark:bg-black/40 p-10 rounded-sm border border-gray-100 dark:border-white/10 shadow-sm">
+             <div className="flex items-center gap-4 mb-10">
+               <div className="w-12 h-12 bg-primary/10 text-primary rounded-sm flex items-center justify-center"><span className="material-symbols-outlined text-3xl">translate</span></div>
+               <div>
+                 <h2 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-widest">Global Trade Translator</h2>
+                 <p className="text-xs text-gray-500 font-bold uppercase mt-1 tracking-wider">Break down communication barriers in seconds</p>
+               </div>
+             </div>
+             
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+               <div className="space-y-6">
+                 <div className="flex justify-between items-center px-1">
+                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Source Text</label>
+                   <button onClick={detectLanguage} className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">Detect Language</button>
+                 </div>
+                 <textarea value={transText} onChange={(e) => setTransText(e.target.value)} className="w-full h-48 px-4 py-4 rounded-sm border border-gray-200 dark:border-white/10 bg-white dark:bg-black/40 focus:border-primary outline-none text-sm font-medium resize-none" placeholder="Enter message to translate..." />
+               </div>
+               
+               <div className="space-y-6">
+                 <div className="flex justify-between items-center px-1">
+                   <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Translation Output</label>
+                   <select value={transTarget} onChange={(e) => setTransTarget(e.target.value)} className="bg-transparent border-none text-[10px] font-black text-primary uppercase tracking-widest outline-none cursor-pointer">
+                     {LANGUAGES.map(l => <option key={l.code} value={l.code} className="bg-white dark:bg-black text-black dark:text-white">{l.name}</option>)}
+                   </select>
+                 </div>
+                 <div className="w-full h-48 px-4 py-4 rounded-sm border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-white/5 text-sm font-bold text-gray-800 dark:text-gray-200 overflow-y-auto leading-relaxed">
+                   {transLoading ? 'Translating neural engine...' : transResult?.translation || 'Output will appear here...'}
+                 </div>
+               </div>
+             </div>
+             
+             <div className="mt-10 flex justify-end">
+               <button onClick={translateText} disabled={!transText || transLoading} className="px-12 py-4 bg-black dark:bg-white text-white dark:text-black rounded-sm font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 hover:opacity-90 transition-all disabled:opacity-50">
+                 {transLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'EXECUTE TRANSLATION'}
+               </button>
+             </div>
+          </div>
         </div>
       )}
     </div>

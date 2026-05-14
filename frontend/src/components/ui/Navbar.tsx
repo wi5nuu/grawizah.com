@@ -24,26 +24,26 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md shadow-sm shadow-primary/5 border-b border-surface-variant/10 dark:border-dark-surface-variant/30 transition-colors duration-300">
-      <div className="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto">
+    <nav className="fixed top-0 w-full z-50 bg-surface/80 dark:bg-black/80 backdrop-blur-xl border-b border-black/5 dark:border-white/10 transition-all duration-300">
+      <div className="flex justify-between items-center px-6 py-3.5 max-w-[1440px] mx-auto">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img src="/images/android-chrome-192x192.png" alt="Grawizah Logo" className="w-8 h-8 object-contain" />
-          <span className="text-2xl font-display font-bold gradient-text">
+          <img src="/images/android-chrome-192x192.png" alt="Grawizah Logo" className="w-7 h-7 object-contain" />
+          <span className="text-xl font-bold tracking-tighter text-black dark:text-white">
             Grawizah
           </span>
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 font-body">
+        <div className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-all duration-200 ${
+              className={`text-[13px] font-medium transition-all duration-200 ${
                 isActive(link.href)
-                  ? 'text-primary font-bold border-b-2 border-primary'
-                  : 'text-on-surface-variant hover:text-primary hover:opacity-80'
+                  ? 'text-black dark:text-white'
+                  : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'
               }`}
             >
               {link.label}
@@ -54,52 +54,51 @@ export default function Navbar() {
         {/* Right Section */}
         <div className="hidden md:flex items-center gap-4">
           {loading ? (
-            <div className="w-24 h-9 bg-surface-variant/20 dark:bg-dark-surface-variant/20 animate-pulse rounded-lg" />
+            <div className="w-24 h-8 bg-black/5 dark:bg-white/5 animate-pulse rounded-sm" />
           ) : isAuthenticated ? (
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-surface-container-high transition-all"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-                  <span className="text-on-primary text-sm font-bold">
+                <div className="w-6 h-6 bg-black/10 dark:bg-white/10 rounded-sm flex items-center justify-center">
+                  <span className="text-black dark:text-white text-[10px] font-bold">
                     {user?.email?.[0]?.toUpperCase() || 'U'}
                   </span>
                 </div>
-                <span className="text-sm font-medium text-on-surface max-w-[120px] truncate">
+                <span className="text-xs font-medium text-black/80 dark:text-white/80 max-w-[100px] truncate">
                   {user?.email?.split('@')[0]}
                 </span>
-                <span className="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
               </button>
 
               {profileOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-surface-container-lowest rounded-xl shadow-ambient border border-surface-variant/50 py-2 z-50 animate-fade-in">
-                    <div className="px-4 py-2 border-b border-surface-variant/30">
-                      <p className="text-sm font-semibold text-on-surface">{user?.email}</p>
-                      <p className="text-xs text-primary capitalize">{user?.role?.replace('_', ' ')}</p>
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-sm shadow-2xl py-2 z-50 animate-fade-in">
+                    <div className="px-4 py-2 border-b border-black/5 dark:border-white/5">
+                      <p className="text-[11px] font-bold text-black/40 dark:text-white/40 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</p>
+                      <p className="text-xs font-medium text-black/80 dark:text-white/80">{user?.email}</p>
                     </div>
                     <Link
                       href={isBuyer ? '/buyer/dashboard' : '/dashboard'}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high transition"
+                      className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className="material-symbols-outlined text-[18px]">dashboard</span> Dashboard
+                      <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
                     </Link>
                     <Link
                       href="/dashboard/settings"
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-on-surface-variant hover:bg-surface-container-high transition"
+                      className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className="material-symbols-outlined text-[18px]">settings</span> Settings
+                      <span className="material-symbols-outlined text-[16px]">settings</span> Settings
                     </Link>
-                    <hr className="my-1 border-surface-variant/30" />
+                    <hr className="my-1 border-black/5 dark:border-white/5" />
                     <button
                       onClick={() => { signOut(); setProfileOpen(false); }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-error hover:bg-error-container/20 w-full transition"
+                      className="flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 w-full transition"
                     >
-                      <span className="material-symbols-outlined text-[18px]">logout</span> Sign Out
+                      <span className="material-symbols-outlined text-[16px]">logout</span> Sign Out
                     </button>
                   </div>
                 </>
@@ -107,10 +106,10 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="font-body text-sm text-primary hover:opacity-80 transition-opacity font-medium px-4 py-2">
+              <Link href="/login" className="text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-all font-medium px-2 py-1">
                 Log In
               </Link>
-              <Link href="/register" className="btn-primary btn-sm">
+              <Link href="/register" className="px-4 py-1.5 bg-white dark:bg-white text-black rounded-sm font-bold text-xs hover:bg-white/90 transition-all">
                 Get Started
               </Link>
             </>
@@ -118,60 +117,58 @@ export default function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-lg bg-surface-container-low dark:bg-dark-surface-container flex items-center justify-center text-on-surface-variant dark:text-dark-on-surface-variant hover:text-primary transition-colors"
+            className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
             title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className="material-symbols-outlined text-[18px]">
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-primary" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="md:hidden text-white" onClick={() => setMobileOpen(!mobileOpen)}>
           <span className="material-symbols-outlined">{mobileOpen ? 'close' : 'menu'}</span>
         </button>
       </div>
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-surface-variant/30 bg-surface animate-fade-in">
+        <div className="md:hidden border-t border-white/10 bg-black animate-fade-in">
           <nav className="px-6 py-4 space-y-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-4 py-3 rounded-lg font-medium ${
-                  isActive(link.href) ? 'bg-primary-fixed text-on-primary-fixed-variant' : 'text-on-surface-variant'
+                className={`block px-4 py-3 rounded-sm text-sm font-medium ${
+                  isActive(link.href) ? 'bg-white/10 text-white' : 'text-white/40'
                 }`}
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <hr className="my-2 border-surface-variant/30" />
-            {loading ? (
-              <div className="py-4 flex justify-center">
-                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : isAuthenticated ? (
-              <>
-                <Link href={isBuyer ? '/buyer/dashboard' : '/dashboard'} className="block px-4 py-3 rounded-lg font-medium text-on-surface-variant" onClick={() => setMobileOpen(false)}>
-                  Dashboard
-                </Link>
-                <button onClick={() => { signOut(); setMobileOpen(false); }} className="block w-full text-left px-4 py-3 rounded-lg font-medium text-error">
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="block px-4 py-3 rounded-lg font-medium text-on-surface-variant" onClick={() => setMobileOpen(false)}>
-                  Log In
-                </Link>
-                <Link href="/register" className="block px-4 py-3 btn-primary text-center" onClick={() => setMobileOpen(false)}>
-                  Get Started
-                </Link>
-              </>
+            <hr className="my-2 border-white/5" />
+            {!loading && (
+              isAuthenticated ? (
+                <>
+                  <Link href={isBuyer ? '/buyer/dashboard' : '/dashboard'} className="block px-4 py-3 rounded-sm text-sm text-white/60" onClick={() => setMobileOpen(false)}>
+                    Dashboard
+                  </Link>
+                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="block w-full text-left px-4 py-3 rounded-sm text-sm text-red-400">
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/login" className="block px-4 py-3 rounded-sm text-sm text-white/40" onClick={() => setMobileOpen(false)}>
+                    Log In
+                  </Link>
+                  <Link href="/register" className="block px-4 py-3 bg-white text-black text-center font-bold text-sm rounded-sm" onClick={() => setMobileOpen(false)}>
+                    Get Started
+                  </Link>
+                </>
+              )
             )}
           </nav>
         </div>

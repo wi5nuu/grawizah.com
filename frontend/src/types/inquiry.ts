@@ -14,6 +14,7 @@ export interface Inquiry extends BaseEntity {
   buyer_rating?: number;
   // Display fields (joined from buyer/product tables)
   buyer_name?: string;
+  buyer_company?: string;
   buyer_country?: string;
   product_name?: string;
 }

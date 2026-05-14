@@ -110,8 +110,8 @@ type InquiryAnalytics struct {
 	ConvertedDeals     int     `json:"converted_deals"`
 	ConversionRate     float64 `json:"conversion_rate"`
 	ResponseRate       float64 `json:"response_rate"`
-	AvgResponseTime    float64 `json:"avg_response_time_hours"`
-	RepeatBuyerRate    float64 `json:"repeat_buyer_rate"`
+	AvgResponseTimeHours float64 `json:"avg_response_time_hours"`
+	RepeatBuyerRate      float64 `json:"repeat_buyer_rate"`
 }
 
 // CalculateAnalytics calculates analytics from a list of inquiries
@@ -154,7 +154,7 @@ func CalculateAnalytics(inquiries []Inquiry) InquiryAnalytics {
 	}
 	
 	if responseCount > 0 {
-		analytics.AvgResponseTime = totalResponseTime / float64(responseCount)
+		analytics.AvgResponseTimeHours = totalResponseTime / float64(responseCount)
 	}
 	
 	// Calculate repeat buyer rate
@@ -169,4 +169,13 @@ func CalculateAnalytics(inquiries []Inquiry) InquiryAnalytics {
 	}
 	
 	return analytics
+}
+
+// InquiryDetail represents an inquiry with joined data
+type InquiryDetail struct {
+	Inquiry
+	BuyerName    string `json:"buyer_name"`
+	BuyerCompany string `json:"buyer_company"`
+	BuyerCountry string `json:"buyer_country"`
+	ProductName  string `json:"product_name"`
 }

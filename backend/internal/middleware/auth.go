@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // AuthMiddleware validates JWT token
@@ -18,7 +21,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Extract token from "Bearer <token>"
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
@@ -26,19 +28,33 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token := parts[1]
+		tokenString := parts[1]
+		jwtSecret := os.Getenv("JWT_SECRET")
 
-		// TODO: Validate JWT token with Supabase
-		// For now, just check if token exists
-		if token == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(jwtSecret), nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
 			return
 		}
 
-		// TODO: Extract user info from token and set in context
-		c.Set("user_id", "sample-user-id")
-		c.Set("user_role", "free_trader")
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			c.Set("user_id", claims["sub"])
+			c.Set("user_email", claims["email"])
+			
+			// Extract role from app_metadata or user_metadata if available
+			if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
+				c.Set("user_role", userMetadata["role"])
+			} else {
+				c.Set("user_role", "free_trader")
+			}
+		}
 
 		c.Next()
 	}
@@ -52,9 +68,21 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 		if authHeader != "" {
 			parts := strings.Split(authHeader, " ")
 			if len(parts) == 2 && parts[0] == "Bearer" {
-				// TODO: Validate token and extract user info
-				c.Set("user_id", "sample-user-id")
-				c.Set("user_role", "free_trader")
+				tokenString := parts[1]
+				jwtSecret := os.Getenv("JWT_SECRET")
+
+				token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+					return []byte(jwtSecret), nil
+				})
+
+				if err == nil && token.Valid {
+					if claims, ok := token.Claims.(jwt.MapClaims); ok {
+						c.Set("user_id", claims["sub"])
+						if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
+							c.Set("user_role", userMetadata["role"])
+						}
+					}
+				}
 			}
 		}
 

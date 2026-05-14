@@ -32,13 +32,15 @@ func (h *CompanyHandler) GetCompanyByID(c *gin.Context) {
 
 // GetMyCompany handles GET /api/companies/me
 func (h *CompanyHandler) GetMyCompany(c *gin.Context) {
-	// In a real app, you would get the UserID from the JWT context
-	// userID := c.GetString("user_id")
-	userID := "mock_user_123"
+	userID := c.Query("user_id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
+		return
+	}
 
 	company, err := h.service.GetMyCompany(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch your company details"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Company not found for this user"})
 		return
 	}
 	c.JSON(http.StatusOK, company)

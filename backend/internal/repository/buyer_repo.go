@@ -169,6 +169,12 @@ func (r *BuyerRepository) Search(criteria models.BuyerSearchCriteria) ([]models.
 	args := []interface{}{}
 	argCount := 1
 	
+	if criteria.Query != "" {
+		query += fmt.Sprintf(" AND company_name ILIKE $%d", argCount)
+		args = append(args, "%"+criteria.Query+"%")
+		argCount++
+	}
+	
 	if criteria.Country != "" {
 		query += fmt.Sprintf(" AND country = $%d", argCount)
 		args = append(args, criteria.Country)

@@ -1,32 +1,24 @@
 package services
 
+import (
+	"github.com/grawizah/backend/internal/interfaces"
+	"github.com/grawizah/backend/internal/models"
+)
+
 type LeaderboardService struct {
-	// Add repository here later
+	repo interfaces.LeaderboardRepository
 }
 
-func NewLeaderboardService() *LeaderboardService {
-	return &LeaderboardService{}
+func NewLeaderboardService(repo interfaces.LeaderboardRepository) *LeaderboardService {
+	return &LeaderboardService{repo: repo}
 }
 
 // GetTopSuppliers returns a list of top suppliers based on analytics score
-func (s *LeaderboardService) GetTopSuppliers() ([]interface{}, error) {
-	// TODO: Replace with actual database query
-	// Returning some mock data for now
-	return []interface{}{
-		map[string]interface{}{"id": "c1", "name": "TechCorp Global Mfg.", "score": 98, "rank": 1},
-		map[string]interface{}{"id": "c2", "name": "Nexus Robotics Ltd.", "score": 95, "rank": 2},
-		map[string]interface{}{"id": "c3", "name": "CloudNet Infrastructure", "score": 91, "rank": 3},
-	}, nil
+func (s *LeaderboardService) GetTopSuppliers() ([]models.LeaderboardScore, error) {
+	return s.repo.GetAll(10, 0) // Default limit 10, offset 0
 }
 
 // GetCompanyRank returns the leaderboard ranking for a specific company
-func (s *LeaderboardService) GetCompanyRank(companyID string) (interface{}, error) {
-	// TODO: Replace with actual database query
-	return map[string]interface{}{
-		"id": companyID,
-		"name": "Target Company",
-		"score": 85,
-		"rank": 42,
-		"percentile": 85,
-	}, nil
+func (s *LeaderboardService) GetCompanyRank(companyID string) (*models.LeaderboardScore, error) {
+	return s.repo.GetByCompanyID(companyID)
 }

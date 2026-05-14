@@ -5,15 +5,21 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/components/ThemeProvider';
 
-const sidebarLinks = [
+const supplierLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { href: '/dashboard/intelligence', label: 'Intelligence', icon: 'insights' },
-  { href: '/dashboard/inquiries', label: 'Orders', icon: 'receipt_long' },
-  { href: '/dashboard/products', label: 'Suppliers', icon: 'handshake' },
-  { href: '/catalog/suppliers', label: 'Directory', icon: 'menu_book' },
-  { href: '/dashboard/catalog', label: 'Catalog', icon: 'inventory_2' },
+  { href: '/dashboard/inquiries', label: 'Inquiries', icon: 'mail' },
+  { href: '/dashboard/products', label: 'My Products', icon: 'inventory_2' },
   { href: '/dashboard/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
   { href: '/dashboard/settings', label: 'Settings', icon: 'settings' },
+];
+
+const buyerLinks = [
+  { href: '/buyer/dashboard', label: 'Marketplace', icon: 'shopping_basket' },
+  { href: '/buyer/sourcing', label: 'Sourcing Hub', icon: 'search' },
+  { href: '/buyer/orders', label: 'My Orders', icon: 'local_shipping' },
+  { href: '/catalog/suppliers', label: 'Supplier Directory', icon: 'menu_book' },
+  { href: '/buyer/settings', label: 'Settings', icon: 'settings' },
 ];
 
 interface SidebarProps {
@@ -97,7 +103,7 @@ export default function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMo
 
         {/* Navigation */}
         <nav className={`flex-1 flex flex-col gap-1 overflow-y-auto py-2 ${collapsed ? 'px-2' : 'px-4'}`}>
-          {sidebarLinks.map((link) => {
+          {(user?.role === 'buyer' ? buyerLinks : supplierLinks).map((link) => {
             const active = isActive(link.href);
             return (
               <Link

@@ -148,15 +148,19 @@ func (r *InquiryRepository) Delete(id string) error {
 	return nil
 }
 
-// GetBySupplierID retrieves all inquiries for a supplier
-func (r *InquiryRepository) GetBySupplierID(supplierID string) ([]models.Inquiry, error) {
+// GetBySupplierID retrieves all inquiries for a supplier with buyer and product details
+func (r *InquiryRepository) GetBySupplierID(supplierID string) ([]models.InquiryDetail, error) {
 	query := `
-		SELECT id, buyer_id, supplier_id, product_id, message, source_type,
-			source_metadata, status, response_time_hours, converted_to_deal,
-			buyer_rating, created_at, updated_at
-		FROM inquiries
-		WHERE supplier_id = $1 AND deleted_at IS NULL
-		ORDER BY created_at DESC
+		SELECT i.id, i.buyer_id, i.supplier_id, i.product_id, i.message, i.source_type,
+			i.source_metadata, i.status, i.response_time_hours, i.converted_to_deal,
+			i.buyer_rating, i.created_at, i.updated_at,
+			b.company_name as buyer_name, b.company_name as buyer_company, b.country as buyer_country,
+			p.name as product_name
+		FROM inquiries i
+		LEFT JOIN buyers b ON i.buyer_id = b.id
+		LEFT JOIN products p ON i.product_id = p.id
+		WHERE i.supplier_id = $1 AND i.deleted_at IS NULL
+		ORDER BY i.created_at DESC
 	`
 	
 	rows, err := r.db.Query(query, supplierID)
@@ -165,14 +169,16 @@ func (r *InquiryRepository) GetBySupplierID(supplierID string) ([]models.Inquiry
 	}
 	defer rows.Close()
 	
-	var inquiries []models.Inquiry
+	var inquiries []models.InquiryDetail
 	for rows.Next() {
-		var inq models.Inquiry
+		var inq models.InquiryDetail
 		err := rows.Scan(
 			&inq.ID, &inq.BuyerID, &inq.SupplierID, &inq.ProductID,
 			&inq.Message, &inq.SourceType, &inq.SourceMetadata,
 			&inq.Status, &inq.ResponseTimeHours, &inq.ConvertedToDeal,
 			&inq.BuyerRating, &inq.CreatedAt, &inq.UpdatedAt,
+			&inq.BuyerName, &inq.BuyerCompany, &inq.BuyerCountry,
+			&inq.ProductName,
 		)
 		if err != nil {
 			return nil, err
@@ -220,9 +226,15 @@ func (r *InquiryRepository) GetByBuyerID(buyerID string) ([]models.Inquiry, erro
 
 // GetAnalytics calculates analytics for a supplier
 func (r *InquiryRepository) GetAnalytics(supplierID string) (*models.InquiryAnalytics, error) {
-	inquiries, err := r.GetBySupplierID(supplierID)
+	details, err := r.GetBySupplierID(supplierID)
 	if err != nil {
 		return nil, err
+	}
+	
+	// Convert []models.InquiryDetail to []models.Inquiry for calculation
+	inquiries := make([]models.Inquiry, len(details))
+	for i, d := range details {
+		inquiries[i] = d.Inquiry
 	}
 	
 	analytics := models.CalculateAnalytics(inquiries)
