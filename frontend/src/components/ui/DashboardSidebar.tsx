@@ -23,13 +23,18 @@ const buyerLinks = [
 ];
 
 interface SidebarProps {
-  collapsed: boolean;
-  onToggle: () => void;
-  mobileOpen: boolean;
-  onMobileClose: () => void;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function DashboardSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
+export default function DashboardSidebar({
+  collapsed = false,
+  onToggle = () => {},
+  mobileOpen = false,
+  onMobileClose = () => {},
+}: SidebarProps) {
   const pathname = usePathname();
   const { signOut, user } = useAuth();
   const { theme, toggleTheme } = useTheme();

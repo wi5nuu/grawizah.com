@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LeaderboardPage() {
+  const { user } = useAuth();
   const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPassport, setShowPassport] = useState(false);
