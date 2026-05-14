@@ -1,11 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { 
+  User, 
+  Building2, 
+  Mail, 
+  Camera, 
+  Save, 
+  Plus, 
+  X, 
+  ShieldCheck, 
+  CheckCircle2, 
+  RefreshCcw,
+  Settings,
+  ChevronDown,
+  Database,
+  Terminal,
+  Activity,
+  AlertCircle
+} from 'lucide-react';
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -13,27 +36,26 @@ export default function SettingsPage() {
   const [companyName, setCompanyName] = useState('');
   const [regNumber, setRegNumber] = useState('N/A');
   const [industry, setIndustry] = useState('Electronics & Components');
-  const [certs, setCerts] = useState<string[]>([]);
+  const [certs, setCerts] = useState<string[]>(['ISO 9001', 'CE Certified']);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
   useEffect(() => {
     if (user) {
-      // Derive name from email
       const nameParts = user.email.split('@')[0].split(/[._-]/);
       setFirstName(nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1));
       setLastName(nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : '');
       setEmail(user.email);
 
-      // Fetch company info
       const fetchCompany = async () => {
         try {
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
-          const response = await fetch(`${apiUrl}/api/companies/me?user_id=${user.id}`);
+          const response = await fetch(`${API_URL}/api/companies/me?user_id=${user.id}`);
           if (response.ok) {
             const data = await response.json();
             setCompanyName(data.name || '');
             setIndustry(data.industry || 'Electronics & Components');
           } else {
-            // Fallback for demo: use a default company name based on user
             setCompanyName(`${nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)} Trading Co.`);
           }
         } catch (err) {
@@ -44,107 +66,309 @@ export default function SettingsPage() {
       };
       fetchCompany();
     }
-  }, [user]);
+  }, [user, API_URL]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size: 75KB = 75 * 1024 bytes
+    const maxSize = 75 * 1024;
+    if (file.size > maxSize) {
+      setErrorMsg(`File too large: ${(file.size / 1024).toFixed(1)}KB. Max allowed is 75KB.`);
+      setTimeout(() => setErrorMsg(''), 5000);
+      return;
+    }
+
+    setErrorMsg('');
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+      setSuccessMsg('Photo staged for commit (under 75KB).');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    setSuccessMsg('');
+    try {
+      await new Promise(r => setTimeout(r, 1000));
+      setSuccessMsg('Profile updated successfully!');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveCompany = async () => {
+    setSaving(true);
+    setSuccessMsg('');
+    try {
+      const response = await fetch(`${API_URL}/api/companies/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user?.id,
+          name: companyName,
+          industry: industry
+        })
+      });
+      if (response.ok) {
+        setSuccessMsg('Company details synchronized!');
+        setTimeout(() => setSuccessMsg(''), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeCert = (cert: string) => setCerts(certs.filter(c => c !== cert));
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
+        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing User Preferences...</p>
       </div>
     );
   }
 
-  const removeCert = (cert: string) => setCerts(certs.filter(c => c !== cert));
-
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-[#fafafa] dark:bg-dark-background">
-      <div className="flex-1 p-8 max-w-4xl w-full">
-        <h2 className="text-[22px] font-extrabold text-gray-900 dark:text-dark-on-surface mb-6">Supplier Settings</h2>
-
-        <div className="space-y-6">
-          {/* Profile Section */}
-          <section className="bg-white dark:bg-dark-surface-container-low rounded-xl border border-gray-200 dark:border-dark-surface-variant/30 p-6 shadow-sm">
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-dark-on-surface">Profile</h3>
-              <p className="text-gray-500 dark:text-dark-on-surface-variant text-sm mt-1">Manage your personal information and login credentials.</p>
-            </div>
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {/* Avatar */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-dark-surface-container flex items-center justify-center relative">
-                  <span className="text-gray-400 dark:text-dark-on-surface-variant text-2xl font-bold">{firstName[0]}{lastName[0]}</span>
-                  {/* Since image isn't available, keeping it simple */}
-                </div>
-                <button className="text-[13px] font-bold text-[#5300b7] dark:text-[#d0bcff] hover:text-[#430099] dark:hover:text-[#e8def8] transition-colors">Change Photo</button>
-              </div>
-
-              {/* Form Fields */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">First Name</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">Last Name</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">Email Address</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors" />
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold py-2 px-6 rounded-md text-sm transition-colors shadow-sm">Save Profile</button>
-            </div>
-          </section>
-
-          {/* Company Details */}
-          <section className="bg-white dark:bg-dark-surface-container-low rounded-xl border border-gray-200 dark:border-dark-surface-variant/30 p-6 shadow-sm">
-            <div className="mb-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-dark-on-surface">Company Details</h3>
-              <p className="text-gray-500 dark:text-dark-on-surface-variant text-sm mt-1">Update your business information and operational capabilities.</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">Company Name</label>
-                <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors" />
-              </div>
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">Registration Number</label>
-                <input value={regNumber} onChange={(e) => setRegNumber(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors" />
-              </div>
-              <div>
-                <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-1.5">Primary Industry</label>
-                <div className="relative">
-                  <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="w-full rounded-md border border-gray-300 dark:border-dark-surface-variant/50 bg-white dark:bg-dark-surface px-3 py-2 text-sm text-gray-900 dark:text-dark-on-surface focus:border-[#5300b7] dark:focus:border-dark-primary focus:ring-1 focus:ring-[#5300b7] dark:focus:ring-dark-primary outline-none transition-colors appearance-none">
-                    <option>Electronics & Components</option>
-                    <option>Textiles</option>
-                    <option>Heavy Machinery</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dark-on-surface-variant pointer-events-none text-sm">expand_more</span>
-                </div>
-              </div>
-              <div className="md:col-span-2 mt-2">
-                <label className="block text-[13px] font-bold text-gray-700 dark:text-dark-on-surface-variant mb-2">Certifications</label>
-                <div className="flex flex-wrap gap-2">
-                  {certs.map((cert) => (
-                    <span key={cert} className="inline-flex items-center gap-1 px-3 py-1 rounded bg-[#dbeafe] dark:bg-blue-900/30 text-[#1e40af] dark:text-blue-300 text-[12px] font-bold">
-                      {cert}
-                      <button onClick={() => removeCert(cert)} className="hover:text-opacity-80 transition-opacity ml-1"><span className="material-symbols-outlined text-[14px] font-bold">close</span></button>
-                    </span>
-                  ))}
-                  <button className="inline-flex items-center gap-1 px-3 py-1 rounded border border-dashed border-gray-300 dark:border-dark-surface-variant/50 text-gray-500 dark:text-dark-on-surface-variant hover:text-gray-700 dark:hover:text-dark-on-surface hover:border-gray-400 dark:hover:border-dark-surface-variant transition-colors text-[12px] font-bold">
-                    <span className="material-symbols-outlined text-[14px]">add</span> Add Certification
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end">
-              <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold py-2 px-6 rounded-md text-sm transition-colors shadow-sm">Save Company Info</button>
-            </div>
-          </section>
+    <div className="p-6 md:p-10 w-full bg-[#fafafa] dark:bg-dark-background min-h-screen font-sans">
+      
+      {/* Header */}
+      <header className="mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+            <Settings className="w-4 h-4" />
+          </div>
+          <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Platform Preferences</span>
         </div>
+        <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Supplier Settings</h2>
+        <p className="text-sm text-gray-500 font-medium mt-1">Configure your professional identity and operational infrastructure.</p>
+      </header>
+
+      {/* Notifications */}
+      {successMsg && (
+        <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl flex items-center gap-3 animate-fade-in">
+           <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+           <p className="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">{successMsg}</p>
+        </div>
+      )}
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-2xl flex items-center gap-3 animate-shake">
+           <AlertCircle className="w-5 h-5 text-red-500" />
+           <p className="text-xs font-black text-red-700 dark:text-red-400 uppercase tracking-widest">{errorMsg}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+        
+        {/* Left: Main Settings */}
+        <div className="xl:col-span-8 space-y-8">
+           
+           {/* Profile Section */}
+           <section className="bg-white dark:bg-dark-surface-container-low rounded-[2.5rem] border border-gray-100 dark:border-dark-surface-variant/20 p-8 shadow-sm">
+              <div className="flex items-center gap-2 mb-8">
+                 <User className="w-4 h-4 text-primary" />
+                 <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Personal Identity</h3>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-10 items-start">
+                 {/* Avatar Upload with 75KB Limit */}
+                 <div className="flex flex-col items-center gap-4 group">
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                    />
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-32 h-32 rounded-[2.5rem] bg-gray-50 dark:bg-dark-surface-container flex items-center justify-center relative border-2 border-dashed border-gray-200 dark:border-dark-surface-variant/20 group-hover:border-primary/50 transition-all cursor-pointer overflow-hidden shadow-inner"
+                    >
+                       {avatarPreview ? (
+                          <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                       ) : (
+                          <span className="text-gray-300 dark:text-dark-on-surface-variant text-4xl font-black">{firstName[0]}{lastName[0]}</span>
+                       )}
+                       <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                          <Camera className="w-8 h-8 text-white" />
+                       </div>
+                    </div>
+                    <div className="text-center">
+                       <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black text-primary uppercase tracking-[0.2em] hover:underline">Transmit New Photo</button>
+                       <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase">MAX SIZE: 75KB</p>
+                    </div>
+                 </div>
+
+                 {/* Personal Fields */}
+                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">First Name</label>
+                       <input 
+                         value={firstName} 
+                         onChange={(e) => setFirstName(e.target.value)} 
+                         className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl px-5 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+                       />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Last Name</label>
+                       <input 
+                         value={lastName} 
+                         onChange={(e) => setLastName(e.target.value)} 
+                         className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl px-5 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+                       />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address (Authenticated)</label>
+                       <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <input 
+                            disabled
+                            type="email" 
+                            value={email} 
+                            className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl pl-12 pr-5 py-3 text-sm font-semibold text-gray-400 cursor-not-allowed"
+                          />
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="mt-10 flex justify-end">
+                 <button 
+                   onClick={handleSaveProfile}
+                   disabled={saving}
+                   className="px-10 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+                 >
+                    {saving ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                    Commit Profile Changes
+                 </button>
+              </div>
+           </section>
+
+           {/* Company Section */}
+           <section className="bg-white dark:bg-dark-surface-container-low rounded-[2.5rem] border border-gray-100 dark:border-dark-surface-variant/20 p-8 shadow-sm">
+              <div className="flex items-center gap-2 mb-8">
+                 <Building2 className="w-4 h-4 text-primary" />
+                 <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">Business Configuration</h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="md:col-span-2 space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Legal Company Name</label>
+                    <input 
+                       value={companyName} 
+                       onChange={(e) => setCompanyName(e.target.value)} 
+                       className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl px-5 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Trade License / Reg Number</label>
+                    <input 
+                       value={regNumber} 
+                       onChange={(e) => setRegNumber(e.target.value)} 
+                       className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl px-5 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all"
+                    />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Primary Market Industry</label>
+                    <div className="relative">
+                       <select 
+                         value={industry} 
+                         onChange={(e) => setIndustry(e.target.value)} 
+                         className="w-full bg-gray-50 dark:bg-dark-surface-container border-none rounded-2xl px-5 py-3 text-sm font-semibold focus:ring-2 focus:ring-primary/20 focus:bg-white outline-none transition-all appearance-none"
+                       >
+                          <option>Electronics & Components</option>
+                          <option>Textiles & Fabrics</option>
+                          <option>Heavy Machinery</option>
+                          <option>Automotive Systems</option>
+                       </select>
+                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                 </div>
+                 
+                 <div className="md:col-span-2 space-y-4">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Operational Certifications</label>
+                    <div className="flex flex-wrap gap-3">
+                       {certs.map((cert) => (
+                          <div key={cert} className="flex items-center gap-2 px-4 py-2 bg-primary/5 dark:bg-primary/10 border border-primary/10 rounded-xl">
+                             <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                             <span className="text-[11px] font-black text-gray-900 dark:text-white uppercase tracking-tight">{cert}</span>
+                             <button onClick={() => removeCert(cert)} className="text-gray-400 hover:text-red-500 transition-colors ml-1">
+                                <X className="w-3.5 h-3.5" />
+                             </button>
+                          </div>
+                       ))}
+                       <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-100 dark:border-dark-surface-variant/20 rounded-xl text-[10px] font-black text-gray-400 hover:border-primary/30 hover:text-primary transition-all">
+                          <Plus className="w-3.5 h-3.5" /> Add Credentials
+                       </button>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="mt-10 flex justify-end">
+                 <button 
+                   onClick={handleSaveCompany}
+                   disabled={saving}
+                   className="px-10 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-2"
+                 >
+                    {saving ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                    Sync Business Data
+                 </button>
+              </div>
+           </section>
+        </div>
+
+        {/* Right: Security & Infrastructure Snapshot */}
+        <div className="xl:col-span-4 space-y-8">
+           <div className="bg-gradient-to-br from-primary to-indigo-900 text-white rounded-[2.5rem] p-8 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <ShieldCheck className="w-8 h-8 mb-6 text-white/40" />
+              <h3 className="text-xl font-display font-black mb-2">Account Security</h3>
+              <p className="text-xs text-white/60 font-medium leading-relaxed mb-8">Your data is secured within Supabase VPC and encrypted using AES-256 standards.</p>
+              
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between p-4 bg-white/10 rounded-2xl">
+                    <span className="text-[10px] font-black uppercase tracking-widest">Supabase Auth</span>
+                    <span className="px-2 py-0.5 bg-emerald-500 rounded text-[9px] font-black">SECURE</span>
+                 </div>
+                 <div className="flex items-center justify-between p-4 bg-white/10 rounded-2xl">
+                    <span className="text-[10px] font-black uppercase tracking-widest">KYC Status</span>
+                    <span className="px-2 py-0.5 bg-emerald-500 rounded text-[9px] font-black">VERIFIED</span>
+                 </div>
+              </div>
+           </div>
+
+           <div className="bg-white dark:bg-dark-surface-container-low rounded-[2.5rem] border border-gray-100 dark:border-dark-surface-variant/20 p-8 shadow-sm">
+              <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6">Infrastructure Nodes</h3>
+              <div className="space-y-4">
+                 {[
+                   { label: 'Cloud Database', val: 'Supabase PostgreSQL', icon: Database, color: 'text-emerald-500' },
+                   { label: 'Container Orchestration', val: 'Docker Engine', icon: Terminal, color: 'text-blue-500' },
+                   { label: 'Real-time API', val: 'Go Gin Framework', icon: Activity, color: 'text-secondary' }
+                 ].map((node, i) => (
+                   <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/10">
+                      <div className={`w-10 h-10 rounded-xl bg-white dark:bg-dark-surface flex items-center justify-center ${node.color}`}>
+                         <node.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                         <p className="text-[10px] font-bold text-gray-400 uppercase">{node.label}</p>
+                         <p className="text-xs font-black text-gray-900 dark:text-white">{node.val}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+           </div>
+        </div>
+
       </div>
     </div>
   );

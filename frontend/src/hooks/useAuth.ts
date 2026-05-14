@@ -98,6 +98,32 @@ export const useAuth = () => {
     }
   };
 
+  const upgradeTier = async (newRole: string) => {
+    if (!user) return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/upgrade-tier`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: user.id, role: newRole }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Upgrade failed');
+      }
+
+      // Update local state
+      const updatedUser = { ...user, role: newRole as UserRole };
+      localStorage.setItem('grawizah_user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
+
   const hasRole = (requiredRole: UserRole): boolean => {
     if (!user) return false;
     
@@ -119,6 +145,7 @@ export const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    upgradeTier,
     hasRole,
     isAuthenticated: !!user,
     isPremium: user?.role === UserRole.PREMIUM_TRADER || user?.role === 'premium_trader' as any,

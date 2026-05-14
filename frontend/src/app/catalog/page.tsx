@@ -1,189 +1,359 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import ProductCard from '@/components/ProductCard';
 import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
 import Link from 'next/link';
-
-const MOCK_PRODUCTS = [
-  { id: '1', name: 'Advanced Processor Modules PX-9', description: 'High-performance processor module for enterprise computing. Multi-threaded architecture with advanced thermal management.', hs_code: '854231', category: 'Electronics', country_origin: 'China', price_range_min: 1200, price_range_max: 1500, currency: 'USD', moq: 100, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAWe9F2uj9__k5b3Glco3dNMrJ7kgrbIjPup-q58O8AFM70XCmtVDu0USZ75Xpz0jct5WNxhxqJ5bxsxLjdIXc6-ug-O_fgg2Qm7sivePJXwF27OkI6wnuo_XnzpSO1zR6HMLgn5-pVcNli_zazJqviM7uPZYVzKg0l0n3Jn2oIuv2ppIO4yeCCUfVMg-0OpDAHWfIIBGGqV3dbf-rwP5R3we5ct9pJ0k4mNOlQ-p1NuQAFWfnlSeAghCPVbPUlVjxqIkffWa37e8HG'], listing_score: 92, view_count: 1247, inquiry_count: 34, company_id: 'c1', created_at: '', updated_at: '' },
-  { id: '2', name: 'Precision Automation Actuators', description: 'Industrial-grade precision actuators for robotics and automation systems. High torque output with minimal backlash.', hs_code: '847989', category: 'Machinery', country_origin: 'Germany', price_range_min: 450, price_range_max: 600, currency: 'USD', moq: 50, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuBkNs8MiEKaXvJ9zRl1qpDCapg8SuKDBbnnkEg8GQj1HJKrT5e3PZ3jMe048DYZDify3yiPKu7AGVIyxHITiVavEGjk9XkuHTy37-3aHutlAY4DntRZGETqmWy2LSZXq7ewTlXl87ci_tD0wAhGlTD46TIqyjymVVjZ9qEM4M98XUHoB54VEHZq2AN8SCb1efMWTGEXmfIcJTOT0uLQCAQjvEmnzsPz4sm4L-Ss6LGYmeayBfx50arcP-1BDkyAIC4nLbk9w6g6xfJz'], listing_score: 88, view_count: 892, inquiry_count: 28, company_id: 'c2', created_at: '', updated_at: '' },
-  { id: '3', name: 'Enterprise Server Blade G-Series', description: 'High-density server blade for data center deployment. Features redundant power, hot-swap storage, and advanced cooling.', hs_code: '851762', category: 'Electronics', country_origin: 'USA', price_range_min: 3200, price_range_max: 4100, currency: 'USD', moq: 10, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAo76yh4HPGol9HY7DSvkB21xboMW9eohxbZUGRxEO2q8UVymjlAYDopGzJT188cEOX-yf8T_4lbfWwt-GBzgOC6JeviCbMy78yAIBQQ6gqdoktGl9tLCOlD2OdrmO-oyc5v3xGsip5WWElRAMcQMfK_elvwgSEY8NYHBATxT63us-rOKVy8cmDfPHsr-IEZ9OXrFWjCWb8U18Csip4T9K00DNs8DvLhuBOA-pvfgLuQMbB2Gyb4BeFX5KUCqWszg3fDufI0_8ZgME6'], listing_score: 85, view_count: 678, inquiry_count: 19, company_id: 'c3', created_at: '', updated_at: '' },
-  { id: '4', name: 'Organic Turmeric Powder', description: 'Premium quality organic turmeric powder with high curcumin content. USDA Organic and EU Organic certified.', hs_code: '091030', category: 'Agriculture', country_origin: 'Indonesia', price_range_min: 2000, price_range_max: 3500, currency: 'USD', moq: 200, images: [], listing_score: 79, view_count: 543, inquiry_count: 15, company_id: 'c1', created_at: '', updated_at: '' },
-  { id: '5', name: 'Rattan Furniture Set', description: 'Handcrafted natural rattan furniture set. Includes 2 chairs and 1 table. Indoor and outdoor use.', hs_code: '940179', category: 'Furniture', country_origin: 'Indonesia', price_range_min: 150, price_range_max: 400, currency: 'USD', moq: 20, images: [], listing_score: 76, view_count: 421, inquiry_count: 12, company_id: 'c4', created_at: '', updated_at: '' },
-  { id: '6', name: 'Batik Fabric - Premium Cotton', description: 'Hand-drawn batik on premium cotton. Traditional Javanese patterns, suitable for fashion and home decor.', hs_code: '520852', category: 'Textiles', country_origin: 'Indonesia', price_range_min: 15, price_range_max: 45, currency: 'USD', moq: 100, images: [], listing_score: 72, view_count: 356, inquiry_count: 8, company_id: 'c5', created_at: '', updated_at: '' },
-];
+import { 
+  Loader2, 
+  Search, 
+  Globe, 
+  ShieldCheck, 
+  LayoutGrid, 
+  Users, 
+  Filter, 
+  ChevronDown, 
+  Star, 
+  CheckCircle2, 
+  Clock, 
+  Box, 
+  Play, 
+  ChevronRight,
+  MessageSquare,
+  Mail
+} from 'lucide-react';
 
 export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState(true);
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [viewType, setViewType] = useState<'products' | 'suppliers'>('suppliers');
+  const [companies, setCompanies] = useState<Record<string, any>>({});
+  
+  const [minRating, setMinRating] = useState<number>(0);
+  const [selectedCapabilities, setSelectedCapabilities] = useState<string[]>([]);
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
-  const filteredProducts = products.filter((p) => {
-    const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = !selectedCategory || p.category === selectedCategory;
-    const matchCountry = !selectedCountry || p.country_origin === selectedCountry;
-    return matchSearch && matchCategory && matchCountry;
-  });
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
-  const handleSortChange = async (val: string) => {
-    setSortBy(val);
-    if (val === 'ai') {
-      setLoading(true);
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/products?sort=ai`);
-        const result = await res.json();
-        // Map backend mock to frontend mock structure if needed
-        if (result.data) {
-          // Merge with some mock data for display since backend mock is sparse
-          const aiRanked = result.data.map((p: any) => ({
-             ...MOCK_PRODUCTS.find(mp => mp.id === p.id.replace('p', '')), // Match ID
-             ai_score: p.ai_score,
-             ai_metrics: p.ai_metrics
-          })).filter((p: any) => p.id);
-          setProducts(aiRanked.length > 0 ? aiRanked : MOCK_PRODUCTS);
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      let url = `${API_URL}/api/products?limit=50`;
+      if (sortBy === 'ai') url += '&sort=ai';
+      
+      const res = await fetch(url);
+      const result = await res.json();
+      if (result.data) {
+        setProducts(result.data);
+        
+        // Fetch unique companies
+        const uniqueCompanyIds = [...new Set(result.data.map((p: any) => p.company_id))];
+        const comps: Record<string, any> = {};
+        for (const cid of uniqueCompanyIds) {
+          if (typeof cid === 'string') {
+            fetch(`${API_URL}/api/companies/${cid}`)
+              .then(r => r.json())
+              .then(cData => {
+                 setCompanies(prev => ({...prev, [cid]: cData}));
+              }).catch(() => {});
+          }
         }
-      } catch {} finally { setLoading(false); }
-    } else {
-      setProducts(MOCK_PRODUCTS);
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter((p) => {
+    const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchCategory = !selectedCategory || p.category === selectedCategory;
+    const matchCountry = selectedCountries.length === 0 || selectedCountries.includes(p.country_origin);
+    
+    const company = companies[p.company_id];
+    let matchVerified = true;
+    let matchRating = true;
+
+    if (company) {
+      if (verifiedOnly && !company.verified) matchVerified = false;
+      const cRating = company.score ? (company.score / 20) : 4.9;
+      if (cRating < minRating) matchRating = false;
+    }
+
+    return matchSearch && matchCategory && matchCountry && matchVerified && matchRating;
+  });
+
+  const suppliersWithProducts = Object.values(companies).map(company => {
+    return {
+      ...company,
+      products: filteredProducts.filter(p => p.company_id === company.id)
+    };
+  }).filter(c => {
+    if (c.products.length === 0) return false;
+    if (verifiedOnly && !c.verified) return false;
+    const cRating = c.score ? (c.score / 20) : 4.9; 
+    if (cRating < minRating) return false;
+    if (selectedCountries.length > 0 && !selectedCountries.includes(c.country)) return false;
+    return true;
+  });
+
+  const toggleCountry = (country: string) => {
+    setSelectedCountries(prev => 
+      prev.includes(country) ? prev.filter(c => c !== country) : [...prev, country]
+    );
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-background text-on-background">
+    <div className="min-h-screen flex flex-col bg-[#fafafa] dark:bg-dark-background text-on-surface dark:text-dark-on-surface selection:bg-primary/20 font-sans antialiased transition-colors duration-500 overflow-x-hidden">
       <Navbar />
 
-      <main className="flex-1 mt-10 mb-16 max-w-[1440px] w-full mx-auto px-8 lg:px-16 flex flex-col gap-10">
-        {/* Hero & Search */}
-        <section className="bg-gradient-to-r from-[#5300b7] to-[#2563eb] rounded-xl p-12 text-white flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg">
-          <h1 className="font-display font-extrabold text-4xl mb-4 relative z-10">Product Catalog</h1>
-          <p className="font-body text-base text-white/90 max-w-2xl mb-8 relative z-10">Discover verified global trade products, suppliers, and market intelligence.</p>
-          <div className="w-full max-w-2xl relative z-10 flex bg-white rounded-lg p-2 shadow-xl items-center">
-            <span className="material-symbols-outlined text-gray-400 ml-3 mr-2">search</span>
-            <input
-              className="flex-1 bg-transparent border-none focus:ring-0 text-gray-900 font-body outline-none text-sm"
-              placeholder="Search by product name, HS Code, or supplier..."
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button className="bg-[#5300b7] hover:bg-[#430099] text-white px-6 py-2.5 rounded-md font-bold text-sm transition-colors whitespace-nowrap">
-              Search Products
-            </button>
+      {/* Hero Header Area - Creative & Formal */}
+      <div className="bg-white dark:bg-dark-surface border-b border-gray-100 dark:border-dark-surface-variant/20 pt-20 pb-8 sticky top-[64px] z-40 transition-all shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-display font-semibold tracking-tight text-gray-900 dark:text-white mb-2">Global Catalog</h1>
+              <p className="text-sm text-gray-500 font-medium">Orchestrating verified trade connections worldwide.</p>
+            </div>
+            
+            {/* View Toggle - Modern Tabs */}
+            <div className="flex p-1 bg-gray-50 dark:bg-dark-surface-container rounded-xl border border-gray-200 dark:border-dark-surface-variant/30 w-fit">
+              <button 
+                onClick={() => setViewType('suppliers')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewType === 'suppliers' ? 'bg-white dark:bg-dark-surface text-primary dark:text-dark-primary shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <Users className="w-4 h-4" /> Suppliers
+              </button>
+              <button 
+                onClick={() => setViewType('products')}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewType === 'products' ? 'bg-white dark:bg-dark-surface text-primary dark:text-dark-primary shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <LayoutGrid className="w-4 h-4" /> Products
+              </button>
+            </div>
           </div>
-        </section>
 
-        {/* Layout Wrapper */}
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Filter Sidebar */}
-          <aside className="w-full md:w-64 flex-shrink-0 flex flex-col gap-6">
-            <div className="bg-surface-container-lowest rounded-xl border border-surface-variant/50 p-6" style={{ boxShadow: '0 4px 24px rgba(109,40,217,0.04)' }}>
-              <h2 className="font-headline font-bold text-lg mb-4 text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">tune</span>
-                Filters
-              </h2>
-              {/* Categories */}
-              <div className="mb-6">
-                <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Category</h3>
-                <div className="flex flex-col gap-2">
-                  {['Electronics', 'Machinery', 'Textiles', 'Agriculture'].map((cat) => (
-                    <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategory === cat}
-                        onChange={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
-                        className="form-checkbox text-primary rounded border-outline focus:ring-primary/20"
-                      />
-                      <span className="text-sm font-body text-on-surface group-hover:text-primary transition-colors">{cat}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              {/* Country */}
-              <div className="mb-6">
-                <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Origin Country</h3>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full bg-surface-container-low border border-surface-variant rounded-lg p-2 text-sm font-body focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none"
-                >
-                  <option value="">All Countries</option>
-                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              {/* Verification Status */}
-              <div>
-                <h3 className="font-label font-semibold text-sm text-on-surface-variant uppercase tracking-wider mb-3">Supplier Status</h3>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            {/* Main Search Bar - Refined */}
+            <div className="flex-1 flex w-full bg-gray-50 dark:bg-dark-surface-container rounded-2xl border border-gray-100 dark:border-dark-surface-variant/30 px-4 py-1.5 items-center group focus-within:border-primary/50 transition-all">
+              <Search className="w-5 h-5 text-gray-400 mr-3" />
+              <input
+                type="text"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 outline-none py-2"
+                placeholder="Find manufacturers, products, or trade partners..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <button className="bg-primary text-white px-8 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">Search</button>
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex items-center gap-3 w-full md:w-auto">
+               <button className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
+                  <Globe className="w-4 h-4" /> Worldwide <ChevronDown className="w-3 h-3" />
+               </button>
+               <button className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
+                  <Filter className="w-4 h-4" /> All Categories <ChevronDown className="w-3 h-3" />
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <main className="flex-grow max-w-[1400px] w-full mx-auto px-6 md:px-10 pt-10 flex flex-col lg:flex-row gap-12 overflow-hidden h-[calc(100vh-280px)]">
+        
+        {/* Sidebar Filters - Formal Design */}
+        <aside className="w-full lg:w-[260px] flex-shrink-0 overflow-y-auto pr-4 scrollbar-hide pb-20">
+          <div className="space-y-12">
+            <div>
+              <h3 className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-6">Security & Trust</h3>
+              <div className="space-y-4">
                 <label className="flex items-center gap-3 cursor-pointer group">
-                  <input type="checkbox" checked={verifiedOnly} onChange={() => setVerifiedOnly(!verifiedOnly)} className="form-checkbox text-secondary rounded border-outline focus:ring-secondary/20" />
-                  <span className="text-sm font-body text-on-surface group-hover:text-secondary transition-colors font-medium">Verified Suppliers Only</span>
+                  <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-primary focus:ring-primary bg-transparent" checked={verifiedOnly} onChange={(e) => setVerifiedOnly(e.target.checked)} />
+                  <span className="text-sm font-bold text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors flex items-center gap-2">
+                    Verified Pro <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+                  </span>
                 </label>
               </div>
             </div>
-          </aside>
 
-          {/* Product Grid */}
-          <div className="flex-1 flex flex-col gap-6">
-            {/* Results Header */}
-            <div className="flex justify-between items-center">
-              <span className="font-body text-on-surface-variant text-sm">
-                Showing <strong className="text-on-surface">1-{filteredProducts.length}</strong> of {MOCK_PRODUCTS.length} products
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="font-body text-sm text-on-surface-variant">Sort by:</span>
-                <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} className="bg-transparent border-none text-sm font-label font-medium text-primary focus:ring-0 cursor-pointer">
-                  <option value="relevance">Relevance</option>
-                  <option value="ai">AI Ranked (Smart Match)</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="newest">Newest</option>
-                </select>
+            <div className="border-t border-gray-100 dark:border-dark-surface-variant/20 pt-8">
+              <h3 className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-6">Performance Audit</h3>
+              <div className="space-y-4">
+                {[0, 4.0, 4.5, 5.0].map((rating) => (
+                  <label key={rating} className="flex items-center gap-3 cursor-pointer group">
+                    <input type="radio" name="rating" className="w-4 h-4 text-primary focus:ring-primary bg-transparent border-gray-300 dark:border-gray-700" checked={minRating === rating} onChange={() => setMinRating(rating)} />
+                    <span className="text-sm font-bold text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors">
+                      {rating === 0 ? 'All Ratings' : `${rating} & Above`}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
 
-            {loading && (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-on-surface-variant font-medium animate-pulse">AI is calculating optimal matches...</p>
-              </div>
-            )}
-
-            {!loading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product as any} viewMode="grid" />
+            <div className="border-t border-gray-100 dark:border-dark-surface-variant/20 pt-8">
+              <h3 className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-6">Market Jurisdictions</h3>
+              <div className="space-y-4">
+                {['China', 'Indonesia', 'Germany', 'South Korea'].map((country) => (
+                  <label key={country} className="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 dark:border-gray-700 text-primary focus:ring-primary bg-transparent" checked={selectedCountries.includes(country)} onChange={() => toggleCountry(country)} />
+                    <span className="text-sm font-bold text-gray-600 dark:text-gray-300 group-hover:text-primary transition-colors flex items-center gap-2">
+                       <img src={`https://flagcdn.com/w20/${country.toLowerCase() === 'indonesia' ? 'id' : country.toLowerCase() === 'china' ? 'cn' : country.toLowerCase() === 'germany' ? 'de' : 'kr'}.png`} alt="" className="w-4 rounded-sm" />
+                       {country}
+                    </span>
+                  </label>
                 ))}
               </div>
-            )}
+            </div>
+          </div>
+        </aside>
 
-            {filteredProducts.length === 0 && (
-              <div className="text-center py-20">
-                <span className="material-symbols-outlined text-6xl text-outline-variant mb-4 block">search_off</span>
-                <h3 className="text-xl font-semibold text-on-surface mb-2">No products found</h3>
-                <p className="text-on-surface-variant mb-6">Try adjusting your search or filter criteria</p>
-                <button onClick={() => { setSearchQuery(''); setSelectedCategory(''); setSelectedCountry(''); }} className="btn-primary">Clear All Filters</button>
-              </div>
-            )}
-
-            {/* Pagination */}
-            <div className="mt-8 flex justify-center gap-2">
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">chevron_left</span>
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold">1</button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">2</button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">3</button>
-              <button className="w-10 h-10 flex items-center justify-center rounded-lg border border-surface-variant text-on-surface-variant hover:border-primary hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">chevron_right</span>
+        {/* Catalog Grid Area */}
+        <div className="flex-1 min-w-0 overflow-y-auto pr-2 scrollbar-hide pb-20">
+          <div className="flex justify-between items-center mt-4 mb-8 bg-white dark:bg-dark-surface p-4 rounded-2xl border border-gray-100 dark:border-dark-surface-variant/20">
+            <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+               Orchestrating {viewType === 'products' ? filteredProducts.length : suppliersWithProducts.length} intelligence nodes
+            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:block">Verified Only</span>
+              <button 
+                onClick={() => setVerifiedOnly(!verifiedOnly)}
+                className={`w-10 h-5 rounded-full relative transition-all ${verifiedOnly ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-800'}`}
+              >
+                <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all ${verifiedOnly ? 'translate-x-5' : ''}`} />
               </button>
             </div>
           </div>
+
+          {loading ? (
+             <div className="flex flex-col items-center justify-center py-32 gap-6">
+                <Loader2 className="w-12 h-12 animate-spin text-primary opacity-20" />
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing Global Data...</p>
+             </div>
+          ) : viewType === 'products' ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product as any} viewMode="grid" />
+                ))}
+             </div>
+          ) : (
+             <div className="flex flex-col gap-10">
+               {suppliersWithProducts.map(supplier => (
+                 <div key={supplier.id} className="bg-white dark:bg-dark-surface rounded-[2rem] p-8 md:p-10 border border-gray-100 dark:border-dark-surface-variant/20 transition-all group">
+                   
+                   {/* Supplier Formal Dossier Header */}
+                   <div className="flex flex-col xl:flex-row justify-between items-start gap-8 mb-10 pb-10 border-b border-gray-50 dark:border-dark-surface-variant/10">
+                     <div className="flex items-start gap-6">
+                        <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/20 flex items-center justify-center p-2 transition-transform group-hover:rotate-3">
+                           <img src={`https://ui-avatars.com/api/?name=${supplier.name}&background=6366f1&color=fff&size=128&font-size=0.33`} alt={supplier.name} className="w-full h-full object-contain rounded-xl" />
+                        </div>
+                        <div>
+                           <div className="flex items-center gap-3 mb-2 flex-wrap">
+                              <Link href={`/supplier/${supplier.id}`} className="text-2xl font-display font-bold text-gray-900 dark:text-white hover:text-primary transition-all tracking-tight">{supplier.name}</Link>
+                              <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-800/30">
+                                 <ShieldCheck className="w-3 h-3" /> Verified
+                              </div>
+                           </div>
+                           <div className="flex items-center gap-4 text-xs font-bold text-gray-500 dark:text-gray-400">
+                              <span className="flex items-center gap-1.5">
+                                 <img src={`https://flagcdn.com/w20/${supplier.country?.toLowerCase() === 'indonesia' ? 'id' : supplier.country?.toLowerCase() === 'germany' ? 'de' : supplier.country?.toLowerCase() === 'south korea' ? 'kr' : 'cn'}.png`} alt="" className="w-4 rounded-sm" />
+                                 {supplier.country}
+                              </span>
+                              <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700" />
+                              <span className="flex items-center gap-1">
+                                 <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                                 <span className="text-gray-900 dark:text-white">4.9/5</span>
+                                 <span className="font-medium opacity-60">(24 Reviews)</span>
+                              </span>
+                           </div>
+                        </div>
+                     </div>
+                     <div className="flex gap-4 w-full xl:w-auto">
+                        <Link href={`/supplier/${supplier.id}`} className="flex-1 xl:flex-none px-8 py-3.5 bg-gray-50 dark:bg-dark-surface-container text-gray-900 dark:text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-gray-100 dark:hover:bg-dark-surface-container-high transition-all text-center flex items-center justify-center gap-2">
+                           <Mail className="w-4 h-4" /> Message
+                        </Link>
+                        <Link href={`/supplier/${supplier.id}`} className="flex-1 xl:flex-none px-8 py-3.5 bg-primary text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 text-center flex items-center justify-center gap-2">
+                           <MessageSquare className="w-4 h-4" /> Live Chat
+                        </Link>
+                     </div>
+                   </div>
+
+                   {/* Intelligence Grid */}
+                   <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+                      <div className="xl:col-span-3 space-y-8">
+                         <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Operations Meta</p>
+                            <div className="space-y-4">
+                               <div className="flex justify-between items-center bg-gray-50/50 dark:bg-dark-surface-container/30 p-3 rounded-xl border border-gray-100/50 dark:border-dark-surface-variant/10">
+                                  <span className="text-xs font-bold text-gray-500 flex items-center gap-2"><Clock className="w-3 h-3" /> Delivery</span>
+                                  <span className="text-xs font-black text-emerald-600">98% On-Time</span>
+                               </div>
+                               <div className="flex justify-between items-center bg-gray-50/50 dark:bg-dark-surface-container/30 p-3 rounded-xl border border-gray-100/50 dark:border-dark-surface-variant/10">
+                                  <span className="text-xs font-bold text-gray-500 flex items-center gap-2"><Box className="w-3 h-3" /> Capacity</span>
+                                  <span className="text-xs font-black text-gray-900 dark:text-white">Active (High)</span>
+                               </div>
+                            </div>
+                         </div>
+                         <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Capabilities</p>
+                            <div className="flex flex-wrap gap-2">
+                               {['OEM', 'ODM', 'R&D'].map(cap => (
+                                 <span key={cap} className="px-3 py-1 bg-gray-100 dark:bg-dark-surface-container-high text-gray-600 dark:text-gray-400 text-[10px] font-black rounded-lg uppercase">{cap}</span>
+                               ))}
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="xl:col-span-9">
+                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Product Showcase</p>
+                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {supplier.products.slice(0, 3).map((p: any) => (
+                               <Link key={p.id} href={`/catalog/${p.id}`} className="group/item relative aspect-square rounded-2xl overflow-hidden bg-gray-50 dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/20">
+                                  <img src={p.images?.[0] || 'https://via.placeholder.com/400'} alt="" className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-700" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover/item:opacity-100 transition-all p-4 flex flex-col justify-end">
+                                     <p className="text-white text-[10px] font-black uppercase tracking-widest mb-1 truncate">{p.name}</p>
+                                     <p className="text-primary-container text-sm font-black">${p.price_range_min}</p>
+                                  </div>
+                               </Link>
+                            ))}
+                            {/* Factory Insight Card */}
+                            <div className="relative aspect-square rounded-2xl overflow-hidden group/factory cursor-pointer">
+                               <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80" alt="" className="w-full h-full object-cover group-hover/factory:scale-110 transition-all" />
+                               <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-3 backdrop-blur-[1px]">
+                                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                                     <Play className="w-4 h-4 text-white fill-current pl-0.5" />
+                                  </div>
+                                  <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">View Facility</span>
+                               </div>
+                            </div>
+                         </div>
+                         <Link href={`/supplier/${supplier.id}`} className="inline-flex items-center gap-2 mt-6 text-[10px] font-black text-primary uppercase tracking-[0.3em] hover:gap-4 transition-all group/more">
+                            Explore Full Intelligence Report <ChevronRight className="w-4 h-4" />
+                         </Link>
+                      </div>
+                   </div>
+                 </div>
+               ))}
+               {suppliersWithProducts.length === 0 && (
+                 <div className="text-center py-32 bg-white dark:bg-dark-surface rounded-[2rem] border border-gray-100 dark:border-dark-surface-variant/20 shadow-sm">
+                    <Search className="w-16 h-16 text-gray-200 dark:text-gray-800 mx-auto mb-6" />
+                    <h3 className="text-xl font-display font-bold text-gray-900 dark:text-white mb-2">No Intelligence Matches</h3>
+                    <p className="text-sm text-gray-500 font-medium">Try broadening your discovery parameters or reset filters.</p>
+                 </div>
+               )}
+             </div>
+          )}
         </div>
       </main>
 

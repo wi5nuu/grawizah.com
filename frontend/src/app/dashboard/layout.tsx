@@ -2,15 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import DashboardSidebar from '@/components/ui/DashboardSidebar';
+import DashboardNavbar from '@/components/ui/DashboardNavbar';
 import { ChatWidget } from '@/components/ChatWidget';
 import { NotificationToast } from '@/components/NotificationToast';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/components/ThemeProvider';
 import { useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { isAuthenticated, loading } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -41,21 +44,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className={`
           flex-1 min-h-screen transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
           ${collapsed ? 'md:ml-[72px]' : 'md:ml-64'}
+          flex flex-col
         `}
       >
-        {/* Mobile Top Bar */}
-        <header className="md:hidden sticky top-0 z-30 h-16 bg-surface/80 dark:bg-dark-surface/80 backdrop-blur-md border-b border-surface-variant/30 dark:border-dark-surface-variant/30 flex items-center justify-between px-4">
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="w-10 h-10 rounded-lg bg-surface-container-low dark:bg-dark-surface-container flex items-center justify-center text-on-surface dark:text-dark-on-surface hover:bg-surface-container-high transition-colors"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <span className="text-lg font-display font-bold gradient-text">Grawizah</span>
-          <button className="w-10 h-10 rounded-lg bg-surface-container-low dark:bg-dark-surface-container flex items-center justify-center text-on-surface dark:text-dark-on-surface">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-        </header>
+        <DashboardNavbar onMenuClick={() => setMobileOpen(true)} />
 
         <main className="flex-1 overflow-auto animate-fade-in">
           {children}

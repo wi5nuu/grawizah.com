@@ -4,22 +4,41 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/components/ThemeProvider';
+import { 
+  LayoutDashboard, 
+  Bot, 
+  Mail, 
+  Package, 
+  BarChart3, 
+  Settings, 
+  ChevronRight, 
+  ChevronLeft,
+  Moon,
+  Sun,
+  HelpCircle,
+  LogOut,
+  Zap,
+  ShoppingBag,
+  Search,
+  Truck,
+  BookOpen
+} from 'lucide-react';
 
 const supplierLinks = [
-  { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/dashboard/intelligence', label: 'Intelligence', icon: 'insights' },
-  { href: '/dashboard/inquiries', label: 'Inquiries', icon: 'mail' },
-  { href: '/dashboard/products', label: 'My Products', icon: 'inventory_2' },
-  { href: '/dashboard/leaderboard', label: 'Leaderboard', icon: 'leaderboard' },
-  { href: '/dashboard/settings', label: 'Settings', icon: 'settings' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/intelligence', label: 'Intelligence', icon: Bot },
+  { href: '/dashboard/inquiries', label: 'Inquiries', icon: Mail },
+  { href: '/dashboard/products', label: 'My Products', icon: Package },
+  { href: '/dashboard/leaderboard', label: 'Leaderboard', icon: BarChart3 },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 const buyerLinks = [
-  { href: '/buyer/dashboard', label: 'Marketplace', icon: 'shopping_basket' },
-  { href: '/buyer/sourcing', label: 'Sourcing Hub', icon: 'search' },
-  { href: '/buyer/orders', label: 'My Orders', icon: 'local_shipping' },
-  { href: '/catalog/suppliers', label: 'Supplier Directory', icon: 'menu_book' },
-  { href: '/buyer/settings', label: 'Settings', icon: 'settings' },
+  { href: '/buyer/dashboard', label: 'Marketplace', icon: ShoppingBag },
+  { href: '/buyer/sourcing', label: 'Sourcing Hub', icon: Search },
+  { href: '/buyer/orders', label: 'My Orders', icon: Truck },
+  { href: '/catalog/suppliers', label: 'Supplier Directory', icon: BookOpen },
+  { href: '/buyer/settings', label: 'Settings', icon: Settings },
 ];
 
 interface SidebarProps {
@@ -58,80 +77,58 @@ export default function DashboardSidebar({
       <aside
         className={`
           h-screen fixed left-0 top-0 z-50 flex flex-col
-          bg-[#faf8ff] dark:bg-dark-surface-container-low
-          border-r border-surface-variant/30 dark:border-dark-surface-variant/30
+          bg-white dark:bg-dark-surface-container-low
+          border-r border-gray-100 dark:border-dark-surface-variant/30
           transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]
-          ${collapsed ? 'w-[72px]' : 'w-64'}
+          ${collapsed ? 'w-[80px]' : 'w-72'}
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
-        style={{ boxShadow: mobileOpen ? '4px 0 24px rgba(0,0,0,0.15)' : 'none' }}
       >
         {/* Brand Header */}
-        <div className={`flex items-center ${collapsed ? 'justify-center py-6' : 'px-6 py-6'} border-b border-transparent`}>
+        <div className={`flex items-center ${collapsed ? 'justify-center py-8' : 'px-8 py-8'}`}>
           {!collapsed ? (
-            <div className="overflow-hidden animate-fade-in flex items-center gap-2">
-              <img src="/images/android-chrome-192x192.png" alt="Logo" className="w-8 h-8 object-contain shrink-0" />
+            <div className="overflow-hidden animate-fade-in flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                 <Zap className="w-6 h-6 fill-current" />
+              </div>
               <div>
-                <Link href="/" className="text-[22px] font-display font-extrabold text-[#5300b7] dark:text-dark-primary block leading-tight">Grawizah</Link>
-                <p className="text-[11px] text-on-surface-variant dark:text-dark-on-surface-variant mt-1">Global Trade Platform</p>
+                <Link href="/" className="text-xl font-black text-gray-900 dark:text-white block leading-none tracking-tight">Grawizah</Link>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mt-1">Intelligence</p>
               </div>
             </div>
           ) : (
-             <Link href="/">
-               <img src="/images/android-chrome-192x192.png" alt="Logo" className="w-8 h-8 object-contain" />
+             <Link href="/" className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+               <Zap className="w-6 h-6 fill-current" />
              </Link>
           )}
         </div>
 
-        {/* Collapse Toggle */}
-        <button
-          onClick={onToggle}
-          className={`
-            hidden md:flex items-center justify-center
-            absolute -right-3 top-[32px]
-            w-6 h-6 rounded-full
-            bg-surface-container-lowest dark:bg-dark-surface-container
-            border border-surface-variant dark:border-dark-surface-variant
-            text-on-surface-variant dark:text-dark-on-surface-variant
-            hover:text-primary dark:hover:text-dark-primary
-            hover:border-primary shadow-sm
-            transition-all duration-300 z-50
-          `}
-        >
-          <span
-            className="material-symbols-outlined text-[14px] transition-transform duration-300"
-            style={{ transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)' }}
-          >
-            chevron_right
-          </span>
-        </button>
-
         {/* Navigation */}
-        <nav className={`flex-1 flex flex-col gap-1 overflow-y-auto py-2 ${collapsed ? 'px-2' : 'px-4'}`}>
+        <nav className={`flex-1 flex flex-col gap-1 overflow-y-auto py-4 ${collapsed ? 'px-3' : 'px-6'}`}>
           {(user?.role === 'buyer' ? buyerLinks : supplierLinks).map((link) => {
             const active = isActive(link.href);
+            const Icon = link.icon;
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => mobileOpen && onMobileClose()}
                 className={`
-                  ${active ? 'sidebar-link-active' : 'sidebar-link text-[#6b7280]'}
-                  ${collapsed ? 'justify-center px-0 py-3' : 'px-3 py-2.5'}
-                  group rounded-md
+                  flex items-center gap-4 transition-all duration-200
+                  ${active 
+                    ? 'bg-primary/5 text-primary border border-primary/10' 
+                    : 'text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'}
+                  ${collapsed ? 'justify-center px-0 py-4' : 'px-4 py-3.5'}
+                  rounded-2xl group
                 `}
                 title={collapsed ? link.label : undefined}
               >
-                <span
-                  className={`material-symbols-outlined text-[20px] shrink-0 transition-colors duration-200 ${
-                    active ? '' : 'group-hover:text-primary dark:group-hover:text-dark-primary'
-                  }`}
-                  style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
-                >
-                  {link.icon}
-                </span>
+                <Icon className={`w-5 h-5 shrink-0 ${active ? 'text-primary' : 'group-hover:scale-110 transition-transform'}`} />
                 {!collapsed && (
-                  <span className="whitespace-nowrap overflow-hidden text-[13px]">{link.label}</span>
+                  <span className={`text-[13px] font-black uppercase tracking-widest ${active ? 'opacity-100' : 'opacity-70'}`}>{link.label}</span>
+                )}
+                {!collapsed && active && (
+                   <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
               </Link>
             );
@@ -139,36 +136,74 @@ export default function DashboardSidebar({
         </nav>
 
         {/* Footer */}
-        <div className={`px-4 py-6 flex flex-col gap-4 mt-auto`}>
-          {/* Upgrade */}
-          <button className={`
-            w-full rounded-md bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-medium
-            transition-colors duration-200 shadow-sm
-            ${collapsed ? 'p-2 flex items-center justify-center' : 'py-2.5 px-4'}
-          `}>
-            {collapsed ? (
-              <span className="material-symbols-outlined text-[18px]">upgrade</span>
-            ) : (
-              <span className="text-sm">Upgrade Plan</span>
-            )}
-          </button>
+        <div className={`mt-auto ${collapsed ? 'px-3' : 'px-6'} py-8 space-y-6`}>
+          
+          {/* Upgrade Plan (FIXED: Added Link & Functionality) */}
+          <Link 
+            href="/pricing"
+            className={`
+              w-full flex items-center justify-center gap-3
+              bg-gray-900 dark:bg-white text-white dark:text-gray-900 
+              font-black text-[10px] uppercase tracking-[0.2em]
+              transition-all duration-300 shadow-xl hover:opacity-90 active:scale-95
+              ${collapsed ? 'p-4 rounded-xl' : 'py-4 px-6 rounded-2xl'}
+            `}
+          >
+            <Zap className="w-4 h-4 fill-current" />
+            {!collapsed && <span>Upgrade Plan</span>}
+          </Link>
 
-          {/* Help, Theme & Logout */}
-          <div className="flex flex-col gap-1 mt-2">
-            <button onClick={toggleTheme} className={`flex items-center gap-3 text-[#6b7280] dark:text-[#a1a1aa] hover:text-[#374151] dark:hover:text-[#e4e4e7] transition-colors ${collapsed ? 'justify-center p-2' : 'px-2 py-1.5'} rounded-md`} title="Toggle Theme">
-              <span className="material-symbols-outlined text-[18px]">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
-              {!collapsed && <span className="text-[13px] font-medium">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+          {/* Theme & Meta Links */}
+          <div className="flex flex-col gap-1">
+            <button 
+              onClick={toggleTheme} 
+              className={`flex items-center gap-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors ${collapsed ? 'justify-center p-4' : 'px-4 py-3'} rounded-xl`}
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {!collapsed && <span className="text-[12px] font-black uppercase tracking-widest">{theme === 'dark' ? 'Solar Mode' : 'Lunar Mode'}</span>}
             </button>
-            <Link href="#" className={`flex items-center gap-3 text-[#6b7280] dark:text-[#a1a1aa] hover:text-[#374151] dark:hover:text-[#e4e4e7] transition-colors ${collapsed ? 'justify-center p-2' : 'px-2 py-1.5'} rounded-md`} title="Help Center">
-              <span className="material-symbols-outlined text-[18px]">help_outline</span>
-              {!collapsed && <span className="text-[13px] font-medium">Help Center</span>}
+            
+            <Link 
+              href="/info" 
+              className={`flex items-center gap-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors ${collapsed ? 'justify-center p-4' : 'px-4 py-3'} rounded-xl`}
+              title="Help Center"
+            >
+              <HelpCircle className="w-5 h-5" />
+              {!collapsed && <span className="text-[12px] font-black uppercase tracking-widest">Protocol Support</span>}
             </Link>
-            <button onClick={signOut} className={`flex items-center gap-3 text-[#6b7280] dark:text-[#a1a1aa] hover:text-[#ef4444] dark:hover:text-[#ef4444] transition-colors ${collapsed ? 'justify-center p-2' : 'px-2 py-1.5'} rounded-md`} title="Logout">
-              <span className="material-symbols-outlined text-[18px]">logout</span>
-              {!collapsed && <span className="text-[13px] font-medium">Logout</span>}
+
+            <button 
+              onClick={signOut} 
+              className={`flex items-center gap-4 text-gray-400 hover:text-red-500 transition-colors ${collapsed ? 'justify-center p-4' : 'px-4 py-3'} rounded-xl group`}
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              {!collapsed && <span className="text-[12px] font-black uppercase tracking-widest">Terminate Session</span>}
             </button>
           </div>
+
+          {/* Profile Quick Snapshot (Collapsed Only) */}
+          {collapsed && (
+             <div className="flex justify-center pt-4 border-t border-gray-100 dark:border-white/5">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-black text-primary">
+                   {user?.email?.[0].toUpperCase()}
+                </div>
+             </div>
+          )}
         </div>
+
+        {/* Toggle (Internal) */}
+        <button
+          onClick={onToggle}
+          className={`
+            absolute -right-4 top-1/2 -translate-y-1/2 hidden md:flex items-center justify-center
+            w-8 h-8 rounded-full bg-white dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/30
+            text-gray-400 hover:text-primary shadow-lg transition-all z-[60]
+          `}
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
       </aside>
     </>
   );

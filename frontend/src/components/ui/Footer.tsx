@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Twitter, Linkedin, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   const handleSubscribe = (e: React.MouseEvent) => {
@@ -84,13 +85,13 @@ export default function Footer() {
           <div className="flex items-center gap-4">
             {/* Social Icons */}
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">public</span>
+              <Twitter className="w-5 h-5" />
             </a>
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">share</span>
+              <Linkedin className="w-5 h-5" />
             </a>
             <a href="https://community.grawizah.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <span className="material-symbols-outlined text-[20px]">forum</span>
+              <MessageCircle className="w-5 h-5" />
             </a>
           </div>
         </div>

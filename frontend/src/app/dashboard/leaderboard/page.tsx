@@ -13,8 +13,9 @@ export default function LeaderboardPage() {
     const fetchLeaderboard = async () => {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/leaderboard`);
-        const data = await res.json();
-        setLeaderboardData(data);
+        const result = await res.json();
+        const finalData = Array.isArray(result) ? result : (result.data || []);
+        setLeaderboardData(finalData);
       } catch (err) {
         console.error('Failed to fetch leaderboard:', err);
       } finally {
@@ -34,7 +35,7 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="p-8 max-w-[1440px] mx-auto w-full bg-[#fafafa] dark:bg-dark-background min-h-screen relative">
+    <div className="p-6 md:p-10 w-full bg-[#fafafa] dark:bg-dark-background min-h-screen relative">
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4">
         <div>

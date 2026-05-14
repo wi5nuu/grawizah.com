@@ -52,122 +52,153 @@ export default function Navbar() {
         </div>
 
         {/* Right Section */}
-        <div className="hidden md:flex items-center gap-4">
-          {loading ? (
-            <div className="w-24 h-8 bg-black/5 dark:bg-white/5 animate-pulse rounded-sm" />
-          ) : isAuthenticated ? (
-            <div className="relative">
-              <button
-                onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all"
-              >
-                <div className="w-6 h-6 bg-black/10 dark:bg-white/10 rounded-sm flex items-center justify-center">
-                  <span className="text-black dark:text-white text-[10px] font-bold">
-                    {user?.email?.[0]?.toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <span className="text-xs font-medium text-black/80 dark:text-white/80 max-w-[100px] truncate">
-                  {user?.email?.split('@')[0]}
-                </span>
-              </button>
-
-              {profileOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-sm shadow-2xl py-2 z-50 animate-fade-in">
-                    <div className="px-4 py-2 border-b border-black/5 dark:border-white/5">
-                      <p className="text-[11px] font-bold text-black/40 dark:text-white/40 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</p>
-                      <p className="text-xs font-medium text-black/80 dark:text-white/80">{user?.email}</p>
-                    </div>
-                    <Link
-                      href={isBuyer ? '/buyer/dashboard' : '/dashboard'}
-                      className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
-                    </Link>
-                    <Link
-                      href="/dashboard/settings"
-                      className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">settings</span> Settings
-                    </Link>
-                    <hr className="my-1 border-black/5 dark:border-white/5" />
-                    <button
-                      onClick={() => { signOut(); setProfileOpen(false); }}
-                      className="flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 w-full transition"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">logout</span> Sign Out
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <>
-              <Link href="/login" className="text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-all font-medium px-2 py-1">
-                Log In
-              </Link>
-              <Link href="/register" className="px-4 py-1.5 bg-white dark:bg-white text-black rounded-sm font-bold text-xs hover:bg-white/90 transition-all">
-                Get Started
-              </Link>
-            </>
-          )}
-          {/* Theme Toggle */}
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Theme Toggle (Visible on all screens) */}
           <button
             onClick={toggleTheme}
-            className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+            className="w-9 h-9 rounded-md bg-black/5 dark:bg-white/10 flex items-center justify-center text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-all active:scale-90"
             title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           >
-            <span className="material-symbols-outlined text-[18px]">
+            <span className="material-symbols-outlined text-[20px]">
               {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
           </button>
-        </div>
 
-        {/* Mobile Toggle */}
-        <button className="md:hidden text-white" onClick={() => setMobileOpen(!mobileOpen)}>
-          <span className="material-symbols-outlined">{mobileOpen ? 'close' : 'menu'}</span>
-        </button>
+          <div className="hidden md:flex items-center gap-4">
+            {loading ? (
+              <div className="w-24 h-8 bg-black/5 dark:bg-white/5 animate-pulse rounded-sm" />
+            ) : isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setProfileOpen(!profileOpen)}
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                >
+                  <div className="w-6 h-6 bg-black/10 dark:bg-white/10 rounded-sm flex items-center justify-center">
+                    <span className="text-black dark:text-white text-[10px] font-bold">
+                      {user?.email?.[0]?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium text-black/80 dark:text-white/80 max-w-[100px] truncate">
+                    {user?.email?.split('@')[0]}
+                  </span>
+                </button>
+
+                {profileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-sm shadow-2xl py-2 z-50 animate-fade-in">
+                      <div className="px-4 py-2 border-b border-black/5 dark:border-white/5">
+                        <p className="text-[11px] font-bold text-black/40 dark:text-white/40 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</p>
+                        <p className="text-xs font-medium text-black/80 dark:text-white/80">{user?.email}</p>
+                      </div>
+                      <Link
+                        href={isBuyer ? '/buyer/dashboard' : '/dashboard'}
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
+                      </Link>
+                      <Link
+                        href="/dashboard/settings"
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">settings</span> Settings
+                      </Link>
+                      <hr className="my-1 border-black/5 dark:border-white/5" />
+                      <button
+                        onClick={() => { signOut(); setProfileOpen(false); }}
+                        className="flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 w-full transition"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">logout</span> Sign Out
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-all font-medium px-2 py-1">
+                  Log In
+                </Link>
+                <Link href="/register" className="px-4 py-1.5 bg-black dark:bg-white text-white dark:text-black rounded-sm font-bold text-xs hover:opacity-90 transition-all">
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Toggle */}
+          <button className="md:hidden text-black dark:text-white w-10 h-10 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setMobileOpen(!mobileOpen)}>
+            <span className="material-symbols-outlined">{mobileOpen ? 'close' : 'menu'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/10 bg-black animate-fade-in">
-          <nav className="px-6 py-4 space-y-1">
+        <div className="md:hidden border-t border-black/5 dark:border-white/10 bg-white dark:bg-dark-surface animate-fade-in overflow-y-auto max-h-[calc(100vh-64px)]">
+          <nav className="px-6 py-6 space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30 px-4 mb-2">Navigation</p>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`block px-4 py-3 rounded-sm text-sm font-medium ${
-                  isActive(link.href) ? 'bg-white/10 text-white' : 'text-white/40'
+                className={`block px-4 py-3.5 rounded-xl text-[15px] font-bold transition-all ${
+                  isActive(link.href) 
+                  ? 'bg-primary/10 text-primary' 
+                  : 'text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 onClick={() => setMobileOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <hr className="my-2 border-white/5" />
+            
+            <div className="my-6 border-t border-black/5 dark:border-white/5 pt-6" />
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/30 dark:text-white/30 px-4 mb-2">Account</p>
+
             {!loading && (
               isAuthenticated ? (
                 <>
-                  <Link href={isBuyer ? '/buyer/dashboard' : '/dashboard'} className="block px-4 py-3 rounded-sm text-sm text-white/60" onClick={() => setMobileOpen(false)}>
-                    Dashboard
+                  <Link 
+                    href={isBuyer ? '/buyer/dashboard' : '/dashboard'} 
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-bold text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 transition-all" 
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
                   </Link>
-                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="block w-full text-left px-4 py-3 rounded-sm text-sm text-red-400">
-                    Sign Out
+                  <Link 
+                    href="/dashboard/settings" 
+                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-bold text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 transition-all" 
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">settings</span> Settings
+                  </Link>
+                  <button 
+                    onClick={() => { signOut(); setMobileOpen(false); }} 
+                    className="flex items-center gap-3 w-full text-left px-4 py-3.5 rounded-xl text-[15px] font-bold text-red-500 hover:bg-red-500/10 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">logout</span> Sign Out
                   </button>
                 </>
               ) : (
-                <>
-                  <Link href="/login" className="block px-4 py-3 rounded-sm text-sm text-white/40" onClick={() => setMobileOpen(false)}>
+                <div className="grid grid-cols-1 gap-3">
+                  <Link 
+                    href="/login" 
+                    className="flex items-center justify-center px-4 py-4 rounded-xl text-[15px] font-bold text-black/60 dark:text-white/60 border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-all" 
+                    onClick={() => setMobileOpen(false)}
+                  >
                     Log In
                   </Link>
-                  <Link href="/register" className="block px-4 py-3 bg-white text-black text-center font-bold text-sm rounded-sm" onClick={() => setMobileOpen(false)}>
+                  <Link 
+                    href="/register" 
+                    className="flex items-center justify-center px-4 py-4 bg-black dark:bg-white text-white dark:text-black font-black text-[15px] rounded-xl shadow-lg" 
+                    onClick={() => setMobileOpen(false)}
+                  >
                     Get Started
                   </Link>
-                </>
+                </div>
               )
             )}
           </nav>

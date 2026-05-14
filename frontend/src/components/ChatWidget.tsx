@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, X, Minimize2, Languages } from 'lucide-react';
+import { 
+  MessageCircle, 
+  Send, 
+  X, 
+  Minimize2, 
+  Languages, 
+  Bot, 
+  Clock, 
+  ShieldCheck, 
+  MoreVertical,
+  Maximize2,
+  ChevronRight,
+  Sparkles
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { TranslatorService } from '@/services/TranslatorService';
 import { ChatService } from '@/services/ChatService';
@@ -27,14 +40,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
-  const [autoTranslate, setAutoTranslate] = useState(true);
+  const [autoTranslate, setAutoTranslate] = useState(false);
   const [targetLang, setTargetLang] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
   const translatorService = new TranslatorService();
+  const chatService = new ChatService();
 
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen && user && supplierId) {
       loadChatHistory();
+      setUnreadCount(0);
     }
     
     let subscription: any;
@@ -49,11 +65,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isMinimized]);
 
   const loadChatHistory = async () => {
     if (!user || !supplierId) return;
-
     try {
       const history = await chatService.getChatHistory(supplierId, user.id);
       if (history && history.messages) {
@@ -83,14 +98,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
           filter: `supplier_id=eq.${supplierId}&buyer_id=eq.${user?.id}`,
         },
         (payload) => {
-          const newMessage = payload.new;
-          if (newMessage.sender_id !== user?.id) {
+          const incoming = payload.new;
+          if (incoming.sender_id !== user?.id) {
             const formattedMessage: Message = {
-              id: newMessage.id,
+              id: incoming.id,
               sender: 'supplier',
-              message: newMessage.message,
-              timestamp: new Date(newMessage.created_at),
-              read: newMessage.is_read,
+              message: incoming.message,
+              timestamp: new Date(incoming.created_at),
+              read: incoming.is_read,
             };
             setMessages((prev) => [...prev, formattedMessage]);
             if (!isOpen) setUnreadCount((prev) => prev + 1);
@@ -106,10 +121,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const chatService = new ChatService();
-
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() || !user || !supplierId) return;
 
     let messageToSend = newMessage;
 
@@ -135,17 +148,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
       read: false,
     };
 
-    setMessages([...messages, message]);
+    setMessages((prev) => [...prev, message]);
     setNewMessage('');
 
-    // Send to backend and WhatsApp Bridge
-    await sendMessageToBackend(message);
-  };
-
-  const sendMessageToBackend = async (message: Message) => {
-    if (!user) return;
     try {
-      // Send to API via ChatService
       await chatService.sendMessage({
         supplierId,
         buyerId: user.id,
@@ -154,21 +160,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
         message: message.message,
         channel: 'chat',
       });
-      // Also send via WhatsApp Bridge if enabled
-      await sendViaWhatsApp(message);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
-  };
-
-  const sendViaWhatsApp = async (message: Message) => {
-    try {
+      // Optionally send via WhatsApp
       await chatService.sendWhatsAppMessage({
         to: supplierId,
         message: message.message,
       });
     } catch (error) {
-      console.error('WhatsApp send failed:', error);
+      console.error('Failed to send message:', error);
     }
   };
 
@@ -176,11 +174,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 bg-primary-600 text-white p-4 rounded-full shadow-lg hover:bg-primary-700 transition-all z-50"
+        className="fixed bottom-8 right-8 bg-gray-900 dark:bg-white text-white dark:text-gray-900 p-5 rounded-[1.5rem] shadow-2xl hover:scale-110 active:scale-95 transition-all z-50 group border border-white/10"
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 bg-primary text-white text-[10px] font-black rounded-full w-6 h-6 flex items-center justify-center border-4 border-[#fafafa] dark:border-dark-background">
             {unreadCount}
           </span>
         )}
@@ -190,26 +188,32 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
 
   return (
     <div
-      className={`fixed bottom-6 right-6 bg-white rounded-lg shadow-2xl z-50 transition-all ${
-        isMinimized ? 'w-80 h-14' : 'w-96 h-[500px]'
+      className={`fixed bottom-8 right-8 bg-white dark:bg-dark-surface-container-low rounded-[2rem] shadow-2xl z-50 transition-all duration-300 overflow-hidden flex flex-col border border-gray-100 dark:border-dark-surface-variant/20 ${
+        isMinimized ? 'w-72 h-16' : 'w-96 h-[580px]'
       }`}
     >
-      {/* Header */}
-      <div className="bg-primary-600 text-white p-4 rounded-t-lg flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" />
-          <span className="font-semibold">Chat with Supplier</span>
+      {/* Premium Header */}
+      <div className="bg-gray-900 dark:bg-dark-surface-container p-4 flex items-center justify-between text-white border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/20 relative">
+             <Bot className="w-5 h-5 text-primary" />
+             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-gray-900" />
+          </div>
+          <div>
+            <span className="text-xs font-black uppercase tracking-widest block leading-none">Intelligence Bot</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Verified Supplier Node</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setIsMinimized(!isMinimized)}
-            className="hover:bg-primary-700 p-1 rounded"
+            className="hover:bg-white/10 p-2 rounded-xl transition-colors"
           >
-            <Minimize2 className="w-4 h-4" />
+            {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
           </button>
           <button
             onClick={() => setIsOpen(false)}
-            className="hover:bg-primary-700 p-1 rounded"
+            className="hover:bg-white/10 p-2 rounded-xl transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -218,83 +222,101 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
 
       {!isMinimized && (
         <>
-          {/* Messages */}
-          <div className="h-[380px] overflow-y-auto p-4 space-y-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[70%] p-3 rounded-lg ${
-                    msg.sender === 'user'
-                      ? 'bg-primary-600 text-white'
-                      : msg.sender === 'system'
-                      ? 'bg-gray-100 text-gray-700'
-                      : 'bg-blue-100 text-gray-900'
-                  }`}
-                >
-                  <p className="text-sm">{msg.message}</p>
-                  <p className="text-xs opacity-70 mt-1">
-                    {msg.timestamp.toLocaleTimeString()}
-                  </p>
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/30 dark:bg-dark-background/10">
+            {messages.length === 0 && (
+               <div className="flex flex-col items-center justify-center h-full opacity-30 text-center px-10">
+                  <MessageCircle className="w-10 h-10 mb-4" />
+                  <p className="text-[10px] font-black uppercase tracking-widest">Initialization Required</p>
+                  <p className="text-[9px] font-bold mt-1 uppercase">Commence communication with your verified trade partner.</p>
+               </div>
+            )}
+            {messages.map((msg, idx) => {
+              const isUser = msg.sender === 'user';
+              return (
+                <div key={msg.id} className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}>
+                  <div
+                    className={`max-w-[85%] p-4 rounded-2xl text-[13px] font-medium leading-relaxed shadow-sm relative ${
+                      isUser
+                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-tr-none'
+                        : msg.sender === 'system'
+                        ? 'bg-gray-100 dark:bg-dark-surface-container text-gray-500 text-[11px] font-black uppercase text-center w-full shadow-none border-none px-0'
+                        : 'bg-white dark:bg-dark-surface-container text-gray-900 dark:text-white border border-gray-100 dark:border-dark-surface-variant/20 rounded-tl-none'
+                    }`}
+                  >
+                    {msg.message}
+                    {msg.sender !== 'system' && (
+                       <div className={`mt-2 flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter opacity-50 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                          <Clock className="w-2.5 h-2.5" />
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                       </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="border-t p-3">
-            {/* AI Translator Toggle */}
-            <div className="flex items-center justify-between mb-2 p-2 bg-blue-50 rounded">
-              <div className="flex items-center gap-2">
-                <Languages className="w-4 h-4 text-blue-600" />
-                <span className="text-xs text-blue-900">AI Translator</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={targetLang}
-                  onChange={(e) => setTargetLang(e.target.value)}
-                  className="text-xs border rounded px-2 py-1"
-                >
-                  {translatorService.getSupportedLanguages().map((lang) => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={autoTranslate}
-                    onChange={(e) => setAutoTranslate(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+          {/* Action Footer */}
+          <div className="p-5 bg-white dark:bg-dark-surface-container-low border-t border-gray-100 dark:border-dark-surface-variant/10">
+            
+            {/* Intelligence Translator Row */}
+            <div className="flex items-center justify-between mb-4 p-2 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10">
+               <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-white dark:bg-dark-surface rounded-lg shadow-sm">
+                     <Languages className="w-3 h-3 text-primary" />
+                  </div>
+                  <span className="text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Neural Sync</span>
+               </div>
+               <div className="flex items-center gap-2">
+                  <select
+                    value={targetLang}
+                    onChange={(e) => setTargetLang(e.target.value)}
+                    className="bg-white dark:bg-dark-surface border-none text-[10px] font-black uppercase tracking-tighter rounded-lg px-2 py-1 outline-none ring-1 ring-gray-100 dark:ring-dark-surface-variant/30"
+                  >
+                    {translatorService.getSupportedLanguages().map((lang) => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.name.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                  <button 
+                    onClick={() => setAutoTranslate(!autoTranslate)}
+                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${autoTranslate ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface text-gray-400'}`}
+                  >
+                     {autoTranslate ? 'Active' : 'Sync'}
+                  </button>
+               </div>
+            </div>
+
+            <div className="flex gap-3 items-center">
+              <div className="flex-1 relative group">
+                 <input
+                   type="text"
+                   value={newMessage}
+                   onChange={(e) => setNewMessage(e.target.value)}
+                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                   placeholder="Transmit intelligence..."
+                   className="w-full bg-gray-50 dark:bg-dark-surface border border-transparent focus:border-primary/20 focus:bg-white text-xs font-semibold px-5 py-3.5 rounded-[1.2rem] outline-none transition-all pr-12"
+                 />
+                 <button
+                    onClick={handleSendMessage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg"
+                 >
+                    <Send className="w-3.5 h-3.5" />
+                 </button>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type your message..."
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                onClick={handleSendMessage}
-                className="bg-primary-600 text-white p-2 rounded-lg hover:bg-primary-700"
-              >
-                <Send className="w-5 h-5" />
-              </button>
+            <div className="mt-4 flex items-center justify-center gap-4 opacity-40">
+               <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em]">
+                  <ShieldCheck className="w-2.5 h-2.5" /> E2E Encrypted
+               </div>
+               <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em]">
+                  <Sparkles className="w-2.5 h-2.5" /> AI Augmented
+               </div>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              💬 Messages also sent via WhatsApp
-            </p>
           </div>
         </>
       )}
