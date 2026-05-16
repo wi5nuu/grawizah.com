@@ -200,6 +200,7 @@ func main() {
 			ai.POST("/optimize-listing", aiHandler.OptimizeListing)
 			ai.POST("/translate", aiHandler.TranslateText)
 			ai.POST("/detect-language", aiHandler.DetectLanguage)
+			ai.POST("/chat", aiHandler.ChatWithAI)
 		}
 
 		// Leaderboard routes

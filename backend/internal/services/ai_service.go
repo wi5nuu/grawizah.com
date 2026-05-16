@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 type AIService struct {
@@ -163,4 +164,40 @@ Text: %s`, text)
 	}
 
 	return result, nil
+}
+// Chat handles general AI chat with Grawizah knowledge
+func (s *AIService) Chat(ctx context.Context, message string) (string, error) {
+	// If Groq key is a placeholder, use intelligent fallback
+	if s.groqAPIKey == "" || s.groqAPIKey == "gsk_your_api_key" {
+		return s.getKnowledgeBaseResponse(message), nil
+	}
+
+	prompt := fmt.Sprintf(`You are the Grawizah Intelligence Bot, an expert in international trade and export-import regulations.
+User asked: %s
+Provide a helpful, professional response focused on trade data, HS codes, or export logistics. If you don't know the specific answer, provide general trade advice.`, message)
+
+	return s.callGroq(prompt)
+}
+
+func (s *AIService) getKnowledgeBaseResponse(query string) string {
+	// Simple keyword-based intelligent fallback
+	q := strings.ToLower(query)
+	
+	if strings.Contains(q, "apa itu grawizah") || strings.Contains(q, "what is grawizah") {
+		return "Grawizah adalah platform intelijen pra-transaksi untuk perdagangan global. Kami membantu UKM Indonesia melakukan ekspor dengan data pasar yang mendalam, optimasi produk berbasis AI, dan verifikasi partner dagang."
+	}
+	if strings.Contains(q, "hs code") || strings.Contains(q, "kode hs") {
+		return "Grawizah menggunakan AI untuk mengklasifikasi HS Code (Harmonized System) dengan akurasi tinggi. Anda bisa mengunggah deskripsi produk dan kami akan memberikan kode 6-digit serta catatan regulasi terkait."
+	}
+	if strings.Contains(q, "bantu") || strings.Contains(q, "help") || strings.Contains(q, "fitur") {
+		return "Saya bisa membantu Anda dalam beberapa hal: 1. Klasifikasi HS Code otomatis. 2. Optimasi listing produk ekspor. 3. Analisis skor kualitas pembeli (Buyer Quality Score). 4. Pemantauan harga kompetitor global secara real-time."
+	}
+	if strings.Contains(q, "ekspor") || strings.Contains(q, "export") {
+		return "Untuk memulai ekspor, Anda perlu menyiapkan NIB, NPWP, dan izin ekspor khusus produk. Grawizah mempermudah pencarian buyer internasional yang terverifikasi agar transaksi Anda lebih aman."
+	}
+	if strings.Contains(q, "halo") || strings.Contains(q, "hi") || strings.Contains(q, "pagi") || strings.Contains(q, "siang") {
+		return "Halo! Saya Grawizah Intelligence Bot. Ada yang bisa saya bantu terkait intelijen pasar atau persiapan ekspor Anda hari ini?"
+	}
+
+	return "Terima kasih atas pertanyaannya. Sebagai AI Grawizah, saya bisa memberikan info mengenai HS Code, analisis pasar global, dan verifikasi supplier/buyer. Bisa tolong spesifikkan apa yang ingin Anda ketahui?"
 }

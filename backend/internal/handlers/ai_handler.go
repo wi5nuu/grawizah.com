@@ -134,3 +134,25 @@ func (h *AIHandler) DetectLanguage(c *gin.Context) {
 		"language": result["language"],
 	})
 }
+// ChatWithAI handles POST /api/ai/chat
+func (h *AIHandler) ChatWithAI(c *gin.Context) {
+	var input struct {
+		Message string `json:"message" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := h.aiService.Chat(c.Request.Context(), input.Message)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":  true,
+		"response": response,
+	})
+}

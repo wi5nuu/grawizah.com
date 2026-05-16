@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { TranslatorService } from '@/services/TranslatorService';
 import { ChatService } from '@/services/ChatService';
+import { GeneralAIService } from '@/services/AIService';
 import { supabase } from '@/lib/supabase';
 
 interface Message {
@@ -46,6 +47,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   
   const translatorService = new TranslatorService();
   const chatService = new ChatService();
+  const aiGeneralService = new GeneralAIService();
 
   const effectiveSupplierId = supplierId || 'system-ai-bot';
 
@@ -140,19 +142,20 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     setMessages((prev) => [...prev, message]);
     setNewMessage('');
 
-    // Always trigger Mock AI response for demo purposes
-    setTimeout(() => {
+    try {
+      // Get real (or RAG-mock) response from AI
+      const aiResponse = await aiGeneralService.chat(messageToSend);
+      
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'supplier',
-        message: `Hello! I am the Grawizah Intelligence Bot. I've received your message: "${message.message}". How can I assist you with market data today?`,
+        message: aiResponse,
         timestamp: new Date(),
         read: false,
       };
       setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
 
-    try {
+      // Also record the message in the chat history
       await chatService.sendMessage({
         supplierId: effectiveSupplierId,
         buyerId: user.id,
@@ -163,6 +166,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
       });
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Fallback response if everything fails
+      const fallbackMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'supplier',
+        message: "Maaf, sistem intelijen kami sedang sibuk. Silakan coba beberapa saat lagi.",
+        timestamp: new Date(),
+        read: false,
+      };
+      setMessages((prev) => [...prev, fallbackMessage]);
     }
   };
 

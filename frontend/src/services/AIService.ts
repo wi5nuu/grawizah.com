@@ -109,3 +109,18 @@ export class ListingOptimizerService extends BaseService implements IAIService {
     }
   }
 }
+/**
+ * General AI Chat Service
+ * Uses backend endpoint /api/ai/chat
+ */
+export class GeneralAIService extends BaseService {
+  async chat(message: string): Promise<string> {
+    try {
+      const response = await this.post<any>('/api/ai/chat', { message });
+      return response.response;
+    } catch (error) {
+      console.error('AI Chat failed:', error);
+      throw error;
+    }
+  }
+}
