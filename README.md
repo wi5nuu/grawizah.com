@@ -53,7 +53,7 @@ The platform serves two distinct user roles with purpose-built workflows:
 ## Core Features
 
 ### 1. AI Smart Matchmaker
-A neural matching engine powered by Groq Llama 3.1 that analyzes production capacity, ISO certifications, trade history, and market demand signals to produce ranked buyer-supplier matches with human-readable rationale.
+A neural matching engine powered by Groq Llama 3.3 that analyzes production capacity, ISO certifications, trade history, and market demand signals to produce ranked buyer-supplier matches with human-readable rationale.
 
 ### 2. Interactive Trade Network Map
 A real-time, interactive node graph that visualizes global supply chain relationships, route dependencies, and market concentrations. Suppliers can identify at-risk routes and alternative market opportunities.
@@ -113,7 +113,7 @@ Grawizah's differentiator is its **embedded business intelligence**, not just da
 ┌───▼───────────────┐    ┌─────────────▼──────────────┐
 │   INTELLIGENCE    │    │       DATA LAYER           │
 │   AI ENGINE       │    │   Supabase (PostgreSQL)    │
-│   Groq Llama 3.1  │    │   Real-time Subscriptions  │
+│   Groq Llama   │    │   Real-time Subscriptions  │
 │   HS Code AI      │    │   Row Level Security       │
 │   Match Neural    │    │   Full-text Search         │
 └───────────────────┘    └────────────────────────────┘
@@ -169,7 +169,7 @@ graph TD
     F --> G["Negotiation & Communication"]
     G --> H["Deal Conversion"]
 
-    C2 -.->|Powered by| AI["Groq Llama 3.1"]
+    C2 -.->|Powered by| AI["Groq Llama "]
     E -.->|Powered by| AI
     C1 -.->|HS Code Classification| AI
 ```
@@ -203,7 +203,7 @@ sequenceDiagram
     participant U as User
     participant F as Frontend (Next.js)
     participant B as Backend (Go API)
-    participant AI as Groq Llama 3.1
+    participant AI as Groq Llama 
     participant DB as Supabase DB
 
     U->>F: Click "Run Matchmaking"
@@ -318,7 +318,7 @@ classDiagram
 | **Styling** | Tailwind CSS | Rapid, consistent design system |
 | **Backend** | Go (Golang) | High-concurrency, low-latency API processing |
 | **Database** | Supabase (PostgreSQL) | Real-time subscriptions, Row Level Security |
-| **AI Engine** | Groq — Llama 3.1 70B | Sub-second inference for classification and matching |
+| **AI Engine** | Groq — Llama  70B | Sub-second inference for classification and matching |
 | **Authentication** | JWT (bcrypt + RS256) | Stateless, scalable, role-aware |
 | **ORM / DB Driver** | `lib/pq` (native PostgreSQL driver) | Direct query control, no N+1 risk |
 | **Rate Limiting** | In-process Go middleware | Per-role tier limits (Free / Premium) |
