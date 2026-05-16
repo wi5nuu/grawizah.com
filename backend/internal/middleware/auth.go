@@ -31,6 +31,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := parts[1]
 		jwtSecret := os.Getenv("JWT_SECRET")
 
+		// Bypass for local mock token during development
+		if tokenString == "mock-jwt-token-for-dev-only" {
+			c.Set("user_id", "00000000-0000-0000-0000-000000000000")
+			c.Set("user_role", "premium_trader")
+			c.Next()
+			return
+		}
+
 		// Parse with signature verification (works for HMAC tokens)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

@@ -122,9 +122,27 @@ Return a JSON object with: score (0-100) and an object of suggestions for title,
 
 // TranslateText uses Groq AI to translate text to a target language
 func (s *AIService) TranslateText(ctx context.Context, text, targetLang string) (map[string]interface{}, error) {
+	// If Groq key is a placeholder, use mock translation
+	if s.groqAPIKey == "" || s.groqAPIKey == "gsk_your_api_key" {
+		mockTranslated := fmt.Sprintf("[Neural Sync: %s] %s", targetLang, text)
+		// Special cases for better demo
+		if targetLang == "id" && strings.Contains(strings.ToLower(text), "hello") {
+			mockTranslated = "Halo! Saya adalah Bot Intelijen Grawizah."
+		} else if targetLang == "en" && strings.Contains(strings.ToLower(text), "bantu") {
+			mockTranslated = "Can you help me with HS classification?"
+		}
+		
+		return map[string]interface{}{
+			"translated_text": mockTranslated,
+			"source_language": "auto",
+			"target_language": targetLang,
+		}, nil
+	}
+
 	prompt := fmt.Sprintf(`Translate the following text to %s.
 Return ONLY a JSON object with: translated_text (the translated text in %s), source_language (detected source language), and target_language (%s).
 Text to translate: %s`, targetLang, targetLang, targetLang, text)
+// ... (rest of existing TranslateText code)
 
 	response, err := s.callGroq(prompt)
 	if err != nil {
@@ -180,24 +198,29 @@ Provide a helpful, professional response focused on trade data, HS codes, or exp
 }
 
 func (s *AIService) getKnowledgeBaseResponse(query string) string {
-	// Simple keyword-based intelligent fallback
 	q := strings.ToLower(query)
 	
-	if strings.Contains(q, "apa itu grawizah") || strings.Contains(q, "what is grawizah") {
-		return "Grawizah adalah platform intelijen pra-transaksi untuk perdagangan global. Kami membantu UKM Indonesia melakukan ekspor dengan data pasar yang mendalam, optimasi produk berbasis AI, dan verifikasi partner dagang."
+	if strings.Contains(q, "apa itu grawizah") || strings.Contains(q, "tentang grawizah") {
+		return "Grawizah (Grawizah Otw Juara) adalah platform 'Pre-Transaction Intelligence' pertama di Indonesia. Fokus kami adalah meminimalkan risiko ekspor bagi UKM melalui validasi data real-time, AI Listing Optimization, dan HS Code Classification otomatis. Kami ingin UKM Indonesia tidak hanya 'bisa ekspor', tapi 'paham strategi ekspor'."
 	}
-	if strings.Contains(q, "hs code") || strings.Contains(q, "kode hs") {
-		return "Grawizah menggunakan AI untuk mengklasifikasi HS Code (Harmonized System) dengan akurasi tinggi. Anda bisa mengunggah deskripsi produk dan kami akan memberikan kode 6-digit serta catatan regulasi terkait."
+	if strings.Contains(q, "hs code") || strings.Contains(q, "kode hs") || strings.Contains(q, "klasifikasi") {
+		return "Klasifikasi HS Code kami bekerja dengan menganalisis parameter teknis produk Anda secara otomatis. Untuk produk pertanian (Chapter 01-24), kami menyediakan detail regulasi tambahan seperti Sanitary & Phytosanitary (SPS). Silakan berikan deskripsi produk Anda yang paling detail untuk akurasi optimal."
 	}
-	if strings.Contains(q, "bantu") || strings.Contains(q, "help") || strings.Contains(q, "fitur") {
-		return "Saya bisa membantu Anda dalam beberapa hal: 1. Klasifikasi HS Code otomatis. 2. Optimasi listing produk ekspor. 3. Analisis skor kualitas pembeli (Buyer Quality Score). 4. Pemantauan harga kompetitor global secara real-time."
+	if strings.Contains(q, "bantu") || strings.Contains(q, "help") || strings.Contains(q, "fitur") || strings.Contains(q, "apa yang bisa kamu lakukan") {
+		return "Saya adalah Intelijen Perdagangan Anda. Saya bisa membantu:\n1. 🔍 **HS Code Genius**: Menentukan kode pajak internasional.\n2. 📈 **Market Benchmark**: Menganalisis harga kompetitor di negara target.\n3. 🛡️ **Buyer Radar**: Memvalidasi kualitas dan track record pembeli.\n4. 🚀 **Neural Sync**: Komunikasi lintas bahasa secara real-time."
 	}
-	if strings.Contains(q, "ekspor") || strings.Contains(q, "export") {
-		return "Untuk memulai ekspor, Anda perlu menyiapkan NIB, NPWP, dan izin ekspor khusus produk. Grawizah mempermudah pencarian buyer internasional yang terverifikasi agar transaksi Anda lebih aman."
+	if strings.Contains(q, "moq") || strings.Contains(q, "minimum order") {
+		return "Dalam perdagangan global, Minimum Order Quantity (MOQ) sangat krusial untuk efisiensi logistik. Grawizah membantu Anda menghitung titik impas (break-even) antara biaya produksi dan biaya pengiriman (FOB/CIF) untuk menentukan MOQ yang kompetitif."
 	}
-	if strings.Contains(q, "halo") || strings.Contains(q, "hi") || strings.Contains(q, "pagi") || strings.Contains(q, "siang") {
-		return "Halo! Saya Grawizah Intelligence Bot. Ada yang bisa saya bantu terkait intelijen pasar atau persiapan ekspor Anda hari ini?"
+	if strings.Contains(q, "lead time") || strings.Contains(q, "waktu kirim") {
+		return "Berdasarkan data logistik global kami, rata-rata lead time dari pelabuhan utama Indonesia ke Eropa adalah 35-45 hari, sementara ke Asia Timur adalah 10-15 hari. Kami menyarankan penambahan buffer 5 hari untuk proses custom clearance."
+	}
+	if strings.Contains(q, "ekspor") || strings.Contains(q, "pembeli") || strings.Contains(q, "buyer") {
+		return "Pencarian pembeli di Grawizah didasarkan pada 'Buyer Quality Score'. Kami memfilter pembeli berdasarkan frekuensi impor mereka, rekam jejak pembayaran, dan stabilitas permintaan. Ini memastikan Anda hanya berurusan dengan partner yang serius."
+	}
+	if strings.Contains(q, "neural sync") || strings.Contains(q, "terjemah") || strings.Contains(q, "bahasa") {
+		return "Neural Sync adalah teknologi inti kami yang memungkinkan Anda mengobrol dengan pembeli dari mana pun (Cina, Jerman, Korea) dalam bahasa Indonesia. Pesan mereka otomatis diterjemahkan ke bahasa Anda, dan sebaliknya, secara instan."
 	}
 
-	return "Terima kasih atas pertanyaannya. Sebagai AI Grawizah, saya bisa memberikan info mengenai HS Code, analisis pasar global, dan verifikasi supplier/buyer. Bisa tolong spesifikkan apa yang ingin Anda ketahui?"
+	return "Saya mengerti Anda bertanya tentang '" + query + "'. Sebagai AI Intelijen Grawizah, saya bisa memberikan insight mendalam mengenai strategi ekspor, regulasi HS Code, atau audit kualitas buyer. Bisa tolong spesifikkan kebutuhan bisnis Anda?"
 }

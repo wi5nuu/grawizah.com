@@ -129,12 +129,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user) return;
 
-    const messageToSend = newMessage;
     const tempId = Date.now().toString();
     const message: Message = {
       id: tempId,
       sender: 'user',
-      message: messageToSend,
+      message: newMessage, // Use original message for UI
       timestamp: new Date(),
       read: false,
     };
@@ -142,10 +141,44 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     setMessages((prev) => [...prev, message]);
     setNewMessage('');
 
+    let messageToSend = newMessage;
+    let userLang = 'id';
+
+    // 1. Neural Sync: Auto-translate user message to English (Brain Language)
+    if (autoTranslate) {
+      try {
+        // Detect language first (optional but better)
+        userLang = await translatorService.detectLanguage(newMessage);
+        
+        if (userLang !== 'en') {
+          const translated = await translatorService.translate({
+            text: newMessage,
+            targetLang: 'en',
+          });
+          messageToSend = translated.translatedText;
+        }
+      } catch (error) {
+        console.error('Neural Sync: Translation to English failed:', error);
+      }
+    }
+
     try {
-      // Get real (or RAG-mock) response from AI
-      const aiResponse = await aiGeneralService.chat(messageToSend);
+      // 2. Get real (or RAG-mock) response from AI (AI brain works in English for better accuracy)
+      let aiResponse = await aiGeneralService.chat(messageToSend);
       
+      // 3. Neural Sync: Translate AI response back to user's target language
+      if (autoTranslate && targetLang !== 'en') {
+        try {
+          const translatedBack = await translatorService.translate({
+            text: aiResponse,
+            targetLang: targetLang,
+          });
+          aiResponse = translatedBack.translatedText;
+        } catch (error) {
+          console.error('Neural Sync: Translation back failed:', error);
+        }
+      }
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'supplier',
@@ -161,16 +194,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
         buyerId: user.id,
         senderId: user.id,
         productId,
-        message: message.message,
+        message: message.message, // Record original message
         channel: 'chat',
       });
     } catch (error) {
       console.error('Failed to send message:', error);
-      // Fallback response if everything fails
+      // Fallback
       const fallbackMessage: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'supplier',
-        message: "Maaf, sistem intelijen kami sedang sibuk. Silakan coba beberapa saat lagi.",
+        message: targetLang === 'id' ? "Maaf, sistem sedang sibuk." : "Sorry, system is busy.",
         timestamp: new Date(),
         read: false,
       };
