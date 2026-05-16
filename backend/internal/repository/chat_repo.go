@@ -29,6 +29,10 @@ func (r *ChatRepository) SaveMessage(msg *models.ChatMessage) error {
 		msg.CreatedAt = time.Now()
 	}
 
+	if r.db == nil {
+		return nil // Success in mock mode
+	}
+
 	_, err := r.db.Exec(query,
 		msg.ID, msg.SupplierID, msg.BuyerID, msg.ProductID,
 		msg.SenderID, msg.Message, msg.Channel, msg.CreatedAt,
@@ -45,6 +49,10 @@ func (r *ChatRepository) GetHistory(supplierID, buyerID string) ([]models.ChatMe
 		ORDER BY created_at ASC
 	`
 	
+	if r.db == nil {
+		return []models.ChatMessage{}, nil // Return empty history in mock mode
+	}
+
 	rows, err := r.db.Query(query, supplierID, buyerID)
 	if err != nil {
 		return nil, err

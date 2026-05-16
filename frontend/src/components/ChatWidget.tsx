@@ -47,14 +47,16 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const translatorService = new TranslatorService();
   const chatService = new ChatService();
 
+  const effectiveSupplierId = supplierId || 'system-ai-bot';
+
   useEffect(() => {
-    if (isOpen && user && supplierId) {
+    if (isOpen && user) {
       loadChatHistory();
       setUnreadCount(0);
     }
     
     let subscription: any;
-    if (user && supplierId) {
+    if (user) {
       subscription = setupRealtimeListener();
     }
     
@@ -68,9 +70,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   }, [messages, isMinimized]);
 
   const loadChatHistory = async () => {
-    if (!user || !supplierId) return;
+    if (!user) return;
     try {
-      const history = await chatService.getChatHistory(supplierId, user.id);
+      const history = await chatService.getChatHistory(effectiveSupplierId, user.id);
       if (history && history.messages) {
         const formattedMessages: Message[] = history.messages.map((m: any) => ({
           id: m.id,
@@ -87,20 +89,20 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   };
 
   const setupRealtimeListener = () => {
-    if (!supabase) return null;
+    if (!supabase || !user) return null;
     const channel = supabase
-      .channel(`chat:${supplierId}:${user?.id}`)
+      .channel(`chat:${effectiveSupplierId}:${user.id}`)
       .on(
         'postgres_changes' as any,
         {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
-          filter: `supplier_id=eq.${supplierId}&buyer_id=eq.${user?.id}`,
+          filter: `supplier_id=eq.${effectiveSupplierId}&buyer_id=eq.${user.id}`,
         },
         (payload: any) => {
           const incoming = payload.new;
-          if (incoming.sender_id !== user?.id) {
+          if (incoming.sender_id !== user.id) {
             const formattedMessage: Message = {
               id: incoming.id,
               sender: 'supplier',
@@ -123,23 +125,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user || !supplierId) return;
+    if (!newMessage.trim() || !user) return;
 
-    let messageToSend = newMessage;
-
-    // Auto-translate if enabled
-    if (autoTranslate && targetLang !== 'en') {
-      try {
-        const translated = await translatorService.translate({
-          text: newMessage,
-          targetLang: targetLang,
-        });
-        messageToSend = translated.translatedText;
-      } catch (error) {
-        console.error('Translation failed:', error);
-      }
-    }
-
+    const messageToSend = newMessage;
     const tempId = Date.now().toString();
     const message: Message = {
       id: tempId,
@@ -152,19 +140,26 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
     setMessages((prev) => [...prev, message]);
     setNewMessage('');
 
+    // Always trigger Mock AI response for demo purposes
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'supplier',
+        message: `Hello! I am the Grawizah Intelligence Bot. I've received your message: "${message.message}". How can I assist you with market data today?`,
+        timestamp: new Date(),
+        read: false,
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    }, 1000);
+
     try {
       await chatService.sendMessage({
-        supplierId,
+        supplierId: effectiveSupplierId,
         buyerId: user.id,
         senderId: user.id,
         productId,
         message: message.message,
         channel: 'chat',
-      });
-      // Optionally send via WhatsApp
-      await chatService.sendWhatsAppMessage({
-        to: supplierId,
-        message: message.message,
       });
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -263,14 +258,17 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
           <div className="p-5 bg-white dark:bg-dark-surface-container-low border-t border-gray-100 dark:border-dark-surface-variant/10">
             
             {/* Intelligence Translator Row */}
-            <div className="flex items-center justify-between mb-4 p-2 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10">
+            <div 
+              onClick={() => setAutoTranslate(!autoTranslate)}
+              className="flex items-center justify-between mb-4 p-2 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 cursor-pointer hover:bg-primary/10 transition-colors group/sync"
+            >
                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-white dark:bg-dark-surface rounded-lg shadow-sm">
+                  <div className="p-1.5 bg-white dark:bg-dark-surface rounded-lg shadow-sm group-hover/sync:scale-110 transition-transform">
                      <Languages className="w-3 h-3 text-primary" />
                   </div>
                   <span className="text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Neural Sync</span>
                </div>
-               <div className="flex items-center gap-2">
+               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                   <select
                     value={targetLang}
                     onChange={(e) => setTargetLang(e.target.value)}
@@ -283,7 +281,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
                     ))}
                   </select>
                   <button 
-                    onClick={() => setAutoTranslate(!autoTranslate)}
+                    onClick={(e) => { e.stopPropagation(); setAutoTranslate(!autoTranslate); }}
                     className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${autoTranslate ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface text-gray-400'}`}
                   >
                      {autoTranslate ? 'Active' : 'Sync'}

@@ -91,9 +91,9 @@ function LoginContent() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="rounded border-outline-variant text-primary focus:ring-primary" />
-                <span className="text-sm text-on-surface-variant">Remember me</span>
+              <label htmlFor="rememberMe" className="flex items-center gap-2 cursor-pointer group">
+                <input id="rememberMe" type="checkbox" className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" />
+                <span className="text-sm text-on-surface-variant group-hover:text-primary transition-colors">Remember me</span>
               </label>
               <Link href="/forgot-password" className="text-sm text-primary font-medium hover:underline">Forgot password?</Link>
             </div>

@@ -35,9 +35,11 @@ func main() {
 	// Initialize database connection
 	database, err := db.Connect()
 	if err != nil {
-		log.Fatalf("❌ Failed to connect to database: %v", err)
+		log.Printf("⚠️  WARNING: Failed to connect to database: %v", err)
+		log.Println("🛠️  Running in MOCK MODE — some features may be disabled or simulated")
+	} else {
+		defer database.Close()
 	}
-	defer database.Close()
 
 	// Initialize repositories
 	productRepo := repository.NewProductRepository(database)

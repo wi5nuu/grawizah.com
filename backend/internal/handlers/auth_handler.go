@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
@@ -37,6 +38,30 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Mock Login for local development if Supabase is not configured
+	if h.supabaseURL == "" || h.supabaseURL == "https://your-project.supabase.co" {
+		log.Println("🛠️  Auth: Using local mock login")
+		role := "free_trader"
+		if req.Email == "supplier_premium@test.com" {
+			role = "premium_trader"
+		} else if req.Email == "buyer@test.com" {
+			role = "buyer"
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"token": "mock-jwt-token-for-dev-only",
+			"user": gin.H{
+				"id":    "00000000-0000-0000-0000-000000000000",
+				"email": req.Email,
+				"user_metadata": gin.H{
+					"role":      role,
+					"full_name": "Test User",
+				},
+			},
+		})
 		return
 	}
 

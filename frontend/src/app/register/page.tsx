@@ -158,10 +158,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" className="rounded-md border-gray-200 text-primary focus:ring-primary mt-1" required />
-              <span className="text-xs text-gray-500 dark:text-dark-on-surface-variant leading-relaxed">
-                By creating an account, you agree to Grawizah&apos;s <Link href="#" className="text-primary font-bold hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary font-bold hover:underline">Privacy Policy</Link>.
+            <label htmlFor="terms" className="flex items-start gap-3 cursor-pointer group">
+              <input id="terms" type="checkbox" className="w-4 h-4 rounded-md border-gray-200 text-primary focus:ring-primary mt-1 cursor-pointer" required />
+              <span className="text-xs text-gray-500 dark:text-dark-on-surface-variant leading-relaxed group-hover:text-gray-700 dark:group-hover:text-dark-on-surface transition-colors">
+                By creating an account, you agree to Grawizah&apos;s <Link href="#" className="text-primary font-bold hover:underline" onClick={(e) => e.stopPropagation()}>Terms of Service</Link> and <Link href="#" className="text-primary font-bold hover:underline" onClick={(e) => e.stopPropagation()}>Privacy Policy</Link>.
               </span>
             </label>
 
