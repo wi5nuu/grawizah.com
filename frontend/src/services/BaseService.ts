@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { API_BASE_URL } from '@/lib/constants';
 
 /**
  * Base Service Class
@@ -10,7 +11,7 @@ export abstract class BaseService {
   protected baseURL: string;
 
   constructor(baseURL?: string) {
-    this.baseURL = baseURL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+    this.baseURL = baseURL || API_BASE_URL;
     this.client = axios.create({
       baseURL: this.baseURL,
       timeout: 30000,

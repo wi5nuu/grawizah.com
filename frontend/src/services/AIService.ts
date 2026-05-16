@@ -27,24 +27,25 @@ export class HSCodeAIService extends BaseService implements IAIService {
 
 /**
  * AI Lead Scoring Service
- * Uses backend API instead of client-side logic
+ * Uses backend endpoint /api/buyers/:id/lead-score
  */
 export class LeadScoringService extends BaseService implements IAIService {
   async analyze(input: {
+    buyer_id: string;
     buyer_country: string;
     product_category: string;
     import_history?: any[];
     inquiry_message?: string;
   }): Promise<AIResult> {
     try {
-      // In the backend, lead score is generated per buyer
-      // The API endpoint is /api/buyers/:id/lead-score
-      // We assume this generic analyze acts as a wrapper if needed
-      const response = await this.post<any>('/api/ai/lead-scoring', input);
+      const response = await this.post<any>(
+        `/api/buyers/${input.buyer_id}/lead-score`,
+        { product_category: input.product_category }
+      );
       return {
         success: true,
         data: response,
-        confidence: response.conversion_probability,
+        confidence: response.score ? response.score / 100 : undefined,
       };
     } catch (error) {
       return {

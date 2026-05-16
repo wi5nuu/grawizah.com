@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/repository"
 )
 
@@ -13,11 +14,11 @@ func NewCompanyService(repo *repository.CompanyRepository) *CompanyService {
 }
 
 // GetCompanyByID fetches company details by ID
-func (s *CompanyService) GetCompanyByID(id string) (interface{}, error) {
+func (s *CompanyService) GetCompanyByID(id string) (*models.Company, error) {
 	return s.repo.GetByID(id)
 }
 
 // GetMyCompany fetches the company details for the currently authenticated user
-func (s *CompanyService) GetMyCompany(userID string) (interface{}, error) {
+func (s *CompanyService) GetMyCompany(userID string) (*models.Company, error) {
 	return s.repo.GetByUserID(userID)
 }

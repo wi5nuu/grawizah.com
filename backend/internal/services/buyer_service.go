@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"github.com/grawizah/backend/internal/interfaces"
 	"github.com/grawizah/backend/internal/models"
 )
@@ -30,6 +31,14 @@ func (s *BuyerService) SearchBuyers(ctx context.Context, query string) ([]models
 	})
 }
 
+func (s *BuyerService) GetBuyersByCountry(ctx context.Context, country string) ([]models.Buyer, error) {
+	return s.buyerRepo.GetByCountry(country)
+}
+
+func (s *BuyerService) GetHighQualityBuyers(ctx context.Context, limit int) ([]models.Buyer, error) {
+	return s.buyerRepo.GetHighQualityBuyers(limit)
+}
+
 func (s *BuyerService) CalculateLeadScore(ctx context.Context, buyerID string, productCategory string) (map[string]interface{}, error) {
 	buyer, err := s.buyerRepo.GetByID(buyerID)
 	if err != nil {
@@ -38,11 +47,11 @@ func (s *BuyerService) CalculateLeadScore(ctx context.Context, buyerID string, p
 
 	// Simple lead scoring algorithm
 	buyScore := buyer.BuyScore
-	
+
 	return map[string]interface{}{
-		"buyer_id":                buyerID,
-		"conversion_probability":  float64(buyScore) / 100.0,
-		"buy_score":               buyScore,
+		"buyer_id":               buyerID,
+		"conversion_probability": float64(buyScore) / 100.0,
+		"buy_score":              buyScore,
 		"factors": map[string]interface{}{
 			"import_frequency": 0.85,
 			"volume_trend":     0.78,

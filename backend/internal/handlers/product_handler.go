@@ -25,18 +25,23 @@ func NewProductHandler(productService *services.ProductService, rankingService *
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
-	
+
 	products, err := h.productService.GetProducts(c.Request.Context(), limit, offset)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	total := len(products)
+	page := (offset / limit) + 1
+	hasMore := total == limit // if we got a full page, there may be more
+
 	c.JSON(http.StatusOK, gin.H{
-		"data":  products,
-		"total": len(products),
-		"page":  (offset / limit) + 1,
-		"limit": limit,
+		"data":    products,
+		"total":   total,
+		"page":    page,
+		"limit":   limit,
+		"hasMore": hasMore,
 	})
 }
 
@@ -53,7 +58,7 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 		}
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, product)
 }
 
@@ -135,6 +140,28 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, products)
+}
+
+// GetProductsByCategory handles GET /api/products/category/:category
+func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
+	category := c.Param("category")
+	products, err := h.productService.GetProductsByCategory(c.Request.Context(), category)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, products)
+}
+
+// GetOptimizedListing handles GET /api/products/:id/optimize
+func (h *ProductHandler) GetOptimizedListing(c *gin.Context) {
+	id := c.Param("id")
+	product, err := h.productService.GetProductByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+		return
+	}
+	c.JSON(http.StatusOK, product)
 }
 
 // IncrementViewCount handles POST /api/products/:id/view

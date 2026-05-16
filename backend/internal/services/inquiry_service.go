@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+
 	"github.com/grawizah/backend/internal/interfaces"
 	"github.com/grawizah/backend/internal/models"
 )
@@ -17,6 +18,10 @@ func NewInquiryService(inquiryRepo interfaces.InquiryRepository, notificationSer
 		inquiryRepo:         inquiryRepo,
 		notificationService: notificationService,
 	}
+}
+
+func (s *InquiryService) GetInquiryByID(ctx context.Context, id string) (*models.Inquiry, error) {
+	return s.inquiryRepo.GetByID(id)
 }
 
 func (s *InquiryService) GetInquiriesBySupplier(ctx context.Context, supplierID string) ([]models.InquiryDetail, error) {
@@ -50,7 +55,7 @@ func (s *InquiryService) RespondToInquiry(ctx context.Context, inquiryID string,
 	inquiry.Status = "responded"
 	inquiry.ResponseMessage = message
 	// Calculate response time could be done here
-	
+
 	return s.inquiryRepo.Update(inquiry)
 }
 

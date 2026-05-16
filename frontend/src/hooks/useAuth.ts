@@ -28,7 +28,7 @@ export const useAuth = () => {
     try {
       setError(null);
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,11 +42,19 @@ export const useAuth = () => {
       }
 
       const data = await response.json();
-      
+
+      // Normalize user: Supabase nests role in user_metadata
+      const rawUser = data.user || {};
+      const normalizedUser: User = {
+        id: rawUser.id || '',
+        email: rawUser.email || email,
+        role: (rawUser.user_metadata?.role || rawUser.role || UserRole.FREE_TRADER) as UserRole,
+      };
+
       // Save session
       localStorage.setItem('grawizah_token', data.token);
-      localStorage.setItem('grawizah_user', JSON.stringify(data.user));
-      setUser(data.user);
+      localStorage.setItem('grawizah_user', JSON.stringify(normalizedUser));
+      setUser(normalizedUser);
       
       return data;
     } catch (err) {
@@ -55,16 +63,16 @@ export const useAuth = () => {
     }
   };
 
-  const signUp = async (email: string, password: string, role: UserRole = UserRole.FREE_TRADER) => {
+  const signUp = async (email: string, password: string, role?: UserRole) => {
     try {
       setError(null);
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/register`, {
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password, role: role || UserRole.FREE_TRADER }),
       });
 
       if (!response.ok) {
@@ -101,7 +109,7 @@ export const useAuth = () => {
   const upgradeTier = async (newRole: string) => {
     if (!user) return;
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/auth/upgrade-tier`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/auth/upgrade-tier`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,8 +156,8 @@ export const useAuth = () => {
     upgradeTier,
     hasRole,
     isAuthenticated: !!user,
-    isPremium: user?.role === UserRole.PREMIUM_TRADER || user?.role === 'premium_trader' as any,
-    isBuyer: user?.role === UserRole.BUYER || user?.role === 'buyer' as any,
-    isAdmin: user?.role === UserRole.ADMIN || user?.role === 'admin' as any
+    isPremium: user?.role === UserRole.PREMIUM_TRADER,
+    isBuyer: user?.role === UserRole.BUYER,
+    isAdmin: user?.role === UserRole.ADMIN
   };
 };

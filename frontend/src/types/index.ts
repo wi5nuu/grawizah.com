@@ -16,8 +16,10 @@ export enum InquirySourceType {
 }
 
 export enum InquiryStatus {
+  PENDING = 'pending',
   OPEN = 'open',
   RESPONDED = 'responded',
+  CONVERTED = 'converted',
   CLOSED = 'closed',
 }
 

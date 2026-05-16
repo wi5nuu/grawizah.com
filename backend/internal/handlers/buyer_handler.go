@@ -62,6 +62,28 @@ func (h *BuyerHandler) SearchBuyers(c *gin.Context) {
 	c.JSON(http.StatusOK, buyers)
 }
 
+// GetBuyersByCountry handles GET /api/buyers/country/:country
+func (h *BuyerHandler) GetBuyersByCountry(c *gin.Context) {
+	country := c.Param("country")
+	buyers, err := h.buyerService.GetBuyersByCountry(c.Request.Context(), country)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": buyers})
+}
+
+// GetTopBuyers handles GET /api/buyers/top
+func (h *BuyerHandler) GetTopBuyers(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	buyers, err := h.buyerService.GetHighQualityBuyers(c.Request.Context(), limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": buyers})
+}
+
 // GetLeadScore handles POST /api/buyers/:id/lead-score
 func (h *BuyerHandler) GetLeadScore(c *gin.Context) {
 	id := c.Param("id")
@@ -79,6 +101,6 @@ func (h *BuyerHandler) GetLeadScore(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, score)
 }

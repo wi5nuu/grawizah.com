@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/interfaces"
+	"github.com/grawizah/backend/internal/models"
 )
 
 type ProductService struct {
@@ -48,4 +48,8 @@ func (s *ProductService) SearchProducts(ctx context.Context, query string, limit
 
 func (s *ProductService) IncrementViewCount(ctx context.Context, productID string) error {
 	return s.productRepo.IncrementViewCount(productID)
+}
+
+func (s *ProductService) GetProductsByCategory(ctx context.Context, category string) ([]models.Product, error) {
+	return s.productRepo.GetByCategory(category)
 }

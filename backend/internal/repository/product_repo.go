@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/grawizah/backend/internal/models"
 )
 
@@ -26,7 +27,7 @@ func (r *ProductRepository) Create(product *models.Product) error {
 			created_at, updated_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 	`
-	
+
 	_, err := r.db.Exec(query,
 		product.ID, product.CompanyID, product.Name, product.Description,
 		product.HSCode, product.HSCodeConfidence, product.PriceRangeMin,
@@ -34,7 +35,7 @@ func (r *ProductRepository) Create(product *models.Product) error {
 		product.Category, product.CountryOrigin, product.ListingScore,
 		product.ViewCount, product.InquiryCount, product.CreatedAt, product.UpdatedAt,
 	)
-	
+
 	return err
 }
 
@@ -48,7 +49,7 @@ func (r *ProductRepository) GetByID(id string) (*models.Product, error) {
 		FROM products
 		WHERE id = $1 AND deleted_at IS NULL
 	`
-	
+
 	product := &models.Product{}
 	err := r.db.QueryRow(query, id).Scan(
 		&product.ID, &product.CompanyID, &product.Name, &product.Description,
@@ -58,11 +59,11 @@ func (r *ProductRepository) GetByID(id string) (*models.Product, error) {
 		&product.ViewCount, &product.InquiryCount, &product.CreatedAt,
 		&product.UpdatedAt, &product.DeletedAt,
 	)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, models.ErrNotFound
 	}
-	
+
 	return product, err
 }
 
@@ -78,13 +79,13 @@ func (r *ProductRepository) GetAll(limit, offset int) ([]models.Product, error) 
 		ORDER BY listing_score DESC, view_count DESC
 		LIMIT $1 OFFSET $2
 	`
-	
+
 	rows, err := r.db.Query(query, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var products []models.Product
 	for rows.Next() {
 		var p models.Product
@@ -100,7 +101,7 @@ func (r *ProductRepository) GetAll(limit, offset int) ([]models.Product, error) 
 		}
 		products = append(products, p)
 	}
-	
+
 	return products, nil
 }
 
@@ -114,7 +115,7 @@ func (r *ProductRepository) Update(product *models.Product) error {
 			view_count = $14, inquiry_count = $15, updated_at = $16
 		WHERE id = $1 AND deleted_at IS NULL
 	`
-	
+
 	result, err := r.db.Exec(query,
 		product.ID, product.Name, product.Description, product.HSCode,
 		product.HSCodeConfidence, product.PriceRangeMin, product.PriceRangeMax,
@@ -122,41 +123,41 @@ func (r *ProductRepository) Update(product *models.Product) error {
 		product.CountryOrigin, product.ListingScore, product.ViewCount,
 		product.InquiryCount, product.UpdatedAt,
 	)
-	
+
 	if err != nil {
 		return err
 	}
-	
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rows == 0 {
 		return models.ErrNotFound
 	}
-	
+
 	return nil
 }
 
 // Delete soft deletes a product
 func (r *ProductRepository) Delete(id string) error {
 	query := `UPDATE products SET deleted_at = NOW() WHERE id = $1 AND deleted_at IS NULL`
-	
+
 	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}
-	
+
 	rows, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rows == 0 {
 		return models.ErrNotFound
 	}
-	
+
 	return nil
 }
 
@@ -171,13 +172,13 @@ func (r *ProductRepository) GetByCompanyID(companyID string) ([]models.Product, 
 		WHERE company_id = $1 AND deleted_at IS NULL
 		ORDER BY created_at DESC
 	`
-	
+
 	rows, err := r.db.Query(query, companyID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var products []models.Product
 	for rows.Next() {
 		var p models.Product
@@ -193,7 +194,44 @@ func (r *ProductRepository) GetByCompanyID(companyID string) ([]models.Product, 
 		}
 		products = append(products, p)
 	}
-	
+
+	return products, nil
+}
+
+// GetByCategory retrieves all products in a specific category
+func (r *ProductRepository) GetByCategory(category string) ([]models.Product, error) {
+	query := `
+		SELECT id, company_id, name, description, hs_code, hs_code_confidence,
+			price_range_min, price_range_max, currency, moq, images, category,
+			country_origin, listing_score, view_count, inquiry_count,
+			created_at, updated_at
+		FROM products
+		WHERE category = $1 AND deleted_at IS NULL
+		ORDER BY listing_score DESC
+	`
+
+	rows, err := r.db.Query(query, category)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var products []models.Product
+	for rows.Next() {
+		var p models.Product
+		err := rows.Scan(
+			&p.ID, &p.CompanyID, &p.Name, &p.Description,
+			&p.HSCode, &p.HSCodeConfidence, &p.PriceRangeMin,
+			&p.PriceRangeMax, &p.Currency, &p.MOQ, &p.Images,
+			&p.Category, &p.CountryOrigin, &p.ListingScore,
+			&p.ViewCount, &p.InquiryCount, &p.CreatedAt, &p.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+
 	return products, nil
 }
 
@@ -210,14 +248,14 @@ func (r *ProductRepository) Search(query string, limit, offset int) ([]models.Pr
 		ORDER BY listing_score DESC
 		LIMIT $2 OFFSET $3
 	`
-	
+
 	searchPattern := fmt.Sprintf("%%%s%%", query)
 	rows, err := r.db.Query(searchQuery, searchPattern, limit, offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	
+
 	var products []models.Product
 	for rows.Next() {
 		var p models.Product
@@ -233,7 +271,7 @@ func (r *ProductRepository) Search(query string, limit, offset int) ([]models.Pr
 		}
 		products = append(products, p)
 	}
-	
+
 	return products, nil
 }
 

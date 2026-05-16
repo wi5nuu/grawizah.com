@@ -14,8 +14,11 @@ func NewLeaderboardService(repo interfaces.LeaderboardRepository) *LeaderboardSe
 }
 
 // GetTopSuppliers returns a list of top suppliers based on analytics score
-func (s *LeaderboardService) GetTopSuppliers() ([]models.LeaderboardScore, error) {
-	return s.repo.GetAll(10, 0) // Default limit 10, offset 0
+func (s *LeaderboardService) GetTopSuppliers(limit int) ([]models.LeaderboardScore, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	return s.repo.GetAll(limit, 0)
 }
 
 // GetCompanyRank returns the leaderboard ranking for a specific company

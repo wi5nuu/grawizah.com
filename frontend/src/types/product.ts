@@ -2,6 +2,7 @@ import { BaseEntity } from './index';
 
 export interface Product extends BaseEntity {
   company_id: string;
+  company_name?: string;
   name: string;
   description: string;
   hs_code?: string;

@@ -8,6 +8,7 @@ import (
 	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/repository"
 	"github.com/twilio/twilio-go"
+	"github.com/twilio/twilio-go/client"
 	api "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
@@ -44,7 +45,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 		Channel:    req.Channel,
 		SenderID:   req.SenderID,
 	}
-	
+
 	if req.ProductID != "" {
 		msg.ProductID = &req.ProductID
 	}
@@ -65,7 +66,7 @@ func (h *ChatHandler) SendMessage(c *gin.Context) {
 func (h *ChatHandler) GetChatHistory(c *gin.Context) {
 	supplierID := c.Param("supplier_id")
 	buyerID := c.Query("buyer_id")
-	
+
 	if buyerID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "buyer_id is required"})
 		return
@@ -76,7 +77,7 @@ func (h *ChatHandler) GetChatHistory(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch history: " + err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"messages":   messages,
 		"supplierId": supplierID,
@@ -100,13 +101,13 @@ func (h *ChatHandler) SendWhatsAppMessage(c *gin.Context) {
 	accountSid := os.Getenv("TWILIO_ACCOUNT_SID")
 	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
 	whatsappFrom := os.Getenv("TWILIO_WHATSAPP_FROM")
-	
+
 	if accountSid == "" || authToken == "" {
 		// Mock behavior if Twilio is not configured
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"message": "WhatsApp message simulated (Twilio credentials not found)",
-			"to": req.To,
+			"to":      req.To,
 		})
 		return
 	}
@@ -115,12 +116,12 @@ func (h *ChatHandler) SendWhatsAppMessage(c *gin.Context) {
 		Username: accountSid,
 		Password: authToken,
 	})
-	
+
 	params := &api.CreateMessageParams{}
 	params.SetFrom("whatsapp:" + whatsappFrom)
 	params.SetTo("whatsapp:" + req.To)
 	params.SetBody(req.Message)
-	
+
 	_, err := client.Api.CreateMessage(params)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send WhatsApp message: " + err.Error()})
@@ -130,7 +131,7 @@ func (h *ChatHandler) SendWhatsAppMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "WhatsApp message sent via Twilio",
-		"to": req.To,
+		"to":      req.To,
 	})
 }
 
@@ -154,9 +155,38 @@ func (h *ChatHandler) ReceiveWhatsAppWebhook(c *gin.Context) {
 		to = to[9:]
 	}
 
-	// Verify webhook signature (Basic implementation - in production, use twilio/client.NewRequestValidator)
-	// For now, assume it's valid if it has From and Body
-	
+	// Verify Twilio signature
+	authToken := os.Getenv("TWILIO_AUTH_TOKEN")
+	if authToken != "" {
+		signature := c.Request.Header.Get("X-Twilio-Signature")
+		if signature == "" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Missing Twilio signature"})
+			return
+		}
+
+		// Build the full URL
+		protocol := "http"
+		if c.Request.TLS != nil || c.Request.Header.Get("X-Forwarded-Proto") == "https" {
+			protocol = "https"
+		}
+		url := protocol + "://" + c.Request.Host + c.Request.URL.Path
+
+		// Parse form for validation
+		c.Request.ParseForm()
+		params := make(map[string]string)
+		for key, values := range c.Request.PostForm {
+			if len(values) > 0 {
+				params[key] = values[0]
+			}
+		}
+
+		validator := client.NewRequestValidator(authToken)
+		if !validator.Validate(url, params, signature) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid Twilio signature"})
+			return
+		}
+	}
+
 	msg := &models.ChatMessage{
 		SupplierID: to,   // The recipient of the WhatsApp message (Twilio number / Supplier)
 		BuyerID:    from, // The sender of the WhatsApp message (Buyer)
@@ -172,7 +202,7 @@ func (h *ChatHandler) ReceiveWhatsAppWebhook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save message: " + err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Webhook processed successfully",

@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
                       </div>
                       <div className="bg-gray-50 p-3 rounded">
                         <p className="text-xs text-gray-500 mb-1">Store Rating</p>
-                        <p className="font-bold text-gray-900 text-orange-500 flex items-center gap-1"><Star className="w-4 h-4 fill-orange-500" /> 4.9</p>
+                        <p className="font-bold text-orange-500 flex items-center gap-1"><Star className="w-4 h-4 fill-orange-500" /> 4.9</p>
                       </div>
                       <div className="bg-gray-50 p-3 rounded">
                         <p className="text-xs text-gray-500 mb-1">Transactions</p>

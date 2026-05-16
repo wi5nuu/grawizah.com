@@ -12,6 +12,7 @@ type ProductRepository interface {
 	Update(product *models.Product) error
 	Delete(id string) error
 	GetByCompanyID(companyID string) ([]models.Product, error)
+	GetByCategory(category string) ([]models.Product, error)
 	Search(query string, limit, offset int) ([]models.Product, error)
 	IncrementViewCount(id string) error
 	IncrementInquiryCount(id string) error
@@ -21,6 +22,8 @@ type ProductRepository interface {
 type BuyerRepository interface {
 	GetAll(limit, offset int) ([]models.Buyer, error)
 	GetByID(id string) (*models.Buyer, error)
+	GetByCountry(country string) ([]models.Buyer, error)
+	GetHighQualityBuyers(limit int) ([]models.Buyer, error)
 	Search(criteria models.BuyerSearchCriteria) ([]models.Buyer, error)
 }
 

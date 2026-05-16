@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import ProductCard from '@/components/ProductCard';
-import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
+import { Product } from '@/types/product';
 import Link from 'next/link';
 import { 
   Loader2, 
@@ -30,7 +30,7 @@ export default function CatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
   const [verifiedOnly, setVerifiedOnly] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<'products' | 'suppliers'>('suppliers');
   const [companies, setCompanies] = useState<Record<string, any>>({});
@@ -244,7 +244,7 @@ export default function CatalogPage() {
           ) : viewType === 'products' ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product as any} viewMode="grid" />
+                  <ProductCard key={product.id} product={product} viewMode="grid" />
                 ))}
              </div>
           ) : (

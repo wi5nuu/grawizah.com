@@ -24,11 +24,11 @@ export default function ProductCard({ product, viewMode = 'grid' }: ProductCardP
     fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/products/${product.id}/view`, { method: 'POST' }).catch(() => {});
   };
 
-  const supplierName = (product as any).company_name || 'Verified Supplier';
+  const supplierName = product.company_name || 'Verified Supplier';
 
   if (viewMode === 'list') {
     return (
-      <Link href={`/catalog/${product.id}`} className="card flex gap-6 hover:shadow-md transition cursor-pointer block" onClick={handleView}>
+      <Link href={`/catalog/${product.id}`} className="card flex gap-6 hover:shadow-md transition cursor-pointer" onClick={handleView}>
         <div className="w-40 h-28 bg-surface-container rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden">
           {product.images && product.images.length > 0 ? (
             <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />

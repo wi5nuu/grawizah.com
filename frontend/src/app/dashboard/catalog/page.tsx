@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import ProductCard from '@/components/ProductCard';
-import { PRODUCT_CATEGORIES, COUNTRIES } from '@/lib/constants';
+import { Product } from '@/types/product';
+import { COUNTRIES } from '@/lib/constants';
 
-const MOCK_PRODUCTS = [
+const MOCK_PRODUCTS: Product[] = [
   { id: '1', name: 'Advanced Processor Modules PX-9', description: 'High-performance processor module for enterprise computing. Multi-threaded architecture with advanced thermal management.', hs_code: '854231', category: 'Electronics', country_origin: 'China', price_range_min: 1200, price_range_max: 1500, currency: 'USD', moq: 100, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAWe9F2uj9__k5b3Glco3dNMrJ7kgrbIjPup-q58O8AFM70XCmtVDu0USZ75Xpz0jct5WNxhxqJ5bxsxLjdIXc6-ug-O_fgg2Qm7sivePJXwF27OkI6wnuo_XnzpSO1zR6HMLgn5-pVcNli_zazJqviM7uPZYVzKg0l0n3Jn2oIuv2ppIO4yeCCUfVMg-0OpDAHWfIIBGGqV3dbf-rwP5R3we5ct9pJ0k4mNOlQ-p1NuQAFWfnlSeAghCPVbPUlVjxqIkffWa37e8HG'], listing_score: 92, view_count: 1247, inquiry_count: 34, company_id: 'c1', created_at: '', updated_at: '' },
   { id: '2', name: 'Precision Automation Actuators', description: 'Industrial-grade precision actuators for robotics and automation systems. High torque output with minimal backlash.', hs_code: '847989', category: 'Machinery', country_origin: 'Germany', price_range_min: 450, price_range_max: 600, currency: 'USD', moq: 50, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuBkNs8MiEKaXvJ9zRl1qpDCapg8SuKDBbnnkEg8GQj1HJKrT5e3PZ3jMe048DYZDify3yiPKu7AGVIyxHITiVavEGjk9XkuHTy37-3aHutlAY4DntRZGETqmWy2LSZXq7ewTlXl87ci_tD0wAhGlTD46TIqyjymVVjZ9qEM4M98XUHoB54VEHZq2AN8SCb1efMWTGEXmfIcJTOT0uLQCAQjvEmnzsPz4sm4L-Ss6LGYmeayBfx50arcP-1BDkyAIC4nLbk9w6g6xfJz'], listing_score: 88, view_count: 892, inquiry_count: 28, company_id: 'c2', created_at: '', updated_at: '' },
   { id: '3', name: 'Enterprise Server Blade G-Series', description: 'High-density server blade for data center deployment. Features redundant power, hot-swap storage, and advanced cooling.', hs_code: '851762', category: 'Electronics', country_origin: 'USA', price_range_min: 3200, price_range_max: 4100, currency: 'USD', moq: 10, images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuAo76yh4HPGol9HY7DSvkB21xboMW9eohxbZUGRxEO2q8UVymjlAYDopGzJT188cEOX-yf8T_4lbfWwt-GBzgOC6JeviCbMy78yAIBQQ6gqdoktGl9tLCOlD2OdrmO-oyc5v3xGsip5WWElRAMcQMfK_elvwgSEY8NYHBATxT63us-rOKVy8cmDfPHsr-IEZ9OXrFWjCWb8U18Csip4T9K00DNs8DvLhuBOA-pvfgLuQMbB2Gyb4BeFX5KUCqWszg3fDufI0_8ZgME6'], listing_score: 85, view_count: 678, inquiry_count: 19, company_id: 'c3', created_at: '', updated_at: '' },
@@ -118,7 +119,7 @@ export default function DashboardCatalogPage() {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product as any} viewMode="grid" />
+              <ProductCard key={product.id} product={product} viewMode="grid" />
             ))}
           </div>
 

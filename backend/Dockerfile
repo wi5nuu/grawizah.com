@@ -17,12 +17,20 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.g
 # Final stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates wget
 
-WORKDIR /root/
+# Create non-root user
+RUN addgroup -S grawizah && adduser -S grawizah -G grawizah
+
+WORKDIR /app
 
 # Copy binary from builder
 COPY --from=builder /app/main .
+
+# Create uploads directory
+RUN mkdir -p /app/uploads/documents && chown -R grawizah:grawizah /app
+
+USER grawizah
 
 EXPOSE 8080
 

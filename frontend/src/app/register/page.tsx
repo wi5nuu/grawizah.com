@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { UserRole } from '@/types';
 
 export default function RegisterPage() {
   const { signUp } = useAuth();
@@ -11,7 +12,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('supplier');
+  const [role, setRole] = useState<'supplier' | 'buyer'>('supplier');
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,8 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await signUp(email, password);
+      const backendRole = role === 'supplier' ? UserRole.FREE_TRADER : UserRole.BUYER;
+      await signUp(email, password, backendRole);
       router.push('/login?registered=true');
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
@@ -114,7 +116,7 @@ export default function RegisterPage() {
                   <button
                     key={r.value}
                     type="button"
-                    onClick={() => setRole(r.value as any)}
+                    onClick={() => setRole(r.value as 'supplier' | 'buyer')}
                     className={`flex items-center justify-center gap-3 py-4 rounded-2xl border-2 font-bold transition-all ${
                       role === r.value
                         ? role === 'supplier' 

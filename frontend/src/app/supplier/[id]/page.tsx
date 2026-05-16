@@ -192,10 +192,10 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
 
               {/* Navigation Tabs */}
               <div className="flex border-t border-gray-100 dark:border-dark-surface-variant/20 px-10">
-                {['overview', 'products', 'certifications'].map(tab => (
-                  <button 
+                {(['overview', 'products', 'certifications'] as const).map(tab => (
+                  <button
                     key={tab}
-                    onClick={() => setActiveTab(tab as any)}
+                    onClick={() => setActiveTab(tab)}
                     className={`py-6 px-4 font-black text-[11px] uppercase tracking-[0.2em] transition-all border-b-2 ${activeTab === tab ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
                   >
                     {tab}

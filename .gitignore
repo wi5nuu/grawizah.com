@@ -108,3 +108,7 @@ temp/
 # Uploads
 uploads/
 public/uploads/
+
+.qwen/
+.antigravity/
+

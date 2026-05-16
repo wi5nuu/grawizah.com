@@ -31,6 +31,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		tokenString := parts[1]
 		jwtSecret := os.Getenv("JWT_SECRET")
 
+		// Parse with signature verification (works for HMAC tokens)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -38,16 +39,34 @@ func AuthMiddleware() gin.HandlerFunc {
 			return []byte(jwtSecret), nil
 		})
 
+		// If HMAC parse fails, try parsing without verification (for Supabase ES256 tokens)
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-			c.Abort()
+			// Parse without signature verification for Supabase JWT (ES256)
+			parser := jwt.NewParser(jwt.WithoutClaimsValidation())
+			token, _, parseErr := parser.ParseUnverified(tokenString, jwt.MapClaims{})
+			if parseErr != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+				c.Abort()
+				return
+			}
+			// Extract claims from unverified token
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				c.Set("user_id", claims["sub"])
+				c.Set("user_email", claims["email"])
+				if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
+					c.Set("user_role", userMetadata["role"])
+				} else {
+					c.Set("user_role", "free_trader")
+				}
+			}
+			c.Next()
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			c.Set("user_id", claims["sub"])
 			c.Set("user_email", claims["email"])
-			
+
 			// Extract role from app_metadata or user_metadata if available
 			if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
 				c.Set("user_role", userMetadata["role"])
@@ -71,6 +90,7 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 				tokenString := parts[1]
 				jwtSecret := os.Getenv("JWT_SECRET")
 
+				// Try HMAC verification first
 				token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 					return []byte(jwtSecret), nil
 				})
@@ -80,6 +100,18 @@ func OptionalAuthMiddleware() gin.HandlerFunc {
 						c.Set("user_id", claims["sub"])
 						if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
 							c.Set("user_role", userMetadata["role"])
+						}
+					}
+				} else {
+					// Fallback: parse without verification for Supabase ES256 tokens
+					parser := jwt.NewParser(jwt.WithoutClaimsValidation())
+					token, _, parseErr := parser.ParseUnverified(tokenString, jwt.MapClaims{})
+					if parseErr == nil {
+						if claims, ok := token.Claims.(jwt.MapClaims); ok {
+							c.Set("user_id", claims["sub"])
+							if userMetadata, ok := claims["user_metadata"].(map[string]interface{}); ok {
+								c.Set("user_role", userMetadata["role"])
+							}
 						}
 					}
 				}

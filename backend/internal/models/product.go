@@ -1,23 +1,25 @@
 package models
 
+import "github.com/lib/pq"
+
 // Product model - inherits BaseEntity through embedding
 type Product struct {
 	BaseEntity
-	CompanyID          string   `json:"company_id" db:"company_id"`
-	Name               string   `json:"name" db:"name"`
-	Description        string   `json:"description" db:"description"`
-	HSCode             *string  `json:"hs_code,omitempty" db:"hs_code"`
-	HSCodeConfidence   *float64 `json:"hs_code_confidence,omitempty" db:"hs_code_confidence"`
-	PriceRangeMin      *float64 `json:"price_range_min,omitempty" db:"price_range_min"`
-	PriceRangeMax      *float64 `json:"price_range_max,omitempty" db:"price_range_max"`
-	Currency           string   `json:"currency" db:"currency"`
-	MOQ                *int     `json:"moq,omitempty" db:"moq"`
-	Images             []string `json:"images" db:"images"`
-	Category           string   `json:"category" db:"category"`
-	CountryOrigin      string   `json:"country_origin" db:"country_origin"`
-	ListingScore       *int     `json:"listing_score,omitempty" db:"listing_score"`
-	ViewCount          int      `json:"view_count" db:"view_count"`
-	InquiryCount       int      `json:"inquiry_count" db:"inquiry_count"`
+	CompanyID        string         `json:"company_id" db:"company_id"`
+	Name             string         `json:"name" db:"name"`
+	Description      string         `json:"description" db:"description"`
+	HSCode           *string        `json:"hs_code,omitempty" db:"hs_code"`
+	HSCodeConfidence *float64       `json:"hs_code_confidence,omitempty" db:"hs_code_confidence"`
+	PriceRangeMin    *float64       `json:"price_range_min,omitempty" db:"price_range_min"`
+	PriceRangeMax    *float64       `json:"price_range_max,omitempty" db:"price_range_max"`
+	Currency         string         `json:"currency" db:"currency"`
+	MOQ              *int           `json:"moq,omitempty" db:"moq"`
+	Images           pq.StringArray `json:"images" db:"images"`
+	Category         string         `json:"category" db:"category"`
+	CountryOrigin    string         `json:"country_origin" db:"country_origin"`
+	ListingScore     *int           `json:"listing_score,omitempty" db:"listing_score"`
+	ViewCount        int            `json:"view_count" db:"view_count"`
+	InquiryCount     int            `json:"inquiry_count" db:"inquiry_count"`
 }
 
 // SetPriceRange sets price range with validation
@@ -44,7 +46,7 @@ func (p *Product) IncrementInquiryCount() {
 // CalculateListingScore calculates product listing completeness score
 func (p *Product) CalculateListingScore() int {
 	score := 0
-	
+
 	if len(p.Name) > 10 {
 		score += 20
 	}
@@ -60,7 +62,7 @@ func (p *Product) CalculateListingScore() int {
 	if p.PriceRangeMin != nil && p.PriceRangeMax != nil {
 		score += 20
 	}
-	
+
 	p.ListingScore = &score
 	return score
 }

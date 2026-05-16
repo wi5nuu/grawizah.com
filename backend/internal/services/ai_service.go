@@ -118,3 +118,49 @@ Return a JSON object with: score (0-100) and an object of suggestions for title,
 	json.Unmarshal([]byte(response), &result)
 	return result, nil
 }
+
+// TranslateText uses Groq AI to translate text to a target language
+func (s *AIService) TranslateText(ctx context.Context, text, targetLang string) (map[string]interface{}, error) {
+	prompt := fmt.Sprintf(`Translate the following text to %s.
+Return ONLY a JSON object with: translated_text (the translated text in %s), source_language (detected source language), and target_language (%s).
+Text to translate: %s`, targetLang, targetLang, targetLang, text)
+
+	response, err := s.callGroq(prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal([]byte(response), &result); err != nil {
+		// If Groq doesn't return valid JSON, wrap the raw response
+		result = map[string]interface{}{
+			"translated_text": response,
+			"target_language": targetLang,
+		}
+	}
+
+	return result, nil
+}
+
+// DetectLanguage uses Groq AI to detect the language of the given text
+func (s *AIService) DetectLanguage(ctx context.Context, text string) (map[string]interface{}, error) {
+	prompt := fmt.Sprintf(`Detect the language of the following text.
+Return ONLY a JSON object with: language (the full English name of the language, e.g. "French", "Indonesian", "Arabic"), language_code (ISO 639-1 code, e.g. "fr", "id", "ar"), and confidence (0.0-1.0).
+Text: %s`, text)
+
+	response, err := s.callGroq(prompt)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal([]byte(response), &result); err != nil {
+		// If Groq doesn't return valid JSON, return a fallback
+		result = map[string]interface{}{
+			"language":   response,
+			"confidence": 0.8,
+		}
+	}
+
+	return result, nil
+}

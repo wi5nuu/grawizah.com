@@ -278,3 +278,23 @@ CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies
 
 CREATE TRIGGER update_inquiries_updated_at BEFORE UPDATE ON inquiries
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Chat Messages table
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    supplier_id VARCHAR(255) NOT NULL,
+    buyer_id VARCHAR(255) NOT NULL,
+    product_id UUID,
+    sender_id VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    channel VARCHAR(50) NOT NULL DEFAULT 'chat',
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_chat_supplier_buyer ON chat_messages(supplier_id, buyer_id);
+CREATE INDEX idx_chat_created ON chat_messages(created_at);
+
+-- Fix documents table: add missing columns if not exists
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_size BIGINT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS mime_type VARCHAR(100);

@@ -23,7 +23,7 @@ func (h *AIHandler) ClassifyHSCode(c *gin.Context) {
 		Description string `json:"description" binding:"required"`
 		Category    string `json:"category"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -36,8 +36,9 @@ func (h *AIHandler) ClassifyHSCode(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    result,
+		"success":    true,
+		"data":       result,
+		"confidence": result["confidence"],
 	})
 }
 
@@ -49,7 +50,7 @@ func (h *AIHandler) GetResponseSuggestion(c *gin.Context) {
 		BuyerCountry   string `json:"buyer_country" binding:"required"`
 		BuyerLanguage  string `json:"buyer_language"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -90,29 +91,46 @@ func (h *AIHandler) TranslateText(c *gin.Context) {
 		Text       string `json:"text" binding:"required"`
 		TargetLang string `json:"targetLang" binding:"required"`
 	}
-	
+
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Reusing response suggestion logic for simple translation prompt
-	result, err := h.aiService.GenerateResponseSuggestion(c.Request.Context(), input.Text, "N/A", "N/A", input.TargetLang)
+	result, err := h.aiService.TranslateText(c.Request.Context(), input.Text, input.TargetLang)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Return shape matching frontend TranslatorService expectations
 	c.JSON(http.StatusOK, gin.H{
-		"translatedText": result["suggested_response"],
-		"targetLang":     input.TargetLang,
+		"translatedText": result["translated_text"],
+		"sourceLang":     result["source_language"],
+		"targetLang":     result["target_language"],
+		"confidence":     0.95,
 	})
 }
 
 // DetectLanguage handles POST /api/ai/detect-language
 func (h *AIHandler) DetectLanguage(c *gin.Context) {
+	var input struct {
+		Text string `json:"text" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	result, err := h.aiService.DetectLanguage(c.Request.Context(), input.Text)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return shape matching frontend TranslatorService expectations
 	c.JSON(http.StatusOK, gin.H{
-		"language":   "auto",
-		"confidence": 1.0,
+		"language": result["language"],
 	})
 }

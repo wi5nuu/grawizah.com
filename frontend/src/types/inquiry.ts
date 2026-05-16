@@ -8,7 +8,7 @@ export interface Inquiry extends BaseEntity {
   source_type?: InquirySourceType;
   source?: string; // alias for source_type used in display
   source_metadata?: Record<string, any>;
-  status: 'open' | 'responded' | 'closed' | InquiryStatus;
+  status: 'pending' | 'open' | 'responded' | 'converted' | 'closed' | InquiryStatus;
   response_time_hours?: number;
   converted_to_deal: boolean;
   buyer_rating?: number;

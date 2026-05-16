@@ -40,8 +40,10 @@ export const USER_ROLES = {
 } as const;
 
 export const INQUIRY_STATUS = {
+  PENDING: 'pending',
   OPEN: 'open',
   RESPONDED: 'responded',
+  CONVERTED: 'converted',
   CLOSED: 'closed',
 } as const;
 
@@ -160,6 +162,8 @@ export const API_ENDPOINTS = {
   AI_LEAD_SCORE: '/api/ai/lead-score',
   AI_RESPONSE: '/api/ai/response-suggestion',
 };
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 export const EXTERNAL_LINKS = {
   UN_COMTRADE: 'https://comtrade.un.org',

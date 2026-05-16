@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { InquiryStatus } from '@/types';
 import { InquiryService } from '@/services/InquiryService';
-import { 
-  Mail, 
-  Search, 
-  Filter, 
-  Download, 
-  Clock, 
-  CheckCircle2, 
-  MessageSquare, 
-  ArrowRight, 
+import {
+  Mail,
+  Search,
+  Filter,
+  Download,
+  Clock,
+  CheckCircle2,
+  MessageSquare,
+  ArrowRight,
   MoreVertical,
   User,
   ShieldCheck,
@@ -20,8 +21,6 @@ import {
   Sparkles,
   Send
 } from 'lucide-react';
-
-type InquiryStatus = 'pending' | 'responded' | 'converted' | 'open' | 'closed';
 
 export default function InquiriesPage() {
   const { user } = useAuth();
@@ -46,7 +45,7 @@ export default function InquiriesPage() {
       try {
         const service = new InquiryService();
         const data = await service.getInquiriesBySupplier(user.id);
-        const list = Array.isArray(data) ? data : ((data as any).data || []);
+        const list = Array.isArray(data) ? data : [];
         setInquiries(list);
         
         // Fetch quality scores

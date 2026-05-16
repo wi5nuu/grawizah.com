@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, CheckCircle2, X, RefreshCcw } from 'lucide-react';
+import { CheckCircle2, X, RefreshCcw } from 'lucide-react';
 
 export default function PricingPage() {
   const { user, isAuthenticated, upgradeTier } = useAuth();
@@ -101,7 +101,7 @@ export default function PricingPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm animate-fade-in">
            <div className="bg-white dark:bg-dark-surface-container rounded-[2rem] p-8 max-w-sm w-full shadow-2xl border border-gray-100 dark:border-dark-surface-variant/20 flex flex-col items-center text-center animate-scale-in">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 ${notification.type === 'success' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>
-                 {notification.type === 'success' ? <CheckCircle2 className="w-8 h-8" /> : <AlertCircle className="w-8 h-8" />}
+                 {notification.type === 'success' ? <CheckCircle2 className="w-8 h-8" /> : <X className="w-8 h-8" />}
               </div>
               <h3 className="text-xl font-display font-black text-gray-900 dark:text-white mb-2">
                  {notification.type === 'success' ? 'Protocol Success' : 'System Error'}
