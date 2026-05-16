@@ -17,20 +17,20 @@ export const NotificationToast: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !supabase) return;
 
     // Listen to real-time notification logs
     const channel = supabase
       .channel('realtime_notifications')
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notification_logs',
           filter: `user_id=eq.${user.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           const newLog = payload.new;
           let data = { title: 'Notification', message: '' };
           try {

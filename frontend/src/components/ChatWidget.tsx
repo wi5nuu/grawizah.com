@@ -87,17 +87,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   };
 
   const setupRealtimeListener = () => {
+    if (!supabase) return null;
     const channel = supabase
       .channel(`chat:${supplierId}:${user?.id}`)
       .on(
-        'postgres_changes',
+        'postgres_changes' as any,
         {
           event: 'INSERT',
           schema: 'public',
           table: 'chat_messages',
           filter: `supplier_id=eq.${supplierId}&buyer_id=eq.${user?.id}`,
         },
-        (payload) => {
+        (payload: any) => {
           const incoming = payload.new;
           if (incoming.sender_id !== user?.id) {
             const formattedMessage: Message = {
