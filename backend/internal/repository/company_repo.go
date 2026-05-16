@@ -47,3 +47,27 @@ func (r *CompanyRepository) GetByUserID(userID string) (*models.Company, error) 
 	}
 	return &c, nil
 }
+
+func (r *CompanyRepository) GetAll() ([]models.Company, error) {
+	query := `SELECT id, owner_id, name, country, verified, nib, npwp, export_license, export_experience_years, created_at, updated_at FROM companies WHERE deleted_at IS NULL`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var companies []models.Company
+	for rows.Next() {
+		var c models.Company
+		err := rows.Scan(
+			&c.ID, &c.OwnerID, &c.Name, &c.Country, &c.Verified,
+			&c.NIB, &c.NPWP, &c.ExportLicense, &c.ExportExperienceYears,
+			&c.CreatedAt, &c.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		companies = append(companies, c)
+	}
+	return companies, nil
+}

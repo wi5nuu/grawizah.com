@@ -40,7 +40,7 @@ func (r *LeaderboardRepository) GetByID(id string) (*models.LeaderboardScore, er
 	query := `
 		SELECT id, company_id, conversion_rate, repeat_buyer_rate, response_rate,
 			buyer_rating, catalog_completeness, fulfillment_success, total_score,
-			rank, trend_7d, created_at, updated_at
+			COALESCE(rank, 0), COALESCE(trend_7d, 0), created_at, updated_at
 		FROM leaderboard_scores
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -65,7 +65,7 @@ func (r *LeaderboardRepository) GetByCompanyID(companyID string) (*models.Leader
 	query := `
 		SELECT id, company_id, conversion_rate, repeat_buyer_rate, response_rate,
 			buyer_rating, catalog_completeness, fulfillment_success, total_score,
-			rank, trend_7d, created_at, updated_at
+			COALESCE(rank, 0), COALESCE(trend_7d, 0), created_at, updated_at
 		FROM leaderboard_scores
 		WHERE company_id = $1 AND deleted_at IS NULL
 	`
@@ -90,7 +90,7 @@ func (r *LeaderboardRepository) GetAll(limit, offset int) ([]models.LeaderboardS
 	query := `
 		SELECT ls.id, ls.company_id, ls.conversion_rate, ls.repeat_buyer_rate,
 			ls.response_rate, ls.buyer_rating, ls.catalog_completeness,
-			ls.fulfillment_success, ls.total_score, ls.rank, ls.trend_7d,
+			ls.fulfillment_success, ls.total_score, COALESCE(ls.rank, 0), COALESCE(ls.trend_7d, 0),
 			ls.created_at, ls.updated_at, c.name as company_name, c.country
 		FROM leaderboard_scores ls
 		LEFT JOIN companies c ON ls.company_id = c.id
@@ -181,7 +181,7 @@ func (r *LeaderboardRepository) GetTopPerformers(limit int) ([]models.Leaderboar
 	query := `
 		SELECT ls.id, ls.company_id, ls.conversion_rate, ls.repeat_buyer_rate,
 			ls.response_rate, ls.buyer_rating, ls.catalog_completeness,
-			ls.fulfillment_success, ls.total_score, ls.rank, ls.trend_7d,
+			ls.fulfillment_success, ls.total_score, COALESCE(ls.rank, 0), COALESCE(ls.trend_7d, 0),
 			ls.created_at, ls.updated_at, c.name as company_name, c.country
 		FROM leaderboard_scores ls
 		LEFT JOIN companies c ON ls.company_id = c.id
@@ -235,7 +235,7 @@ func (r *LeaderboardRepository) RecalculateRanks() error {
 // GetCompanyRank retrieves the rank of a specific company
 func (r *LeaderboardRepository) GetCompanyRank(companyID string) (int, error) {
 	query := `
-		SELECT rank
+		SELECT COALESCE(rank, 0)
 		FROM leaderboard_scores
 		WHERE company_id = $1 AND deleted_at IS NULL
 	`

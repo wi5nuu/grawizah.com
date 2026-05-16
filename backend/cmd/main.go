@@ -209,6 +209,7 @@ func main() {
 		api.PUT("/leaderboard/company/:id/show", leaderboardHandler.ShowCompany)
 
 		// Company routes
+		api.GET("/companies", companyHandler.GetAllCompanies)
 		api.GET("/companies/:id", companyHandler.GetCompanyByID)
 		api.GET("/companies/me", companyHandler.GetMyCompany)
 		api.PUT("/companies/:id", companyHandler.UpdateCompany)

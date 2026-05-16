@@ -165,7 +165,7 @@ export default function DashboardSidebar({
             </button>
             
             <Link 
-              href="/info" 
+              href="/info/support" 
               className={`flex items-center gap-4 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors ${collapsed ? 'justify-center p-4' : 'px-4 py-3'} rounded-xl`}
               title="Help Center"
             >

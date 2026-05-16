@@ -99,3 +99,13 @@ func (h *CompanyHandler) GetMyCompany(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, company)
 }
+
+// GetAllCompanies handles GET /api/companies
+func (h *CompanyHandler) GetAllCompanies(c *gin.Context) {
+	companies, err := h.service.GetAllCompanies()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch companies"})
+		return
+	}
+	c.JSON(http.StatusOK, companies)
+}

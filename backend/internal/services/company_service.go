@@ -22,3 +22,8 @@ func (s *CompanyService) GetCompanyByID(id string) (*models.Company, error) {
 func (s *CompanyService) GetMyCompany(userID string) (*models.Company, error) {
 	return s.repo.GetByUserID(userID)
 }
+
+// GetAllCompanies fetches all companies
+func (s *CompanyService) GetAllCompanies() ([]models.Company, error) {
+	return s.repo.GetAll()
+}
