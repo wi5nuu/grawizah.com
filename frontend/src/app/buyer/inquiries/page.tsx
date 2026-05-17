@@ -123,6 +123,16 @@ export default function BuyerInquiriesPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-300 mt-4 leading-relaxed bg-gray-50 dark:bg-dark-surface-container-high p-4 rounded-2xl border border-gray-100 dark:border-dark-surface-variant/10">
                   {inq.message}
                 </p>
+                {inq.response_message && (
+                  <div className="mt-4">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">
+                      Supplier Response:
+                    </p>
+                    <p className="text-sm text-gray-800 dark:text-gray-100 leading-relaxed bg-primary/5 dark:bg-primary/10 p-4 rounded-2xl border border-primary/20">
+                      {inq.response_message}
+                    </p>
+                  </div>
+                )}
               </div>
               <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest self-start ${
                 inq.status === 'responded' 

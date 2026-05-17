@@ -27,6 +27,7 @@ import {
 const supplierLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/intelligence', label: 'Intelligence', icon: Bot },
+  { href: '/dashboard/buyers', label: 'Buyer Radar', icon: Search },
   { href: '/dashboard/inquiries', label: 'Inquiries', icon: Mail },
   { href: '/dashboard/products', label: 'My Products', icon: Package },
   { href: '/dashboard/documents', label: 'Document Vault', icon: BookOpen },

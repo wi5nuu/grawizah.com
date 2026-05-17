@@ -50,9 +50,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if h.supabaseURL == "" || h.supabaseURL == "https://your-project.supabase.co" {
 		log.Println("🛠️  Auth: Using local mock login")
 		role := "free_trader"
-		if req.Email == "supplier_premium@test.com" {
+		emailLower := strings.ToLower(req.Email)
+		if strings.Contains(emailLower, "premium") || strings.Contains(emailLower, "export") {
 			role = "premium_trader"
-		} else if req.Email == "buyer@test.com" {
+		} else if strings.Contains(emailLower, "buyer") {
 			role = "buyer"
 		}
 

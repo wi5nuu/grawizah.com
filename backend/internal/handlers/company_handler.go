@@ -39,13 +39,14 @@ func (h *CompanyHandler) UpdateCompany(c *gin.Context) {
 		Country        string   `json:"country"`
 		Industry       string   `json:"industry"`
 		Certifications []string `json:"certifications"`
+		LogoURL        string   `json:"logo_url"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.service.UpdateCompany(id, input.Name, input.Country, input.Industry, input.Certifications)
+	err := h.service.UpdateCompany(id, input.Name, input.Country, input.Industry, input.Certifications, input.LogoURL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

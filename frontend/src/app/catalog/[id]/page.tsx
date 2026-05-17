@@ -315,6 +315,7 @@ export default function ProductDetailPage() {
                   Send inquiry
                 </button>
                 <button 
+                  onClick={() => setInquiryOpen(true)}
                   className="flex-1 bg-white dark:bg-transparent border border-primary text-primary hover:bg-primary/5 font-bold py-3 px-4 rounded-full text-sm transition text-center"
                 >
                   Chat now

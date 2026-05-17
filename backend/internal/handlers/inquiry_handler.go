@@ -66,6 +66,10 @@ func (h *InquiryHandler) CreateInquiry(c *gin.Context) {
 		log.Printf("🔑 Auto-injected BuyerID: %s", inquiry.BuyerID)
 	}
 
+	if inquiry.Status == "" {
+		inquiry.Status = models.StatusOpen
+	}
+
 	if err := h.inquiryService.CreateInquiry(c.Request.Context(), &inquiry); err != nil {
 		log.Printf("❌ CreateInquiry error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

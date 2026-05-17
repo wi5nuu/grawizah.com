@@ -213,6 +213,41 @@ export default function InquiriesPage() {
     }
   };
 
+  const handleExport = () => {
+    if (inquiries.length === 0) return;
+    
+    // Create CSV header
+    const headers = ['ID', 'Date', 'Buyer ID', 'Buyer Name', 'Country', 'Message', 'Status'];
+    
+    // Create CSV rows
+    const rows = inquiries.map(inq => {
+      const buyerProfile = buyerProfiles[inq.buyer_id] || {};
+      const date = new Date(inq.created_at).toLocaleDateString();
+      const messageStr = `"${inq.message?.replace(/"/g, '""') || ''}"`;
+      
+      return [
+        inq.id,
+        date,
+        inq.buyer_id,
+        `"${buyerProfile.company_name || 'Unknown'}"`,
+        `"${buyerProfile.country || 'Unknown'}"`,
+        messageStr,
+        inq.status
+      ].join(',');
+    });
+    
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `grawizah_inquiries_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -240,7 +275,10 @@ export default function InquiriesPage() {
            <button className="px-5 py-2.5 bg-white dark:bg-dark-surface-container-low border border-gray-200 dark:border-dark-surface-variant/20 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
               <Filter className="w-4 h-4" /> Filter
            </button>
-           <button className="px-5 py-2.5 bg-white dark:bg-dark-surface-container-low border border-gray-200 dark:border-dark-surface-variant/20 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm">
+           <button 
+              onClick={handleExport}
+              className="px-5 py-2.5 bg-white dark:bg-dark-surface-container-low border border-gray-200 dark:border-dark-surface-variant/20 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-50 transition-all shadow-sm"
+           >
               <Download className="w-4 h-4" /> Export
            </button>
         </div>
