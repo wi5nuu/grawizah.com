@@ -23,10 +23,17 @@ func NewProductHandler(productService *services.ProductService, rankingService *
 
 // GetProducts handles GET /api/products
 func (h *ProductHandler) GetProducts(c *gin.Context) {
+	companyID := c.Query("company_id")
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	var products []models.Product
+	var err error
 
-	products, err := h.productService.GetProducts(c.Request.Context(), limit, offset)
+	if companyID != "" {
+		products, err = h.productService.GetProductsByCompany(c.Request.Context(), companyID)
+	} else {
+		products, err = h.productService.GetProducts(c.Request.Context(), limit, offset)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -68,6 +75,31 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	userID := c.GetString("user_id")
+	if product.CompanyID == "" {
+		product.CompanyID = userID
+	} else if product.CompanyID != userID && userID != "" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized to add products for this company"})
+		return
+	}
+
+	if product.CompanyID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Company ID is required"})
+		return
+	}
+
+	userRole, exists := c.Get("user_role")
+	if exists && userRole == "free_trader" {
+		products, err := h.productService.GetProductsByCompany(c.Request.Context(), product.CompanyID)
+		if err == nil && len(products) >= 5 {
+			c.JSON(http.StatusForbidden, gin.H{
+				"error":   "Premium subscription required",
+				"message": "Free tier is limited to 5 products. Please upgrade to Premium.",
+			})
+			return
+		}
 	}
 
 	if err := h.productService.CreateProduct(c.Request.Context(), &product); err != nil {

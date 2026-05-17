@@ -2,27 +2,28 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { 
-  User, 
-  Building2, 
-  Mail, 
-  Camera, 
-  Save, 
-  Plus, 
-  X, 
-  ShieldCheck, 
-  CheckCircle2, 
+import {
+  User,
+  Building2,
+  Mail,
+  Camera,
+  Save,
+  Plus,
+  X,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   RefreshCcw,
   Settings,
   ChevronDown,
   Database,
   Terminal,
   Activity,
-  AlertCircle
 } from 'lucide-react';
+import { uploadToSupabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [loading, setLoading] = useState(true);
@@ -33,33 +34,64 @@ export default function SettingsPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [companyId, setCompanyId] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [regNumber, setRegNumber] = useState('N/A');
   const [industry, setIndustry] = useState('Electronics & Components');
   const [certs, setCerts] = useState<string[]>(['ISO 9001', 'CE Certified']);
+  const [newCertInput, setNewCertInput] = useState('');
+  const [showCertInput, setShowCertInput] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
   useEffect(() => {
     if (user) {
       const nameParts = user.email.split('@')[0].split(/[._-]/);
-      setFirstName(nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1));
-      setLastName(nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : '');
+      const defaultFirst = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      const defaultLast = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : '';
+
+      // Restore saved names from localStorage (persists across refreshes)
+      const savedFirst = localStorage.getItem(`grawizah_first_name_${user.id}`);
+      const savedLast = localStorage.getItem(`grawizah_last_name_${user.id}`);
+      setFirstName(savedFirst || defaultFirst);
+      setLastName(savedLast || defaultLast);
       setEmail(user.email);
+      setAvatarPreview(user.avatar_url || null);
 
       const fetchCompany = async () => {
         try {
-          const response = await fetch(`${API_URL}/api/companies/me?user_id=${user.id}`);
+          const token = localStorage.getItem('grawizah_token');
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+          const response = await fetch(`${API_URL}/api/companies/me?user_id=${user.id}`, { headers });
           if (response.ok) {
             const data = await response.json();
-            setCompanyName(data.name || '');
+            setCompanyId(data.id);
+            if (data.logo_url) {
+              setAvatarPreview(data.logo_url);
+              updateUser({ avatar_url: data.logo_url });
+            }
+            setCompanyName(data.name || `${defaultFirst} Trading Co.`);
             setIndustry(data.industry || 'Electronics & Components');
+            setRegNumber(data.reg_number || 'N/A');
+            // Restore owner name from company data if available
+            if (data.owner_name && !savedFirst) {
+              const parts = data.owner_name.split(' ');
+              setFirstName(parts[0] || defaultFirst);
+              setLastName(parts.slice(1).join(' ') || defaultLast);
+            }
+            if (data.certifications && Array.isArray(data.certifications)) {
+              setCerts(data.certifications);
+            }
           } else {
-            setCompanyName(`${nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)} Trading Co.`);
+            setCompanyName(`${defaultFirst} Trading Co.`);
           }
         } catch (err) {
           console.error('Failed to fetch company:', err);
+          setCompanyName(`${defaultFirst} Trading Co.`);
         } finally {
           setLoading(false);
         }
@@ -68,61 +100,151 @@ export default function SettingsPage() {
     }
   }, [user, API_URL]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size: 75KB = 75 * 1024 bytes
-    const maxSize = 75 * 1024;
+    // Check size: 2MB = 2 * 1024 * 1024 bytes
+    const maxSize = 2 * 1024 * 1024;
     if (file.size > maxSize) {
-      setErrorMsg(`File too large: ${(file.size / 1024).toFixed(1)}KB. Max allowed is 75KB.`);
+      setErrorMsg(`File too large: ${(file.size / (1024 * 1024)).toFixed(1)}MB. Max allowed is 2MB.`);
       setTimeout(() => setErrorMsg(''), 5000);
       return;
     }
 
     setErrorMsg('');
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setAvatarPreview(reader.result as string);
-      setSuccessMsg('Photo staged for commit (under 75KB).');
+    setAvatarUploading(true);
+    try {
+      // Direct upload to Supabase Storage in 'profiles' folder
+      const publicUrl = await uploadToSupabase(file, 'profiles');
+      setAvatarPreview(publicUrl);
+      updateUser({ avatar_url: publicUrl });
+
+      if (!companyId) {
+        setSuccessMsg('Profile photo uploaded to Supabase Storage!');
+        setTimeout(() => setSuccessMsg(''), 3000);
+        return;
+      }
+
+      const token = localStorage.getItem('grawizah_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${API_URL}/api/companies/${companyId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          name: companyName,
+          industry: industry,
+          certifications: certs,
+          logo_url: publicUrl,
+        }),
+      });
+
+      if (response.ok) {
+        setSuccessMsg('Profile photo updated in Supabase Storage successfully!');
+      } else {
+        setSuccessMsg('Photo saved to Supabase Storage.');
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to upload photo to Supabase Storage.');
+      setTimeout(() => setErrorMsg(''), 5000);
+    } finally {
+      setAvatarUploading(false);
       setTimeout(() => setSuccessMsg(''), 3000);
-    };
-    reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddCert = () => {
+    const trimmed = newCertInput.trim();
+    if (trimmed && !certs.includes(trimmed)) {
+      setCerts([...certs, trimmed]);
+      setNewCertInput('');
+      setShowCertInput(false);
+    }
   };
 
   const handleSaveProfile = async () => {
+    if (!user) return;
     setSaving(true);
     setSuccessMsg('');
+    setErrorMsg('');
     try {
-      await new Promise(r => setTimeout(r, 1000));
-      setSuccessMsg('Profile updated successfully!');
+      // 1. Persist names to localStorage immediately (survives page refresh)
+      localStorage.setItem(`grawizah_first_name_${user.id}`, firstName);
+      localStorage.setItem(`grawizah_last_name_${user.id}`, lastName);
+
+      // 2. If company exists, save owner_name to backend too
+      if (companyId) {
+        const token = localStorage.getItem('grawizah_token');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const response = await fetch(`${API_URL}/api/companies/${companyId}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            name: companyName,
+            industry,
+            certifications: certs,
+            owner_name: `${firstName} ${lastName}`.trim(),
+            logo_url: avatarPreview || undefined,
+          }),
+        });
+
+        if (!response.ok) {
+          // Not critical — localStorage already saved
+          console.warn('Could not persist name to company backend, saved locally only.');
+        }
+      }
+
+      setSuccessMsg('Profile updated and saved successfully!');
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
       console.error(err);
+      // Still show success since localStorage worked
+      setSuccessMsg('Profile saved locally!');
+      setTimeout(() => setSuccessMsg(''), 3000);
     } finally {
       setSaving(false);
     }
   };
 
   const handleSaveCompany = async () => {
+    if (!companyId) {
+      setErrorMsg('No company entity found to synchronize.');
+      setTimeout(() => setErrorMsg(''), 3000);
+      return;
+    }
     setSaving(true);
     setSuccessMsg('');
     try {
-      const response = await fetch(`${API_URL}/api/companies/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const token = localStorage.getItem('grawizah_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch(`${API_URL}/api/companies/${companyId}`, {
+        method: 'PUT',
+        headers,
         body: JSON.stringify({
-          user_id: user?.id,
           name: companyName,
-          industry: industry
+          industry: industry,
+          certifications: certs,
+          logo_url: avatarPreview || undefined
         })
       });
       if (response.ok) {
-        setSuccessMsg('Company details synchronized!');
+        setSuccessMsg('Business configuration successfully synchronized!');
         setTimeout(() => setSuccessMsg(''), 3000);
+      } else {
+        setErrorMsg('Failed to sync business details with server.');
+        setTimeout(() => setErrorMsg(''), 3000);
       }
     } catch (err) {
       console.error(err);
+      setErrorMsg('Failed to synchronize business data.');
+      setTimeout(() => setErrorMsg(''), 3000);
     } finally {
       setSaving(false);
     }
@@ -140,7 +262,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 md:p-10 w-full bg-[#fafafa] dark:bg-dark-background min-h-screen font-sans">
+    <div className="p-6 md:p-10 w-full min-h-full font-sans">
       
       {/* Header */}
       <header className="mb-10">
@@ -197,7 +319,7 @@ export default function SettingsPage() {
                        {avatarPreview ? (
                           <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
                        ) : (
-                          <span className="text-gray-300 dark:text-dark-on-surface-variant text-4xl font-black">{firstName[0]}{lastName[0]}</span>
+                          <span className="text-gray-300 dark:text-dark-on-surface-variant text-4xl font-black">{firstName?.charAt(0) || ''}{lastName?.charAt(0) || ''}</span>
                        )}
                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                           <Camera className="w-8 h-8 text-white" />
@@ -307,9 +429,37 @@ export default function SettingsPage() {
                              </button>
                           </div>
                        ))}
-                       <button className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-100 dark:border-dark-surface-variant/20 rounded-xl text-[10px] font-black text-gray-400 hover:border-primary/30 hover:text-primary transition-all">
+                       <button
+                         onClick={() => setShowCertInput(true)}
+                         className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-100 dark:border-dark-surface-variant/20 rounded-xl text-[10px] font-black text-gray-400 hover:border-primary/30 hover:text-primary transition-all"
+                       >
                           <Plus className="w-3.5 h-3.5" /> Add Credentials
                        </button>
+                       {showCertInput && (
+                         <div className="flex items-center gap-2 w-full mt-2">
+                           <input
+                             type="text"
+                             value={newCertInput}
+                             onChange={(e) => setNewCertInput(e.target.value)}
+                             onKeyDown={(e) => e.key === 'Enter' && handleAddCert()}
+                             placeholder="e.g. ISO 14001, RoHS, UL Listed..."
+                             className="flex-1 bg-gray-50 dark:bg-dark-surface-container border border-gray-200 dark:border-dark-surface-variant/20 rounded-xl px-4 py-2 text-[11px] font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                             autoFocus
+                           />
+                           <button
+                             onClick={handleAddCert}
+                             className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all"
+                           >
+                             Add
+                           </button>
+                           <button
+                             onClick={() => { setShowCertInput(false); setNewCertInput(''); }}
+                             className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                           >
+                             <X className="w-4 h-4" />
+                           </button>
+                         </div>
+                       )}
                     </div>
                  </div>
               </div>

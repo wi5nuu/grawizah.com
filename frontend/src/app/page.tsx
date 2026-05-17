@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { ArrowRight, ShieldCheck, Globe, Zap, BarChart3, Database, MessageSquare } from 'lucide-react';
 
 export default function HomePage() {
@@ -126,9 +127,14 @@ export default function HomePage() {
           <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
              <div className="rounded-2xl md:rounded-3xl shadow-2xl border border-gray-200 dark:border-dark-surface-variant/30 relative overflow-hidden group max-w-lg mx-auto w-full order-1 lg:order-1">
                 <div className="aspect-[16/10] bg-gray-200 dark:bg-dark-surface-container-low flex items-center justify-center overflow-hidden">
-                   <img 
+                   <Image 
                      src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
                      alt="Global Supply Chain Logistics" 
+                     width={1200}
+                     height={750}
+                     priority
+                     quality={80}
+                     sizes="(max-width: 1024px) 100vw, 50vw"
                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                    />
                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60" />
@@ -179,7 +185,7 @@ export default function HomePage() {
               ].map((item, i) => (
                 <div key={i} className="bg-white dark:bg-dark-surface p-8 md:p-10 rounded-2xl border border-gray-100 dark:border-dark-surface-variant/30 hover:shadow-lg transition-all text-left">
                    <div className="text-primary dark:text-dark-primary mb-6">{item.icon}</div>
-                   <h4 className="text-base md:text-lg font-display font-bold text-gray-900 dark:text-white mb-2 md:mb-3 uppercase tracking-tight">{item.title}</h4>
+                   <h3 className="text-base md:text-lg font-display font-bold text-gray-900 dark:text-white mb-2 md:mb-3 uppercase tracking-tight">{item.title}</h3>
                    <p className="text-xs md:text-sm text-gray-500 dark:text-dark-on-surface-variant leading-relaxed">{item.desc}</p>
                 </div>
               ))}

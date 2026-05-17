@@ -35,13 +35,22 @@ func (h *CompanyHandler) GetCompanyByID(c *gin.Context) {
 func (h *CompanyHandler) UpdateCompany(c *gin.Context) {
 	id := c.Param("id")
 	var input struct {
-		Name     string `json:"name"`
-		Industry string `json:"industry"`
+		Name           string   `json:"name"`
+		Country        string   `json:"country"`
+		Industry       string   `json:"industry"`
+		Certifications []string `json:"certifications"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	err := h.service.UpdateCompany(id, input.Name, input.Country, input.Industry, input.Certifications)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Company updated successfully",
 		"id":      id,

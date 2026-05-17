@@ -43,7 +43,7 @@ export default function Navbar() {
               className={`text-[13px] font-medium transition-all duration-200 ${
                 isActive(link.href)
                   ? 'text-black dark:text-white'
-                  : 'text-black/40 dark:text-white/40 hover:text-black dark:hover:text-white'
+                  : 'text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white'
               }`}
             >
               {link.label}
@@ -56,6 +56,7 @@ export default function Navbar() {
           {/* Theme Toggle (Visible on all screens) */}
           <button
             onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             className="w-9 h-9 rounded-md bg-black/5 dark:bg-white/10 flex items-center justify-center text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white transition-all active:scale-90"
             title={theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           >
@@ -88,7 +89,7 @@ export default function Navbar() {
                     <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
                     <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-black border border-black/5 dark:border-white/10 rounded-sm shadow-2xl py-2 z-50 animate-fade-in">
                       <div className="px-4 py-2 border-b border-black/5 dark:border-white/5">
-                        <p className="text-[11px] font-bold text-black/40 dark:text-white/40 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</p>
+                        <p className="text-[11px] font-bold text-black/60 dark:text-white/60 uppercase tracking-widest">{user?.role?.replace('_', ' ')}</p>
                         <p className="text-xs font-medium text-black/80 dark:text-white/80">{user?.email}</p>
                       </div>
                       <Link
@@ -99,7 +100,7 @@ export default function Navbar() {
                         <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
                       </Link>
                       <Link
-                        href="/dashboard/settings"
+                        href={isBuyer ? '/buyer/settings' : '/dashboard/settings'}
                         className="flex items-center gap-2 px-4 py-2 text-xs text-black/60 dark:text-white/60 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition"
                         onClick={() => setProfileOpen(false)}
                       >
@@ -129,7 +130,11 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Toggle */}
-          <button className="md:hidden text-black dark:text-white w-10 h-10 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors" onClick={() => setMobileOpen(!mobileOpen)}>
+          <button 
+            aria-label="Toggle mobile menu"
+            className="md:hidden text-black dark:text-white w-10 h-10 flex items-center justify-center rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors" 
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
             <span className="material-symbols-outlined">{mobileOpen ? 'close' : 'menu'}</span>
           </button>
         </div>
@@ -169,7 +174,7 @@ export default function Navbar() {
                     <span className="material-symbols-outlined text-[20px]">dashboard</span> Dashboard
                   </Link>
                   <Link 
-                    href="/dashboard/settings" 
+                    href={isBuyer ? '/buyer/settings' : '/dashboard/settings'} 
                     className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-[15px] font-bold text-black/60 dark:text-white/60 hover:bg-black/5 dark:hover:bg-white/5 transition-all" 
                     onClick={() => setMobileOpen(false)}
                   >

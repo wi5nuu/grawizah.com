@@ -156,3 +156,22 @@ func (h *AIHandler) ChatWithAI(c *gin.Context) {
 		"response": response,
 	})
 }
+
+// AIHealthCheck handles GET /api/health/ai
+// [H-07] Verifies Groq API connectivity without requiring authentication.
+func (h *AIHandler) AIHealthCheck(c *gin.Context) {
+	if err := h.aiService.HealthCheck(); err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"status":  "unhealthy",
+			"service": "groq-ai",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "healthy",
+		"service": "groq-ai",
+	})
+}
+

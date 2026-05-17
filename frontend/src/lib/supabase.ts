@@ -39,3 +39,31 @@ export const signOut = async () => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 };
+
+// Direct-to-Supabase Storage upload helper
+export const uploadToSupabase = async (file: File, folder: string): Promise<string> => {
+  if (!supabase) {
+    throw new Error('Supabase client is not initialized or configured.');
+  }
+
+  // Generate unique clean path: grawizah/folder/timestamp-random.ext
+  const fileExt = file.name.split('.').pop();
+  const cleanFileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 10)}.${fileExt}`;
+
+  const { data, error } = await supabase.storage
+    .from('grawizah')
+    .upload(cleanFileName, file, {
+      cacheControl: '3600',
+      upsert: true
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('grawizah')
+    .getPublicUrl(cleanFileName);
+
+  return publicUrl;
+};

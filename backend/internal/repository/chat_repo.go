@@ -2,9 +2,11 @@ package repository
 
 import (
 	"database/sql"
-	"github.com/grawizah/backend/internal/models"
-	"github.com/google/uuid"
+	"log"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/grawizah/backend/internal/models"
 )
 
 type ChatRepository struct {
@@ -31,6 +33,62 @@ func (r *ChatRepository) SaveMessage(msg *models.ChatMessage) error {
 
 	if r.db == nil {
 		return nil // Success in mock mode
+	}
+
+	// Double-check and auto-create buyer record if missing to prevent foreign key violations
+	if msg.BuyerID != "" {
+		var exists bool
+		err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM buyers WHERE id = $1)", msg.BuyerID).Scan(&exists)
+		if err == nil && !exists {
+			log.Printf("🛠️  Auto-creating missing buyer record in chat for ID: %s", msg.BuyerID)
+			
+			var userExists bool
+			_ = r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)", msg.BuyerID).Scan(&userExists)
+			if !userExists {
+				_, _ = r.db.Exec(`
+					INSERT INTO users (id, email, role, created_at, updated_at)
+					VALUES ($1, 'buyer@grawizah.com', 'buyer', NOW(), NOW())
+					ON CONFLICT (id) DO NOTHING
+				`, msg.BuyerID)
+			}
+			
+			_, err = r.db.Exec(`
+				INSERT INTO buyers (id, company_name, country, buy_score, verified, created_at, updated_at)
+				VALUES ($1, 'EuroTech Procurement LLC', 'Indonesia', 95, true, NOW(), NOW())
+				ON CONFLICT (id) DO NOTHING
+			`, msg.BuyerID)
+			if err != nil {
+				log.Printf("⚠️  Failed to auto-create buyer in chat repository: %v", err)
+			}
+		}
+	}
+
+	// Double-check and auto-create company record if missing to prevent supplier_id foreign key violations
+	if msg.SupplierID != "" {
+		var exists bool
+		err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM companies WHERE id = $1)", msg.SupplierID).Scan(&exists)
+		if err == nil && !exists {
+			log.Printf("🛠️  Auto-creating missing supplier company in chat for ID: %s", msg.SupplierID)
+			
+			var userExists bool
+			_ = r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)", msg.SupplierID).Scan(&userExists)
+			if !userExists {
+				_, _ = r.db.Exec(`
+					INSERT INTO users (id, email, role, created_at, updated_at)
+					VALUES ($1, 'supplier_auto@grawizah.com', 'free_trader', NOW(), NOW())
+					ON CONFLICT (id) DO NOTHING
+				`, msg.SupplierID)
+			}
+			
+			_, err = r.db.Exec(`
+				INSERT INTO companies (id, owner_id, name, country, verified, score, created_at, updated_at)
+				VALUES ($1, $1, 'Global Supplier Corp', 'Indonesia', true, 95, NOW(), NOW())
+				ON CONFLICT (id) DO NOTHING
+			`, msg.SupplierID)
+			if err != nil {
+				log.Printf("⚠️  Failed to auto-create company in chat repository: %v", err)
+			}
+		}
 	}
 
 	_, err := r.db.Exec(query,

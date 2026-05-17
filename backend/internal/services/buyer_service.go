@@ -60,3 +60,11 @@ func (s *BuyerService) CalculateLeadScore(ctx context.Context, buyerID string, p
 		},
 	}, nil
 }
+
+func (s *BuyerService) CreateBuyer(ctx context.Context, buyer *models.Buyer) error {
+	return s.buyerRepo.Create(buyer)
+}
+
+func (s *BuyerService) UpdateBuyer(ctx context.Context, buyer *models.Buyer) error {
+	return s.buyerRepo.Update(buyer)
+}

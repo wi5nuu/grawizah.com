@@ -4,13 +4,22 @@ import Link from 'next/link';
 import Navbar from '@/components/ui/Navbar';
 import Footer from '@/components/ui/Footer';
 
-const features = [
-  { icon: 'hub', title: 'Global Network Mapping', desc: 'Visualize complex supply chains with our interactive node-based mapping tool. Identify vulnerabilities, discover alternative routing, and optimize your global logistics network in real-time.', large: true, gradient: 'from-blue-600/20 to-purple-600/20', hasChart: true },
+interface FeatureItem {
+  icon: string;
+  title: string;
+  desc: string;
+  gradient: string;
+  badge?: string;
+  large?: boolean;
+  hasCode?: boolean;
+  hasChart?: boolean;
+}
+
+const features: FeatureItem[] = [
   { icon: 'monitoring', title: 'Predictive Analytics', desc: 'Leverage AI-driven forecasting models to predict market trends, demand fluctuations, and potential supply chain disruptions before they occur.', badge: 'AI Powered', gradient: 'from-emerald-600/20 to-teal-600/20' },
   { icon: 'policy', title: 'Compliance Engine', desc: 'Automated tariff calculation, trade restriction checks, and documentation generation to ensure full compliance across global borders.', gradient: 'from-orange-600/20 to-red-600/20' },
   { icon: 'currency_exchange', title: 'Multi-Currency Settlements', desc: 'Execute transactions seamlessly in over 50 currencies with real-time exchange rates and minimized conversion fees.', gradient: 'from-indigo-600/20 to-blue-600/20' },
   { icon: 'verified_user', title: 'Supplier Verification', desc: 'Access our rigorously vetted directory of global suppliers, complete with risk scores, financial health metrics, and audit histories.', gradient: 'from-pink-600/20 to-rose-600/20' },
-  { icon: 'api', title: 'Enterprise API Access', desc: 'Integrate Grawizah\'s powerful data streams directly into your existing ERP, CRM, or custom internal systems with our robust RESTful API.', large: true, gradient: 'from-purple-600/20 to-fuchsia-600/20', hasCode: true },
   { icon: 'inventory_2', title: 'Inventory Sync', desc: 'Real-time synchronization across multiple warehouses globally, ensuring accurate stock levels and preventing overselling.', gradient: 'from-cyan-600/20 to-blue-600/20' },
   { icon: 'support_agent', title: 'Dedicated Trade Desk', desc: '24/7 access to our team of international trade experts to assist with complex negotiations, customs disputes, or logistics emergencies.', gradient: 'from-amber-600/20 to-orange-600/20' },
 ];

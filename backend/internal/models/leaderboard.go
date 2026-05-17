@@ -17,6 +17,7 @@ type LeaderboardScore struct {
 	// Additional metadata
 	CompanyName          string  `json:"company_name,omitempty"`
 	Country              string  `json:"country,omitempty"`
+	LogoURL              string  `json:"logo_url,omitempty"`
 }
 
 // NewLeaderboardScore creates a new leaderboard score instance

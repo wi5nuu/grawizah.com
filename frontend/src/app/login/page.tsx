@@ -12,6 +12,7 @@ function LoginContent() {
   const registered = searchParams.get('registered');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,8 +21,14 @@ function LoginContent() {
     setError(null);
     setLoading(true);
     try {
-      await signIn(email, password);
-      router.push('/dashboard');
+      const data = await signIn(email, password);
+      const rawUser = data?.user || {};
+      const role = rawUser.user_metadata?.role || rawUser.role;
+      if (role === 'buyer') {
+        router.push('/buyer/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: any) {
       setError(err.message || "Invalid email or password. Please try again.");
     } finally {
@@ -87,7 +94,10 @@ function LoginContent() {
               <label className="block text-sm font-medium text-on-surface mb-2">Password</label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">lock</span>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input-field pl-10" placeholder="••••••••" required />
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="input-field pl-10 pr-10" placeholder="••••••••" required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-primary transition-colors flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                </button>
               </div>
             </div>
             <div className="flex items-center justify-between">

@@ -99,6 +99,7 @@ logs/
 *.db
 *.sqlite
 *.sqlite3
+database/
 
 # Temporary files
 tmp/

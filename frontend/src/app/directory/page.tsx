@@ -20,6 +20,45 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+// Premium Company Avatar component with robust fallback rendering
+const CompanyAvatar = ({ logoUrl, companyName, className, index }: { logoUrl?: string, companyName: string, className: string, index: number }) => {
+  const [imgError, setImgError] = useState(false);
+  
+  const getAvatarBg = (idx: number) => {
+    const bgs = [
+      'bg-gradient-to-br from-yellow-400 to-amber-600 text-white', // Gold
+      'bg-gradient-to-br from-indigo-400 to-indigo-700 text-white', // Purple
+      'bg-gradient-to-br from-emerald-400 to-emerald-700 text-white', // Emerald
+      'bg-gradient-to-br from-blue-500 to-indigo-600 text-white',
+      'bg-gradient-to-br from-pink-500 to-rose-600 text-white',
+      'bg-gradient-to-br from-purple-500 to-violet-600 text-white',
+      'bg-gradient-to-br from-teal-500 to-emerald-600 text-white',
+    ];
+    return bgs[idx % bgs.length];
+  };
+
+  const isUiAvatar = logoUrl && (logoUrl.includes('ui-avatars.com') || logoUrl.trim() === '');
+
+  if (logoUrl && !imgError && !isUiAvatar) {
+    return (
+      <div className={`${className} overflow-hidden flex items-center justify-center`}>
+        <img 
+          src={logoUrl} 
+          alt={companyName} 
+          onError={() => setImgError(true)} 
+          className="w-full h-full object-cover rounded-xl" 
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${className} flex items-center justify-center font-black ${getAvatarBg(index)} shadow-inner rounded-xl`}>
+      <span>{companyName ? companyName[0].toUpperCase() : 'G'}</span>
+    </div>
+  );
+};
+
 export default function DirectoryPage() {
   const [search, setSearch] = useState('');
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -36,7 +75,9 @@ export default function DirectoryPage() {
         const res = await fetch(`${API_URL}/api/companies`);
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         const result = await res.json();
-        if (result.data) {
+        if (Array.isArray(result)) {
+          setSuppliers(result);
+        } else if (result && result.data) {
           setSuppliers(result.data);
         } else {
           setSuppliers([]);
@@ -109,7 +150,12 @@ export default function DirectoryPage() {
                   {/* Identity Column */}
                   <div className="flex-[1.5] flex gap-6">
                     <div className="w-24 h-24 rounded-2xl bg-gray-50 dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/20 flex items-center justify-center p-2 flex-shrink-0">
-                      <img src={`https://ui-avatars.com/api/?name=${supplier.name}&background=6366f1&color=fff&size=128&font-size=0.33`} alt="" className="w-full h-full object-contain rounded-xl" />
+                      <CompanyAvatar 
+                        logoUrl={supplier.logo_url} 
+                        companyName={supplier.name} 
+                        className="w-full h-full text-3xl" 
+                        index={supplier.id ? supplier.id.charCodeAt(0) : 0} 
+                      />
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-2 flex-wrap">

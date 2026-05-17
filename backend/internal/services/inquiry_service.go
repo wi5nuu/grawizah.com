@@ -28,7 +28,7 @@ func (s *InquiryService) GetInquiriesBySupplier(ctx context.Context, supplierID 
 	return s.inquiryRepo.GetBySupplierID(supplierID)
 }
 
-func (s *InquiryService) GetInquiriesByBuyer(ctx context.Context, buyerID string) ([]models.Inquiry, error) {
+func (s *InquiryService) GetInquiriesByBuyer(ctx context.Context, buyerID string) ([]models.InquiryDetail, error) {
 	return s.inquiryRepo.GetByBuyerID(buyerID)
 }
 
@@ -52,9 +52,7 @@ func (s *InquiryService) RespondToInquiry(ctx context.Context, inquiryID string,
 		return err
 	}
 
-	inquiry.Status = "responded"
-	inquiry.ResponseMessage = message
-	// Calculate response time could be done here
+	inquiry.Respond(message)
 
 	return s.inquiryRepo.Update(inquiry)
 }
@@ -82,4 +80,12 @@ func (s *InquiryService) MarkAsConverted(ctx context.Context, inquiryID string) 
 
 	inquiry.ConvertedToDeal = true
 	return s.inquiryRepo.Update(inquiry)
+}
+
+// RateInquiry saves a buyer rating (1–5) for a completed inquiry. [M-02]
+func (s *InquiryService) RateInquiry(ctx context.Context, inquiryID string, rating int) error {
+	if rating < 1 || rating > 5 {
+		return fmt.Errorf("rating must be between 1 and 5")
+	}
+	return s.inquiryRepo.RateInquiry(inquiryID, rating)
 }

@@ -4,28 +4,100 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
+
+// groqTimeout is the maximum time we wait for a single Groq API call.
+const groqTimeout = 30 * time.Second
+
+// groqRetryDelays defines wait durations between retries (exponential backoff).
+var groqRetryDelays = []time.Duration{1 * time.Second, 2 * time.Second}
 
 type AIService struct {
 	groqAPIKey string
 	apiURL     string
 	model      string
+	httpClient *http.Client // [H-02] shared client with timeout
 }
 
+// NewAIService creates a new AIService.
+// [H-07] Falls back to well-known defaults so the service never fails silently.
 func NewAIService(groqAPIKey string) *AIService {
+	// [H-07] Default API URL
+	apiURL := os.Getenv("GROQ_API_URL")
+	if apiURL == "" {
+		apiURL = "https://api.groq.com/openai/v1"
+	}
+
+	// [H-07] Default model
+	model := os.Getenv("GROQ_MODEL")
+	if model == "" {
+		model = "llama-3.3-70b-versatile"
+	}
+
+	// [H-07] Startup warning — not fatal so the server still starts in mock mode
+	if groqAPIKey == "" {
+		log.Println("⚠️  WARNING: GROQ_API_KEY is not set. AI features will run in mock/fallback mode.")
+		log.Println("   Get your free API key at: https://console.groq.com/keys")
+	}
+
 	return &AIService{
 		groqAPIKey: groqAPIKey,
-		apiURL:     os.Getenv("GROQ_API_URL"),
-		model:      os.Getenv("GROQ_MODEL"),
+		apiURL:     apiURL,
+		model:      model,
+		// [H-02] Shared HTTP client with a hard 30-second timeout.
+		// This prevents goroutines from hanging forever when Groq is slow.
+		httpClient: &http.Client{
+			Timeout: groqTimeout,
+		},
 	}
 }
 
+// callGroq sends a prompt to Groq and returns the text response.
+// [H-02] Implements:
+//   - Per-request context deadline (25 s, slightly under the client timeout)
+//   - Max 2 retries with exponential backoff (1 s, 2 s)
+//   - Explicit handling of context.DeadlineExceeded
 func (s *AIService) callGroq(prompt string) (string, error) {
+	var lastErr error
+
+	for attempt := 0; attempt <= len(groqRetryDelays); attempt++ {
+		if attempt > 0 {
+			delay := groqRetryDelays[attempt-1]
+			log.Printf("🔄 Groq retry %d/%d after %s (prev error: %v)", attempt, len(groqRetryDelays), delay, lastErr)
+			time.Sleep(delay)
+		}
+
+		result, err := s.doGroqCall(prompt)
+		if err == nil {
+			return result, nil
+		}
+
+		// Don't retry on context cancellation from the caller
+		if errors.Is(err, context.Canceled) {
+			return "", err
+		}
+
+		lastErr = err
+	}
+
+	return "", fmt.Errorf("groq API failed after %d attempts: %w", len(groqRetryDelays)+1, lastErr)
+}
+
+// doGroqCall executes a single Groq API call with a 25-second deadline.
+func (s *AIService) doGroqCall(prompt string) (string, error) {
+	// [H-02] 25-second deadline — slightly under the 30s client timeout
+	// so context expiry fires before the transport-level timeout.
+	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+	defer cancel()
+
 	payload := map[string]interface{}{
 		"model": s.model,
 		"messages": []map[string]string{
@@ -34,19 +106,37 @@ func (s *AIService) callGroq(prompt string) (string, error) {
 		"temperature": 0.7,
 	}
 
-	jsonData, _ := json.Marshal(payload)
-	req, _ := http.NewRequest("POST", s.apiURL+"/chat/completions", bytes.NewBuffer(jsonData))
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.apiURL+"/chat/completions", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("failed to build request: %w", err)
+	}
 	req.Header.Set("Authorization", "Bearer "+s.groqAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := s.httpClient.Do(req)
 	if err != nil {
-		return "", err
+		// [H-02] Explicit deadline-exceeded handling
+		if errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return "", fmt.Errorf("AI request timed out after 25s — Groq API may be slow, please retry")
+		}
+		return "", fmt.Errorf("HTTP request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("groq API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
 	var groqResp struct {
 		Choices []struct {
 			Message struct {
@@ -56,14 +146,27 @@ func (s *AIService) callGroq(prompt string) (string, error) {
 	}
 
 	if err := json.Unmarshal(body, &groqResp); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse response JSON: %w", err)
 	}
 
 	if len(groqResp.Choices) == 0 {
-		return "", fmt.Errorf("no response from AI")
+		return "", fmt.Errorf("groq returned empty choices list")
 	}
 
 	return groqResp.Choices[0].Message.Content, nil
+}
+
+// HealthCheck pings the Groq API and returns an error if it is unreachable.
+// [H-07] Used by GET /api/health/ai
+func (s *AIService) HealthCheck() error {
+	if s.groqAPIKey == "" || s.groqAPIKey == "gsk_your_api_key" {
+		return fmt.Errorf("GROQ_API_KEY not configured")
+	}
+	_, err := s.doGroqCall("Reply with the single word: OK")
+	if err != nil {
+		return fmt.Errorf("groq health check failed: %w", err)
+	}
+	return nil
 }
 
 // ClassifyHSCode uses Groq AI to classify HS Code
@@ -125,13 +228,12 @@ func (s *AIService) TranslateText(ctx context.Context, text, targetLang string) 
 	// If Groq key is a placeholder, use mock translation
 	if s.groqAPIKey == "" || s.groqAPIKey == "gsk_your_api_key" {
 		mockTranslated := fmt.Sprintf("[Neural Sync: %s] %s", targetLang, text)
-		// Special cases for better demo
 		if targetLang == "id" && strings.Contains(strings.ToLower(text), "hello") {
 			mockTranslated = "Halo! Saya adalah Bot Intelijen Grawizah."
 		} else if targetLang == "en" && strings.Contains(strings.ToLower(text), "bantu") {
 			mockTranslated = "Can you help me with HS classification?"
 		}
-		
+
 		return map[string]interface{}{
 			"translated_text": mockTranslated,
 			"source_language": "auto",
@@ -142,7 +244,6 @@ func (s *AIService) TranslateText(ctx context.Context, text, targetLang string) 
 	prompt := fmt.Sprintf(`Translate the following text to %s.
 Return ONLY a JSON object with: translated_text (the translated text in %s), source_language (detected source language), and target_language (%s).
 Text to translate: %s`, targetLang, targetLang, targetLang, text)
-// ... (rest of existing TranslateText code)
 
 	response, err := s.callGroq(prompt)
 	if err != nil {
@@ -151,7 +252,6 @@ Text to translate: %s`, targetLang, targetLang, targetLang, text)
 
 	var result map[string]interface{}
 	if err := json.Unmarshal([]byte(response), &result); err != nil {
-		// If Groq doesn't return valid JSON, wrap the raw response
 		result = map[string]interface{}{
 			"translated_text": response,
 			"target_language": targetLang,
@@ -174,7 +274,6 @@ Text: %s`, text)
 
 	var result map[string]interface{}
 	if err := json.Unmarshal([]byte(response), &result); err != nil {
-		// If Groq doesn't return valid JSON, return a fallback
 		result = map[string]interface{}{
 			"language":   response,
 			"confidence": 0.8,
@@ -183,6 +282,7 @@ Text: %s`, text)
 
 	return result, nil
 }
+
 // Chat handles general AI chat with Grawizah knowledge
 func (s *AIService) Chat(ctx context.Context, message string) (string, error) {
 	// If Groq key is a placeholder, use intelligent fallback
@@ -199,7 +299,7 @@ Provide a helpful, professional response focused on trade data, HS codes, or exp
 
 func (s *AIService) getKnowledgeBaseResponse(query string) string {
 	q := strings.ToLower(query)
-	
+
 	if strings.Contains(q, "apa itu grawizah") || strings.Contains(q, "tentang grawizah") {
 		return "Grawizah (Grawizah Otw Juara) adalah platform 'Pre-Transaction Intelligence' pertama di Indonesia. Fokus kami adalah meminimalkan risiko ekspor bagi UKM melalui validasi data real-time, AI Listing Optimization, dan HS Code Classification otomatis. Kami ingin UKM Indonesia tidak hanya 'bisa ekspor', tapi 'paham strategi ekspor'."
 	}

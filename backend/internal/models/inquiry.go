@@ -1,8 +1,51 @@
 package models
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 )
+
+// PolymorphicMetadata represents a polymorphic JSONB metadata map
+type PolymorphicMetadata map[string]interface{}
+
+// Value implements the driver.Valuer interface
+func (m PolymorphicMetadata) Value() (driver.Value, error) {
+	if m == nil {
+		return nil, nil
+	}
+	return json.Marshal(m)
+}
+
+// Scan implements the sql.Scanner interface
+// PostgreSQL JSONB can be returned as []byte OR string depending on the driver version.
+// We handle both to avoid silent scan failures that cause empty inquiry results.
+func (m *PolymorphicMetadata) Scan(value interface{}) error {
+	if value == nil {
+		*m = nil
+		return nil
+	}
+	var b []byte
+	switch v := value.(type) {
+	case []byte:
+		b = v
+	case string:
+		b = []byte(v)
+	default:
+		// Unknown type — try JSON marshaling as last resort
+		encoded, err := json.Marshal(v)
+		if err != nil {
+			*m = nil
+			return nil // silently skip rather than crash the entire row scan
+		}
+		b = encoded
+	}
+	if err := json.Unmarshal(b, m); err != nil {
+		*m = nil // malformed JSON — treat as empty metadata, don't break the scan
+		return nil
+	}
+	return nil
+}
 
 // InquirySourceType represents the source of an inquiry (polymorphic)
 type InquirySourceType string
@@ -26,18 +69,18 @@ const (
 // Inquiry represents a buyer inquiry to a supplier
 type Inquiry struct {
 	BaseEntity
-	BuyerID            string                 `json:"buyer_id" db:"buyer_id"`
-	SupplierID         string                 `json:"supplier_id" db:"supplier_id"`
-	ProductID          string                 `json:"product_id" db:"product_id"`
-	Message            string                 `json:"message" db:"message"`
-	SourceType         InquirySourceType      `json:"source_type" db:"source_type"`
-	SourceMetadata     map[string]interface{} `json:"source_metadata" db:"source_metadata"` // Polymorphic metadata
-	Status             InquiryStatus          `json:"status" db:"status"`
-	ResponseTimeHours  *float64               `json:"response_time_hours,omitempty" db:"response_time_hours"`
-	ConvertedToDeal    bool                   `json:"converted_to_deal" db:"converted_to_deal"`
-	BuyerRating        *int                   `json:"buyer_rating,omitempty" db:"buyer_rating"`
-	ResponseMessage    string                 `json:"response_message,omitempty" db:"response_message"`
-	RespondedAt        *time.Time             `json:"responded_at,omitempty" db:"responded_at"`
+	BuyerID            string              `json:"buyer_id" db:"buyer_id"`
+	SupplierID         string              `json:"supplier_id" db:"supplier_id"`
+	ProductID          string              `json:"product_id" db:"product_id"`
+	Message            string              `json:"message" db:"message"`
+	SourceType         InquirySourceType   `json:"source_type" db:"source_type"`
+	SourceMetadata     PolymorphicMetadata `json:"source_metadata" db:"source_metadata"` // Polymorphic metadata
+	Status             InquiryStatus       `json:"status" db:"status"`
+	ResponseTimeHours  *float64            `json:"response_time_hours,omitempty" db:"response_time_hours"`
+	ConvertedToDeal    bool                `json:"converted_to_deal" db:"converted_to_deal"`
+	BuyerRating        *int                `json:"buyer_rating,omitempty" db:"buyer_rating"`
+	ResponseMessage    string              `json:"response_message,omitempty" db:"response_message"`
+	RespondedAt        *time.Time          `json:"responded_at,omitempty" db:"responded_at"`
 }
 
 // NewInquiry creates a new inquiry instance

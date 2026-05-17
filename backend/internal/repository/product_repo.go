@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/grawizah/backend/internal/models"
+	"github.com/lib/pq"
 )
 
 // ProductRepository implements the Repository interface for Product
@@ -19,6 +20,27 @@ func NewProductRepository(db *sql.DB) *ProductRepository {
 
 // Create inserts a new product
 func (r *ProductRepository) Create(product *models.Product) error {
+	userQuery := `
+		INSERT INTO users (id, email, role, created_at, updated_at)
+		VALUES ($1, $2, 'free_trader', NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`
+	_, err := r.db.Exec(userQuery, product.CompanyID, fmt.Sprintf("%s@auto-created.com", product.CompanyID))
+	if err != nil {
+		return fmt.Errorf("failed to ensure user exists: %v", err)
+	}
+
+	// Auto-create company if it doesn't exist (using the company_id which is the user ID)
+	companyQuery := `
+		INSERT INTO companies (id, owner_id, name, country, score, created_at, updated_at)
+		VALUES ($1, $1, 'My Company', 'Unknown', 98, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`
+	_, err = r.db.Exec(companyQuery, product.CompanyID)
+	if err != nil {
+		return fmt.Errorf("failed to ensure company exists: %v", err)
+	}
+
 	query := `
 		INSERT INTO products (
 			id, company_id, name, description, hs_code, hs_code_confidence,
@@ -28,10 +50,10 @@ func (r *ProductRepository) Create(product *models.Product) error {
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 	`
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		product.ID, product.CompanyID, product.Name, product.Description,
 		product.HSCode, product.HSCodeConfidence, product.PriceRangeMin,
-		product.PriceRangeMax, product.Currency, product.MOQ, product.Images,
+		product.PriceRangeMax, product.Currency, product.MOQ, pq.Array([]string(product.Images)),
 		product.Category, product.CountryOrigin, product.ListingScore,
 		product.ViewCount, product.InquiryCount, product.CreatedAt, product.UpdatedAt,
 	)
@@ -100,6 +122,10 @@ func (r *ProductRepository) GetAll(limit, offset int) ([]models.Product, error) 
 			return nil, err
 		}
 		products = append(products, p)
+	}
+	// [L-03] catch mid-iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return products, nil
@@ -194,10 +220,13 @@ func (r *ProductRepository) GetByCompanyID(companyID string) ([]models.Product, 
 		}
 		products = append(products, p)
 	}
+	// [L-03] catch mid-iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return products, nil
 }
-
 // GetByCategory retrieves all products in a specific category
 func (r *ProductRepository) GetByCategory(category string) ([]models.Product, error) {
 	query := `
@@ -232,8 +261,14 @@ func (r *ProductRepository) GetByCategory(category string) ([]models.Product, er
 		products = append(products, p)
 	}
 
+	// Catch errors that occurred during row iteration
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return products, nil
 }
+
 
 // Search searches products by name, description, or category
 func (r *ProductRepository) Search(query string, limit, offset int) ([]models.Product, error) {
@@ -271,10 +306,13 @@ func (r *ProductRepository) Search(query string, limit, offset int) ([]models.Pr
 		}
 		products = append(products, p)
 	}
+	// [L-03] catch mid-iteration errors
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return products, nil
 }
-
 // IncrementViewCount increments the view count for a product
 func (r *ProductRepository) IncrementViewCount(id string) error {
 	query := `UPDATE products SET view_count = view_count + 1, updated_at = NOW() WHERE id = $1`

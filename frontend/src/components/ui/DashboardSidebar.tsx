@@ -29,15 +29,17 @@ const supplierLinks = [
   { href: '/dashboard/intelligence', label: 'Intelligence', icon: Bot },
   { href: '/dashboard/inquiries', label: 'Inquiries', icon: Mail },
   { href: '/dashboard/products', label: 'My Products', icon: Package },
+  { href: '/dashboard/documents', label: 'Document Vault', icon: BookOpen },
   { href: '/dashboard/leaderboard', label: 'Leaderboard', icon: BarChart3 },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 const buyerLinks = [
-  { href: '/buyer/dashboard', label: 'Marketplace', icon: ShoppingBag },
-  { href: '/buyer/sourcing', label: 'Sourcing Hub', icon: Search },
-  { href: '/buyer/orders', label: 'My Orders', icon: Truck },
-  { href: '/catalog/suppliers', label: 'Supplier Directory', icon: BookOpen },
+  { href: '/buyer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/catalog', label: 'Sourcing Hub', icon: Search },
+  { href: '/buyer/rfq', label: 'My RFQs', icon: Package },
+  { href: '/buyer/inquiries', label: 'My Inquiries', icon: Mail },
+  { href: '/buyer/documents', label: 'Document Vault', icon: BookOpen },
   { href: '/buyer/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -88,8 +90,8 @@ export default function DashboardSidebar({
         <div className={`flex items-center ${collapsed ? 'justify-center py-8' : 'px-8 py-8'}`}>
           {!collapsed ? (
             <div className="overflow-hidden animate-fade-in flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                 <Zap className="w-6 h-6 fill-current" />
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-dark-surface-container flex items-center justify-center shadow-md shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-dark-surface-variant/20 overflow-hidden">
+                 <img src="/images/android-chrome-192x192.png" className="w-7 h-7 object-contain" alt="Grawizah Logo" />
               </div>
               <div>
                 <Link href="/" className="text-xl font-black text-gray-900 dark:text-white block leading-none tracking-tight">Grawizah</Link>
@@ -97,8 +99,8 @@ export default function DashboardSidebar({
               </div>
             </div>
           ) : (
-             <Link href="/" className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-               <Zap className="w-6 h-6 fill-current" />
+             <Link href="/" className="w-10 h-10 rounded-xl bg-white dark:bg-dark-surface-container flex items-center justify-center shadow-md shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-dark-surface-variant/20 overflow-hidden">
+               <img src="/images/android-chrome-192x192.png" className="w-7 h-7 object-contain" alt="Grawizah Logo" />
              </Link>
           )}
         </div>

@@ -26,7 +26,7 @@ export default function Footer() {
               Global trade intelligence platform for discovering, verifying, and connecting with trusted enterprise partners worldwide.
             </p>
             <div className="mt-2">
-              <h4 className="font-bold text-on-surface dark:text-white mb-3 text-sm">Subscribe to Market Insights</h4>
+              <h3 className="font-bold text-on-surface dark:text-white mb-3 text-sm">Subscribe to Market Insights</h3>
               <form className="flex items-center w-full max-w-sm relative" onSubmit={(e) => { e.preventDefault(); handleSubscribe(e as any); }}>
                 <input 
                   type="email" 
@@ -43,7 +43,7 @@ export default function Footer() {
 
           {/* Links 1 */}
           <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-on-surface dark:text-white mb-2">Platform</h4>
+            <h3 className="font-bold text-on-surface dark:text-white mb-2">Platform</h3>
             <Link href="/catalog" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Supplier Catalog</Link>
             <Link href="/directory" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Global Directory</Link>
             <Link href="/features" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Intelligence Network</Link>
@@ -52,7 +52,7 @@ export default function Footer() {
 
           {/* Links 2 */}
           <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-on-surface dark:text-white mb-2">Solutions</h4>
+            <h3 className="font-bold text-on-surface dark:text-white mb-2">Solutions</h3>
             <Link href="/info/solutions-for-buyers" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">For Buyers</Link>
             <Link href="/info/solutions-for-suppliers" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">For Suppliers</Link>
             <Link href="/info/trade-finance" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Trade Finance</Link>
@@ -61,7 +61,7 @@ export default function Footer() {
 
           {/* Links 3 */}
           <div className="flex flex-col gap-4">
-            <h4 className="font-bold text-on-surface dark:text-white mb-2">Company</h4>
+            <h3 className="font-bold text-on-surface dark:text-white mb-2">Company</h3>
             <Link href="/info/about-us" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">About Us</Link>
             <Link href="/info/careers" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Careers</Link>
             <Link href="/info/contact" className="text-sm text-on-surface-variant dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 transition-colors">Contact</Link>
@@ -84,14 +84,14 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-4">
             {/* Social Icons */}
-            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <Twitter className="w-5 h-5" />
+            <a href="https://twitter.com/grawizah" target="_blank" rel="noopener noreferrer" aria-label="Follow Grawizah on Twitter" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
+              <Twitter className="w-5 h-5" aria-hidden="true" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <Linkedin className="w-5 h-5" />
+            <a href="https://linkedin.com/company/grawizah" target="_blank" rel="noopener noreferrer" aria-label="Follow Grawizah on LinkedIn" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
+              <Linkedin className="w-5 h-5" aria-hidden="true" />
             </a>
-            <a href="https://community.grawizah.com" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
-              <MessageCircle className="w-5 h-5" />
+            <a href="https://community.grawizah.com" target="_blank" rel="noopener noreferrer" aria-label="Join Grawizah Community" className="w-10 h-10 rounded-full bg-surface-container-low dark:bg-white/5 flex items-center justify-center text-on-surface-variant dark:text-gray-400 hover:bg-primary hover:text-white dark:hover:bg-primary dark:hover:text-white transition-all">
+              <MessageCircle className="w-5 h-5" aria-hidden="true" />
             </a>
           </div>
         </div>

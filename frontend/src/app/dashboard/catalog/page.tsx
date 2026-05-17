@@ -19,7 +19,7 @@ export default function DashboardCatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
-  const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
 
   const filteredProducts = MOCK_PRODUCTS.filter((p) => {
     const matchSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase());

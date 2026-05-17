@@ -12,6 +12,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<'supplier' | 'buyer'>('supplier');
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const backendRole = role === 'supplier' ? UserRole.FREE_TRADER : UserRole.BUYER;
-      await signUp(email, password, backendRole);
+      await signUp(email, password, backendRole, companyName);
       router.push('/login?registered=true');
     } catch (err: any) {
       setError(err.message || "Registration failed. Please try again.");
@@ -149,11 +150,21 @@ export default function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-dark-on-surface mb-2">Password</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-dark-surface-variant/30 bg-gray-50 dark:bg-dark-surface-container focus:ring-2 focus:ring-primary focus:outline-none transition-all" placeholder="••••••••" required />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-100 dark:border-dark-surface-variant/30 bg-gray-50 dark:bg-dark-surface-container focus:ring-2 focus:ring-primary focus:outline-none transition-all" placeholder="••••••••" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-dark-on-surface mb-2">Confirm</label>
-                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-100 dark:border-dark-surface-variant/30 bg-gray-50 dark:bg-dark-surface-container focus:ring-2 focus:ring-primary focus:outline-none transition-all" placeholder="••••••••" required />
+                  <div className="relative">
+                    <input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-100 dark:border-dark-surface-variant/30 bg-gray-50 dark:bg-dark-surface-container focus:ring-2 focus:ring-primary focus:outline-none transition-all" placeholder="••••••••" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

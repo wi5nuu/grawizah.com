@@ -1,146 +1,274 @@
 'use client';
 
-import { useState } from 'react';
-import { Lock, Upload, FileText, Trash2, Download, Shield, Search, Filter, FolderOpen, Image, FileSpreadsheet, AlertCircle } from 'lucide-react';
-
-const MOCK_DOCS = [
-  { id: '1', name: 'Import_License_2026.pdf', type: 'pdf', size: '2.4 MB', encrypted: true, uploaded: '2026-05-01', category: 'License' },
-  { id: '2', name: 'Purchase_Order_001.pdf', type: 'pdf', size: '1.1 MB', encrypted: true, uploaded: '2026-04-28', category: 'Order' },
-  { id: '3', name: 'Supplier_Agreement_NusantaraAgro.docx', type: 'docx', size: '856 KB', encrypted: true, uploaded: '2026-04-25', category: 'Agreement' },
-  { id: '4', name: 'Quality_Inspection_Report.pdf', type: 'pdf', size: '3.2 MB', encrypted: true, uploaded: '2026-04-20', category: 'Report' },
-  { id: '5', name: 'Shipping_Manifest_May.pdf', type: 'pdf', size: '1.8 MB', encrypted: true, uploaded: '2026-04-15', category: 'Shipping' },
-  { id: '6', name: 'Product_Photos_Batch1.zip', type: 'zip', size: '12.4 MB', encrypted: true, uploaded: '2026-04-10', category: 'Media' },
-];
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Lock, 
+  Upload, 
+  Trash2, 
+  Download, 
+  Shield, 
+  Search, 
+  RefreshCcw, 
+  AlertCircle,
+  FileText
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function DocumentVaultPage() {
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
 
-  const categories = ['all', ...Array.from(new Set(MOCK_DOCS.map(d => d.category)))];
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
-  const filteredDocs = MOCK_DOCS.filter(doc => {
-    const matchSearch = !searchQuery || doc.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchCategory = filterCategory === 'all' || doc.category === filterCategory;
-    return matchSearch && matchCategory;
-  });
-
-  const totalSize = MOCK_DOCS.reduce((sum, d) => {
-    const num = parseFloat(d.size);
-    return sum + (d.size.includes('MB') ? num : num / 1024);
-  }, 0).toFixed(1);
-
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'pdf': return <FileText className="w-6 h-6 text-red-500" />;
-      case 'docx': return <FileText className="w-6 h-6 text-accent-500" />;
-      case 'zip': return <FolderOpen className="w-6 h-6 text-amber-500" />;
-      case 'xlsx': return <FileSpreadsheet className="w-6 h-6 text-green-500" />;
-      case 'jpg': case 'png': return <Image className="w-6 h-6 text-primary-500" />;
-      default: return <FileText className="w-6 h-6 text-gray-400" />;
+  const fetchDocuments = async () => {
+    if (!user) return;
+    try {
+      const token = localStorage.getItem('grawizah_token');
+      const res = await fetch(`${API_URL}/api/documents?buyer_id=${user.id}`, {
+        headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDocuments(data.data || []);
+      }
+    } catch (err) {
+      console.error('Fetch docs error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getCategoryColor = (cat: string) => {
-    const colors: Record<string, string> = {
-      License: 'bg-primary-50 text-primary-700', Order: 'bg-accent-50 text-accent-700',
-      Agreement: 'bg-green-50 text-green-700', Report: 'bg-amber-50 text-amber-700',
-      Shipping: 'bg-purple-50 text-purple-700', Media: 'bg-pink-50 text-pink-700',
-    };
-    return colors[cat] || 'bg-gray-50 text-gray-600';
+  useEffect(() => {
+    fetchDocuments();
+  }, [user]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const allowed = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!ext || !allowed.includes(ext)) {
+      setError('Invalid file type. Allowed: PDF, JPG, PNG, DOCX, XLSX.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File size exceeds 10MB limit.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('buyer_id', user.id);
+    formData.append('entity_type', 'buyer');
+
+    try {
+      const token = localStorage.getItem('grawizah_token');
+      const res = await fetch(`${API_URL}/api/documents/upload`, {
+        method: 'POST',
+        headers: { ...(token && { 'Authorization': `Bearer ${token}` }) },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Upload failed');
+      await fetchDocuments();
+    } catch (err: any) {
+      setError(err.message || 'Upload error');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
+  const handleDownload = async (docId: string, filename: string) => {
+    try {
+      const token = localStorage.getItem('grawizah_token');
+      const res = await fetch(`${API_URL}/api/documents/${docId}/download`, {
+        headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
+      });
+      if (!res.ok) throw new Error('Download failed');
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      setError('Failed to securely download document.');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const handleDelete = async (docId: string) => {
+    if (!confirm('Permanently delete this document?')) return;
+    try {
+      const token = localStorage.getItem('grawizah_token');
+      const res = await fetch(`${API_URL}/api/documents/${docId}`, {
+        method: 'DELETE',
+        headers: { ...(token && { 'Authorization': `Bearer ${token}` }) }
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      setDocuments(prev => prev.filter(d => d.id !== docId));
+    } catch (err) {
+      setError('Failed to delete document.');
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
+  const filteredDocs = documents.filter(doc => {
+    const name = doc.filename || doc.original_name || 'Document';
+    return !searchQuery || name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const totalSize = documents.reduce((sum, d) => sum + (d.file_size / (1024 * 1024)), 0).toFixed(2);
+
+  if (loading) {
+     return (
+       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+         <RefreshCcw className="w-8 h-8 animate-spin text-primary opacity-20" />
+         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Decrypting Vault...</p>
+       </div>
+     );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Lock className="w-6 h-6 text-amber-600" /> Document Vault
-            </h1>
-            <p className="text-gray-500 mt-1">AES-256 encrypted document storage</p>
+    <div className="p-6 md:p-10 w-full min-h-full font-sans relative">
+      {/* Header Section */}
+      <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <Lock className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-black text-amber-500 uppercase tracking-[0.3em]">SECURE VAULT</span>
           </div>
-          <button className="btn-primary flex items-center gap-2">
-            <Upload className="w-5 h-5" /> Upload Document
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+            Document Vault
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
+            AES-256 encrypted document storage fully compliant with PDPA security standards.
+          </p>
+        </div>
+        <div>
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileChange} 
+            className="hidden" 
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="px-5 py-2.5 bg-primary text-white rounded-xl font-bold text-xs hover:opacity-90 transition-opacity flex items-center gap-2 shadow-md shadow-primary/10"
+          >
+            {uploading ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {uploading ? 'Encrypting...' : 'Upload Document'}
           </button>
         </div>
+      </div>
 
-        {/* Security Badge */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 mb-6 flex items-center gap-4">
-          <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Shield className="w-6 h-6 text-green-600" />
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl text-xs font-black uppercase tracking-widest border border-red-200 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" /> {error}
+        </div>
+      )}
+
+      {/* Security Info Badge */}
+      <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 border border-green-200 dark:border-green-800/30 rounded-3xl p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-2xl flex items-center justify-center flex-shrink-0">
+            <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-green-800">End-to-End Encrypted</p>
-            <p className="text-xs text-green-600 mt-0.5">All documents are protected with AES-256 encryption. PDPA-aligned security.</p>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-lg font-bold text-green-700">{MOCK_DOCS.length}</p>
-            <p className="text-xs text-green-600">Documents</p>
-          </div>
-          <div className="text-right hidden sm:block">
-            <p className="text-lg font-bold text-green-700">{totalSize} MB</p>
-            <p className="text-xs text-green-600">Total Size</p>
+          <div>
+            <p className="text-sm font-black text-green-800 dark:text-green-400">End-to-End Encrypted</p>
+            <p className="text-xs text-green-600 dark:text-green-500 font-medium mt-0.5">All files are processed with server-side AES-256 keys.</p>
           </div>
         </div>
-
-        {/* Search & Filter */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="relative flex-1">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input type="text" placeholder="Search documents..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="input-field pl-10" />
+        <div className="flex gap-8">
+          <div>
+            <p className="text-2xl font-black text-green-700 dark:text-green-400">{documents.length}</p>
+            <p className="text-[10px] font-black text-green-600/60 dark:text-green-500/60 uppercase tracking-widest mt-0.5">Files</p>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {categories.map((cat) => (
-              <button key={cat} onClick={() => setFilterCategory(cat)} className={`px-3 py-2 rounded-lg text-xs font-medium transition capitalize ${filterCategory === cat ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
-                {cat}
-              </button>
-            ))}
+          <div>
+            <p className="text-2xl font-black text-green-700 dark:text-green-400">{totalSize} MB</p>
+            <p className="text-[10px] font-black text-green-600/60 dark:text-green-500/60 uppercase tracking-widest mt-0.5">Vault Size</p>
           </div>
         </div>
+      </div>
 
-        {/* Document List */}
-        <div className="space-y-3">
-          {filteredDocs.map((doc) => (
-            <div key={doc.id} className="card flex items-center justify-between hover:shadow-md transition group">
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-primary-50 transition">
-                  {getFileIcon(doc.type)}
+      {/* Search Input */}
+      <div className="relative mb-8 bg-white dark:bg-dark-surface-container rounded-2xl border border-gray-100 dark:border-dark-surface-variant/20 p-2 flex items-center shadow-sm">
+        <Search className="w-5 h-5 text-gray-400 ml-3" />
+        <input 
+          type="text" 
+          placeholder="Search encrypted documents..." 
+          value={searchQuery} 
+          onChange={(e) => setSearchQuery(e.target.value)} 
+          className="w-full bg-transparent border-none outline-none px-3 text-sm text-gray-900 dark:text-white" 
+        />
+      </div>
+
+      {/* Documents Grid */}
+      {filteredDocs.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredDocs.map((doc: any) => (
+            <div key={doc.id} className="bg-white dark:bg-dark-surface-container p-6 rounded-3xl border border-gray-100 dark:border-dark-surface-variant/20 shadow-sm flex flex-col justify-between group hover:border-primary/30 transition-all duration-300">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gray-50 dark:bg-dark-surface-container-high rounded-2xl flex items-center justify-center flex-shrink-0 border border-gray-100 dark:border-dark-surface-variant/10">
+                  <FileText className="w-6 h-6 text-gray-400 dark:text-gray-500" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">{doc.name}</p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-1 flex-wrap">
-                    <span>{doc.size}</span>
-                    <span>Uploaded: {doc.uploaded}</span>
-                    <span className={`badge text-[10px] ${getCategoryColor(doc.category)}`}>{doc.category}</span>
-                    {doc.encrypted && (
-                      <span className="badge-success text-[10px] flex items-center gap-0.5">
-                        <Lock className="w-2.5 h-2.5" /> Encrypted
-                      </span>
-                    )}
-                  </div>
+                  <h3 className="font-black text-sm text-gray-900 dark:text-white truncate" title={doc.filename || doc.original_name || 'Document'}>
+                    {doc.filename || doc.original_name || 'Document'}
+                  </h3>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                    {(doc.file_size / (1024 * 1024)).toFixed(2)} MB &bull; {new Date(doc.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1 ml-4">
-                <button className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition" title="Download">
+
+              <div className="mt-6 pt-4 border-t border-gray-50 dark:border-dark-surface-variant/10 flex justify-end gap-3">
+                <button 
+                  onClick={() => handleDownload(doc.id, doc.filename || doc.original_name || 'document.pdf')}
+                  className="p-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-dark-surface-container-high dark:hover:bg-dark-surface-container-highest rounded-xl text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-dark-surface-variant/10 transition-colors"
+                  title="Download File"
+                >
                   <Download className="w-4 h-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete">
+                <button 
+                  onClick={() => handleDelete(doc.id)}
+                  className="p-2.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-900/30 rounded-xl text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/20 transition-colors"
+                  title="Delete File"
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
           ))}
         </div>
-
-        {filteredDocs.length === 0 && (
-          <div className="text-center py-16">
-            <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-500 mb-1">No documents found</p>
-            <p className="text-sm text-gray-400">Upload your first document to get started</p>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="text-center py-20 bg-white dark:bg-dark-surface-container rounded-3xl border border-gray-100 dark:border-dark-surface-variant/20 shadow-sm">
+          <Lock className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-4" />
+          <p className="text-sm font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">No Documents Found</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Upload verified trade documents to proceed securely.</p>
+        </div>
+      )}
     </div>
   );
 }

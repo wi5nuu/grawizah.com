@@ -23,7 +23,7 @@ func (h *LeaderboardHandler) GetLeaderboard(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
 		return
 	}
-	c.JSON(http.StatusOK, suppliers)
+	c.JSON(http.StatusOK, gin.H{"data": suppliers})
 }
 
 // GetCompanyRank handles GET /api/leaderboard/company/:id

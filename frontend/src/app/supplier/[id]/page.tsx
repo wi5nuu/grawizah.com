@@ -39,6 +39,8 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
   
   const [category, setCategory] = useState('');
   const [message, setMessage] = useState('');
+  const [showTradeAssurance, setShowTradeAssurance] = useState(false);
+  const [showInquiryModal, setShowInquiryModal] = useState(false);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
@@ -72,9 +74,13 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
     }
     setInquiryLoading(true);
     try {
+      const token = localStorage.getItem('grawizah_token');
       const res = await fetch(`${API_URL}/api/inquiries`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           supplier_id: supplierId,
           buyer_id: user.id,
@@ -132,18 +138,18 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
           
           {/* Main Dossier Content */}
           <div className="flex-1 min-w-0">
-            <div className="bg-white dark:bg-dark-surface rounded-[2.5rem] border border-gray-100 dark:border-dark-surface-variant/20 overflow-hidden">
+            <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-100 dark:border-dark-surface-variant/20 overflow-hidden">
               
               {/* Profile Hero Header */}
               <div className="relative">
-                <div className="h-48 bg-gray-900 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
-                  <div className="absolute -bottom-24 left-10">
-                    <div className="w-40 h-40 bg-white dark:bg-dark-surface border-[8px] border-white dark:border-dark-surface rounded-[2rem] shadow-2xl flex items-center justify-center p-4">
+                <div className="h-48 bg-gray-900 relative rounded-t-xl">
+                  <div className="absolute inset-0 opacity-20 rounded-t-xl" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+                  <div className="absolute -bottom-20 left-10 z-10">
+                    <div className="w-40 h-40 bg-white dark:bg-dark-surface border-[8px] border-white dark:border-dark-surface rounded-xl shadow-2xl flex items-center justify-center p-4">
                        <img 
                         src={`https://ui-avatars.com/api/?name=${company.name}&background=6366f1&color=fff&size=256&font-size=0.33`} 
                         alt={company.name} 
-                        className="w-full h-full object-contain rounded-2xl" 
+                        className="w-full h-full object-contain rounded-xl" 
                        />
                     </div>
                   </div>
@@ -179,10 +185,16 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
                     </div>
 
                     <div className="flex gap-4">
-                      <button className="px-8 py-3.5 bg-gray-50 dark:bg-dark-surface-container text-gray-900 dark:text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl border border-gray-100 dark:border-dark-surface-variant/20 hover:bg-gray-100 transition-all flex items-center gap-2">
+                      <button 
+                        onClick={() => setShowInquiryModal(true)}
+                        className="px-8 py-3.5 bg-gray-50 dark:bg-dark-surface-container text-gray-900 dark:text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl border border-gray-100 dark:border-dark-surface-variant/20 hover:bg-gray-100 transition-all flex items-center gap-2"
+                      >
                         <MessageSquare className="w-4 h-4" /> Message
                       </button>
-                      <button className="px-8 py-3.5 bg-primary text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                      <button 
+                        onClick={() => setShowTradeAssurance(true)}
+                        className="px-8 py-3.5 bg-primary text-white font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                      >
                         <TrendingUp className="w-4 h-4" /> Secure Trade
                       </button>
                     </div>
@@ -258,7 +270,7 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
                     <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.25em] mb-8">Catalog Showcase</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                       {products.map(product => (
-                        <Link key={product.id} href={`/catalog/${product.id}`} className="group bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-[2rem] overflow-hidden hover:shadow-2xl transition-all">
+                        <Link key={product.id} href={`/catalog/${product.id}`} className="group bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl overflow-hidden hover:shadow-2xl transition-all">
                           <div className="aspect-[4/3] relative overflow-hidden bg-gray-50">
                             <img 
                               src={product.images?.[0] || 'https://via.placeholder.com/400'} 
@@ -286,19 +298,14 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
                   <section>
                     <h2 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.25em] mb-8">Institutional Compliance</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {[
-                        { title: 'ISO 9001:2015', desc: 'Quality Management Systems' },
-                        { title: 'ISO 14001', desc: 'Environmental Performance Standards' },
-                        { title: 'REACH', desc: 'Global Compliance & Chemical Safety' },
-                        { title: 'Industry Audit v2.0', desc: 'Annual Operational Verification' }
-                      ].map((cert, i) => (
-                        <div key={i} className="flex items-center gap-6 p-8 bg-gray-50/50 dark:bg-dark-surface-container/30 rounded-[2rem] border border-gray-100 dark:border-dark-surface-variant/10">
+                      {['ISO 9001:2015', 'ISO 14001', 'REACH', 'Industry Audit v2.0'].map((cert, i) => (
+                        <div key={i} className="flex items-center gap-6 p-8 bg-gray-50/50 dark:bg-dark-surface-container/30 rounded-xl border border-gray-100 dark:border-dark-surface-variant/10">
                           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 shadow-sm">
                             <Award className="w-6 h-6" />
                           </div>
                           <div>
-                            <p className="text-[13px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">{cert.title}</p>
-                            <p className="text-xs font-medium text-gray-500">{cert.desc}</p>
+                            <p className="text-[13px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">{cert}</p>
+                            <p className="text-xs font-medium text-gray-500">Certified Sourcing Compliance</p>
                           </div>
                         </div>
                       ))}
@@ -314,7 +321,7 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
              <div className="sticky top-24 space-y-8">
                 
                 {/* Contact Dossier */}
-                <div className="bg-gray-900 dark:bg-dark-surface rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+                <div id="inquiry-form" className="bg-gray-900 dark:bg-dark-surface rounded-xl p-10 text-white shadow-2xl relative overflow-hidden">
                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-[60px] rounded-full" />
                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 mb-8">Intelligence Request</h3>
                    
@@ -358,7 +365,7 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
                 </div>
 
                 {/* Trust Credentials Mini Grid */}
-                <div className="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-[2.5rem] p-10">
+                <div className="bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl p-10">
                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-8">Audit Integrity</h3>
                    <div className="space-y-6">
                       {[
@@ -381,6 +388,145 @@ export default function SupplierProfilePage({ params }: { params: { id: string }
           </aside>
         </div>
       </main>
+
+      {/* Sourcing Intelligence Request Modal */}
+      {showInquiryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-gray-900 text-white rounded-xl w-full max-w-lg overflow-hidden shadow-2xl border border-white/10 relative p-8 animate-scale-in">
+            <button 
+              onClick={() => setShowInquiryModal(false)}
+              className="absolute top-4 right-4 text-white/50 hover:text-white text-sm font-bold"
+            >
+              ✕
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center text-primary">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black">Intelligence Request</h3>
+                <p className="text-white/40 text-[10px] uppercase font-black tracking-widest">Sourcing dossier for {company.name}</p>
+              </div>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setShowInquiryModal(false);
+              await handleSendInquiry(e);
+            }} className="space-y-6">
+              <div>
+                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block mb-2 px-1">Sourcing Domain</label>
+                 <select 
+                   value={category}
+                   onChange={(e) => setCategory(e.target.value)}
+                   className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm font-bold outline-none focus:border-primary transition-all appearance-none cursor-pointer text-white"
+                 >
+                    <option value="" className="bg-gray-900 text-white">Select Strategy..</option>
+                    <option value="spot" className="bg-gray-900 text-white">Spot Transaction</option>
+                    <option value="contract" className="bg-gray-900 text-white">Long-term Contract</option>
+                    <option value="oem" className="bg-gray-900 text-white">OEM Orchestration</option>
+                 </select>
+              </div>
+              
+              <div>
+                 <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block mb-2 px-1">Requirement Dossier</label>
+                 <textarea 
+                   value={message}
+                   onChange={(e) => setMessage(e.target.value)}
+                   placeholder="Describe MOQ, lead time, and specifications.."
+                   className="w-full bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-sm font-bold outline-none focus:border-primary transition-all h-32 resize-none text-white placeholder-white/35"
+                 />
+              </div>
+
+              <button 
+                disabled={inquiryLoading}
+                className="w-full bg-primary hover:bg-primary/90 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-xl transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3 active:scale-95"
+              >
+                 {inquiryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                 Submit Intelligence Inquiry
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Trade Assurance Modal */}
+      {showTradeAssurance && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-dark-surface rounded-xl w-full max-w-lg overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-surface-variant/30 p-8 relative animate-scale-in">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">Secure Trade Assurance</h3>
+                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">Protocol Enabled</span>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+              Grawizah Trade Assurance is actively protecting transactions with <strong>{company.name}</strong>. Under this protection protocol:
+            </p>
+
+            <ul className="space-y-4 mb-8">
+              {[
+                'Spot and long-term contract orchestrations are 100% verified.',
+                'Full regulatory compliance and on-site audit certification.',
+                'Secured communication ledger with automatic buyer/supplier sync.'
+              ].map((text, i) => (
+                <li key={i} className="flex items-start gap-3 text-xs font-bold text-gray-500 dark:text-gray-400">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex gap-4">
+              <button 
+                onClick={() => {
+                  setShowTradeAssurance(false);
+                  setShowInquiryModal(true);
+                }}
+                className="flex-1 py-4 bg-primary text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all text-center"
+              >
+                Initiate Sourcing Inquiry
+              </button>
+              <button 
+                onClick={() => setShowTradeAssurance(false)}
+                className="px-6 py-4 bg-gray-50 dark:bg-dark-surface-container text-gray-500 font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sourcing Inquiry Success Modal */}
+      {inquirySuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-white dark:bg-dark-surface rounded-xl w-full max-w-md overflow-hidden shadow-2xl border border-gray-100 dark:border-dark-surface-variant/30 p-8 text-center animate-scale-in">
+            <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm animate-bounce">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            
+            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">Request Transmitted Successfully</h3>
+            <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-4">Secured Sourcing Ledger</p>
+            
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+              Your intelligence dossier has been safely logged in our database. The supplier has been instantly notified via all verified trade communication channels.
+            </p>
+
+            <button 
+              onClick={() => setInquirySuccess(false)}
+              className="w-full py-4 bg-primary text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            >
+              Understood
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

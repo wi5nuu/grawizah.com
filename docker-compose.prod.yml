@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  grawizah-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: grawizah-api:latest
+    container_name: grawizah-api
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      - UPSTASH_REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=${DATABASE_URL}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    networks:
+      - grawizah-network
+    ports:
+      - "127.0.0.1:8080:8080" # Only expose to localhost (Nginx will proxy)
+    volumes:
+      - grawizah-uploads:/app/uploads/documents
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  grawizah-web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: grawizah-web:latest
+    container_name: grawizah-web
+    restart: unless-stopped
+    env_file:
+      - .env.prod
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    networks:
+      - grawizah-network
+    ports:
+      - "127.0.0.1:3000:3000" # Only expose to localhost (Nginx will proxy)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - grawizah-api
+
+  redis:
+    image: redis:7-alpine
+    container_name: grawizah-redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    networks:
+      - grawizah-network
+    volumes:
+      - redis-data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  grawizah-network:
+    driver: bridge
+
+volumes:
+  grawizah-uploads:
+  redis-data:

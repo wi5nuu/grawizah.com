@@ -1,15 +1,13 @@
 'use client';
 
-import DashboardSidebar from '@/components/ui/DashboardSidebar';
-
 export default function SupplierComparisonPage() {
   const suppliers = [
     {
       name: 'TechMakers Global',
       badge: 'Verified',
       badgeIcon: 'verified',
-      badgeColor: 'text-[#5300b7] dark:text-[#d0bcff]',
-      badgeBg: 'bg-[#f3e8ff] dark:bg-[#d0bcff]/20',
+      badgeColor: 'text-primary dark:text-dark-primary',
+      badgeBg: 'bg-primary/10 dark:bg-primary/20',
       image: '/images/supplier-tech.png',
       imageBg: 'bg-[#e0f2fe] dark:bg-[#0c4a6e]',
       rating: '4.8',
@@ -25,8 +23,8 @@ export default function SupplierComparisonPage() {
       name: 'Nexus Electronics',
       badge: 'Top Rated',
       badgeIcon: 'star',
-      badgeColor: 'text-[#5300b7] dark:text-[#d0bcff]',
-      badgeBg: 'bg-[#f3e8ff] dark:bg-[#d0bcff]/20',
+      badgeColor: 'text-primary dark:text-dark-primary',
+      badgeBg: 'bg-primary/10 dark:bg-primary/20',
       image: '/images/supplier-nexus.png',
       imageBg: 'bg-[#1e1b4b] dark:bg-[#1e1b4b]',
       rating: '4.9',
@@ -42,8 +40,8 @@ export default function SupplierComparisonPage() {
       name: 'Apex Components',
       badge: 'Fast Shipper',
       badgeIcon: 'bolt',
-      badgeColor: 'text-[#5300b7] dark:text-[#d0bcff]',
-      badgeBg: 'bg-[#f3e8ff] dark:bg-[#d0bcff]/20',
+      badgeColor: 'text-primary dark:text-dark-primary',
+      badgeBg: 'bg-primary/10 dark:bg-primary/20',
       image: '/images/supplier-apex.png',
       imageBg: 'bg-[#fef3c7] dark:bg-[#78350f]',
       rating: '4.6',
@@ -58,24 +56,22 @@ export default function SupplierComparisonPage() {
   ];
 
   return (
-    <div className="flex h-screen bg-[#fafafa] dark:bg-dark-background">
-      <DashboardSidebar />
-      <div className="flex-1 overflow-y-auto p-8 max-w-[1200px] w-full">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-dark-on-surface">Supplier Comparison</h2>
-            <p className="text-gray-500 dark:text-dark-on-surface-variant mt-1 text-[14px]">Evaluate top tier suppliers side-by-side to make informed procurement decisions. Data is refreshed weekly from verified global indices.</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="border border-gray-300 dark:border-dark-surface-variant/50 text-gray-600 dark:text-dark-on-surface hover:bg-gray-50 dark:hover:bg-dark-surface-container bg-white dark:bg-dark-surface px-4 py-2.5 rounded-md font-bold text-[13px] flex items-center gap-2 transition-colors">
-              <span className="material-symbols-outlined text-[18px]">ios_share</span> Export PDF
-            </button>
-            <button className="bg-[#f3e8ff] dark:bg-[#d0bcff]/10 hover:bg-[#e8def8] dark:hover:bg-[#d0bcff]/20 text-[#5300b7] dark:text-[#d0bcff] px-4 py-2.5 rounded-md font-bold text-[13px] flex items-center gap-2 transition-colors">
-              <span className="material-symbols-outlined text-[18px]">add</span> Add Supplier
-            </button>
-          </div>
-        </header>
+    <div className="p-6 md:p-10 w-full min-h-full font-sans relative">
+      {/* Header */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white leading-tight">Supplier Comparison</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[14px]">Evaluate top tier suppliers side-by-side to make informed procurement decisions. Data is refreshed weekly from verified global indices.</p>
+        </div>
+        <div className="flex gap-3">
+          <button className="border border-gray-300 dark:border-dark-surface-variant/50 text-gray-600 dark:text-white hover:bg-gray-50 dark:hover:bg-dark-surface-container bg-white dark:bg-dark-surface px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors">
+            Export PDF
+          </button>
+          <button className="bg-primary/10 hover:bg-primary/20 text-primary dark:text-dark-primary px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors">
+            Add Supplier
+          </button>
+        </div>
+      </header>
 
         {/* Comparison Table */}
         <section className="bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-surface-variant/30 shadow-sm overflow-hidden">
@@ -171,7 +167,6 @@ export default function SupplierComparisonPage() {
             </table>
           </div>
         </section>
-      </div>
     </div>
   );
 }

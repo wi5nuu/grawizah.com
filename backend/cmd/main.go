@@ -79,9 +79,9 @@ func main() {
 	productHandler := handlers.NewProductHandler(productService, rankingService)
 	buyerHandler := handlers.NewBuyerHandler(buyerService)
 	aiHandler := handlers.NewAIHandler(aiService)
-	inquiryHandler := handlers.NewInquiryHandler(inquiryService)
+	inquiryHandler := handlers.NewInquiryHandler(inquiryService, aiService)
 	chatHandler := handlers.NewChatHandler(chatRepo)
-	authHandler := handlers.NewAuthHandler()
+	authHandler := handlers.NewAuthHandler(database)
 	leaderboardHandler := handlers.NewLeaderboardHandler(leaderboardService)
 	companyHandler := handlers.NewCompanyHandler(companyService)
 	logHandler := handlers.NewLogHandler()
@@ -127,14 +127,12 @@ func main() {
 		c.Next()
 	})
 
-	// Health check endpoint
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "healthy",
-			"service": "grawizah-api",
-			"version": "1.0.0",
-		})
-	})
+	// Health check endpoints
+	compHealthHandler := handlers.NewComprehensiveHealthHandler(database, aiService)
+	r.GET("/health", compHealthHandler.Check)
+	r.GET("/api/health", compHealthHandler.Check)
+	// [H-07] AI connectivity health check — no auth required for monitoring
+	r.GET("/api/health/ai", aiHandler.AIHealthCheck)
 
 	// API routes
 	api := r.Group("/api")
@@ -146,6 +144,7 @@ func main() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/upgrade-tier", authHandler.UpgradeTier)
+			auth.POST("/refresh", authHandler.Refresh)
 		}
 
 		// Log routes
@@ -156,13 +155,13 @@ func main() {
 		{
 			products.GET("", productHandler.GetProducts)
 			products.GET("/:id", productHandler.GetProductByID)
-			products.POST("", productHandler.CreateProduct)
-			products.PUT("/:id", productHandler.UpdateProduct)
-			products.DELETE("/:id", productHandler.DeleteProduct)
+			products.POST("", middleware.AuthMiddleware(), productHandler.CreateProduct)
+			products.PUT("/:id", middleware.AuthMiddleware(), productHandler.UpdateProduct)
+			products.DELETE("/:id", middleware.AuthMiddleware(), productHandler.DeleteProduct)
 			products.POST("/search", productHandler.SearchProducts)
 			products.POST("/:id/view", productHandler.IncrementViewCount)
 			products.GET("/category/:category", productHandler.GetProductsByCategory)
-			products.GET("/:id/optimize", productHandler.GetOptimizedListing)
+			products.GET("/:id/optimize", middleware.AuthMiddleware(), middleware.PremiumOnlyMiddleware(), productHandler.GetOptimizedListing)
 		}
 
 		// Buyer routes
@@ -170,6 +169,7 @@ func main() {
 		{
 			buyers.GET("/radar", buyerHandler.GetBuyerRadar)
 			buyers.GET("/:id", buyerHandler.GetBuyerByID)
+			buyers.PUT("/:id", middleware.AuthMiddleware(), buyerHandler.UpdateBuyer)
 			buyers.POST("/search", buyerHandler.SearchBuyers)
 			buyers.POST("/:id/lead-score", buyerHandler.GetLeadScore)
 			buyers.GET("/country/:country", buyerHandler.GetBuyersByCountry)
@@ -178,16 +178,18 @@ func main() {
 
 		// Inquiry routes
 		inquiries := api.Group("/inquiries")
+		inquiries.Use(middleware.AuthMiddleware())
 		{
 			inquiries.GET("/supplier/:id", inquiryHandler.GetInquiriesBySupplier)
 			inquiries.GET("/buyer/:id", inquiryHandler.GetInquiriesByBuyer)
 			inquiries.POST("", inquiryHandler.CreateInquiry)
 			inquiries.PUT("/:id/respond", inquiryHandler.RespondToInquiry)
 			inquiries.PUT("/:id/convert", inquiryHandler.MarkAsConverted)
-			inquiries.GET("/analytics/:supplier_id", inquiryHandler.GetAnalytics)
+			inquiries.GET("/analytics/:supplier_id", middleware.PremiumOnlyMiddleware(), inquiryHandler.GetAnalytics)
 			inquiries.GET("/:id", inquiryHandler.GetInquiryByID)
-			inquiries.POST("/:id/ai-suggest", inquiryHandler.AISuggestResponse)
+			inquiries.POST("/:id/ai-suggest", middleware.PremiumOnlyMiddleware(), inquiryHandler.GetAISuggestion)
 			inquiries.PUT("/:id/rate", inquiryHandler.RateInquiry)
+			inquiries.GET("/:id/rating", inquiryHandler.GetInquiryRating) // [M-02] verify rating persisted
 		}
 
 		// AI routes (require auth + rate limiting)
@@ -195,13 +197,15 @@ func main() {
 		ai.Use(middleware.AuthMiddleware())
 		ai.Use(middleware.AIRateLimitMiddleware())
 		{
-			ai.POST("/hs-code", aiHandler.ClassifyHSCode)
-			ai.POST("/response-suggestion", aiHandler.GetResponseSuggestion)
-			ai.POST("/optimize-listing", aiHandler.OptimizeListing)
+			ai.POST("/hs-code", middleware.PremiumOnlyMiddleware(), aiHandler.ClassifyHSCode)
+			ai.POST("/response-suggestion", middleware.PremiumOnlyMiddleware(), aiHandler.GetResponseSuggestion)
+			ai.POST("/optimize-listing", middleware.PremiumOnlyMiddleware(), aiHandler.OptimizeListing)
 			ai.POST("/translate", aiHandler.TranslateText)
 			ai.POST("/detect-language", aiHandler.DetectLanguage)
 			ai.POST("/chat", aiHandler.ChatWithAI)
 		}
+
+
 
 		// Leaderboard routes
 		api.GET("/leaderboard", leaderboardHandler.GetLeaderboard)
@@ -214,16 +218,17 @@ func main() {
 		// Company routes
 		api.GET("/companies", companyHandler.GetAllCompanies)
 		api.GET("/companies/:id", companyHandler.GetCompanyByID)
-		api.GET("/companies/me", companyHandler.GetMyCompany)
-		api.PUT("/companies/:id", companyHandler.UpdateCompany)
+		api.GET("/companies/me", middleware.AuthMiddleware(), companyHandler.GetMyCompany)
+		api.PUT("/companies/:id", middleware.AuthMiddleware(), companyHandler.UpdateCompany)
 		api.GET("/companies/:id/products", companyHandler.GetCompanyProducts)
 		api.GET("/companies/:id/stats", companyHandler.GetCompanyStats)
-		api.POST("/companies/:id/certifications", companyHandler.AddCertification)
-		api.DELETE("/companies/:id/certifications/:cert_id", companyHandler.RemoveCertification)
-		api.PUT("/companies/:id/verify", companyHandler.VerifyCompany)
+		api.POST("/companies/:id/certifications", middleware.AuthMiddleware(), companyHandler.AddCertification)
+		api.DELETE("/companies/:id/certifications/:cert_id", middleware.AuthMiddleware(), companyHandler.RemoveCertification)
+		api.PUT("/companies/:id/verify", middleware.AuthMiddleware(), companyHandler.VerifyCompany)
 
 		// Chat & WhatsApp Bridge routes
 		chat := api.Group("/chat")
+		chat.Use(middleware.AuthMiddleware())
 		{
 			chat.POST("/send", chatHandler.SendMessage)
 			chat.GET("/history/:supplier_id", chatHandler.GetChatHistory)
@@ -250,8 +255,9 @@ func main() {
 		marketAlertHandler := handlers.NewMarketAlertHandler(marketAlertService)
 		api.GET("/alerts/market", marketAlertHandler.GetAlerts)
 
-		// Document Vault routes
+		// Document Vault routes — require authentication [C-05]
 		documents := api.Group("/documents")
+		documents.Use(middleware.AuthMiddleware())
 		{
 			documents.POST("/upload", documentHandler.UploadDocument)
 			documents.GET("", documentHandler.ListDocuments)
@@ -291,3 +297,4 @@ func main() {
 	}
 	log.Println("Server exited gracefully")
 }
+

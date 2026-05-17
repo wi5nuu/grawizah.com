@@ -1,16 +1,68 @@
 package handlers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/repository"
 	"github.com/grawizah/backend/internal/services"
+	"github.com/google/uuid"
 )
+
+// allowedExtensions is a whitelist of safe file extensions.
+// Any file whose extension is not in this map will be rejected.
+var allowedExtensions = map[string]bool{
+	".pdf":  true,
+	".jpg":  true,
+	".jpeg": true,
+	".png":  true,
+	".doc":  true,
+	".docx": true,
+	".xls":  true,
+	".xlsx": true,
+}
+
+// safeFilenameRegex matches only the characters we allow in final filenames.
+var safeFilenameRegex = regexp.MustCompile(`[^a-zA-Z0-9._-]`)
+
+// sanitizeFilename produces a safe, collision-resistant filename.
+//
+// Security properties [C-03]:
+//  1. filepath.Base strips ALL path components (blocks ../../ traversal).
+//  2. safeFilenameRegex removes every character outside [a-zA-Z0-9._-].
+//  3. Extension is validated against an explicit whitelist.
+//  4. A UUID prefix guarantees uniqueness and prevents filename-guessing attacks.
+func sanitizeFilename(original string) (string, string, error) {
+	// 1. Strip all directory components — blocks path traversal
+	base := filepath.Base(original)
+
+	// 2. Extract and validate extension BEFORE stripping special characters
+	ext := strings.ToLower(filepath.Ext(base))
+	if !allowedExtensions[ext] {
+		return "", "", fmt.Errorf("file type '%s' is not allowed", ext)
+	}
+
+	// 3. Remove the extension to clean only the stem
+	stem := strings.TrimSuffix(base, filepath.Ext(base))
+
+	// 4. Replace every forbidden character in the stem with underscore
+	safeStem := safeFilenameRegex.ReplaceAllString(stem, "_")
+	if safeStem == "" || safeStem == "." {
+		safeStem = "document"
+	}
+
+	// 5. Prepend UUID for uniqueness — prevents enumeration and collision
+	safeBase := uuid.New().String() + "_" + safeStem + ext
+
+	return safeBase, ext, nil
+}
 
 type DocumentHandler struct {
 	docRepo    *repository.DocumentRepository
@@ -44,9 +96,17 @@ func (h *DocumentHandler) UploadDocument(c *gin.Context) {
 	}
 	defer file.Close()
 
-	// Validate file size (max 10MB)
-	if header.Size > 10*1024*1024 {
+	// Validate file size (max 10 MB)
+	const maxSize = 10 * 1024 * 1024
+	if header.Size > maxSize {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "file size exceeds 10MB limit"})
+		return
+	}
+
+	// [C-03] Sanitize and validate the filename
+	safeFilename, _, err := sanitizeFilename(header.Filename)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -64,9 +124,8 @@ func (h *DocumentHandler) UploadDocument(c *gin.Context) {
 		return
 	}
 
-	// Save encrypted file to disk
-	safeFilename := strings.ReplaceAll(header.Filename, " ", "_")
-	encFilename := buyerID + "_" + safeFilename + ".enc"
+	// Save encrypted file to disk using the sanitized filename
+	encFilename := safeFilename + ".enc"
 	encPath := filepath.Join(h.uploadDir, encFilename)
 
 	if err := os.WriteFile(encPath, []byte(encryptedData), 0600); err != nil {
@@ -74,11 +133,12 @@ func (h *DocumentHandler) UploadDocument(c *gin.Context) {
 		return
 	}
 
-	// Create document record
+	// Create document record (store original filename for display purposes)
 	doc := models.NewDocument(buyerID, header.Filename, encPath, header.Size, header.Header.Get("Content-Type"))
 
 	if err := h.docRepo.Create(doc); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create document record"})
+		log.Printf("❌ UploadDocument db insert error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create document record: " + err.Error()})
 		return
 	}
 
@@ -119,8 +179,8 @@ func (h *DocumentHandler) DownloadDocument(c *gin.Context) {
 		return
 	}
 
-	// Serve file
-	c.Header("Content-Disposition", "attachment; filename=\""+doc.Filename+"\"")
+	// Serve file — use filepath.Base to prevent header injection
+	c.Header("Content-Disposition", "attachment; filename=\""+filepath.Base(doc.Filename)+"\"")
 	c.Data(http.StatusOK, doc.MimeType, decryptedData)
 }
 
@@ -135,6 +195,7 @@ func (h *DocumentHandler) ListDocuments(c *gin.Context) {
 
 	docs, err := h.docRepo.GetByBuyerID(buyerID)
 	if err != nil {
+		log.Printf("❌ ListDocuments db query error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

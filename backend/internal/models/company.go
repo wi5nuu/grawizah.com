@@ -10,17 +10,21 @@ type Company struct {
 	NIB                  string   `json:"nib,omitempty" db:"nib"`                     // Business Identification Number
 	NPWP                 string   `json:"npwp,omitempty" db:"npwp"`                   // Tax ID
 	ExportLicense        string   `json:"export_license,omitempty" db:"export_license"`
-	ExportExperienceYears int     `json:"export_experience_years" db:"export_experience_years"`
-	ExportCountries      []string `json:"export_countries,omitempty" db:"export_countries"`
+	ExportExperienceYears *int                 `json:"export_experience_years" db:"export_experience_years"`
+	ExportCountries       ResilientStringArray `json:"export_countries,omitempty" db:"export_countries"`
 	
 	// Additional fields
-	Description          string   `json:"description,omitempty" db:"description"`
-	Website              string   `json:"website,omitempty" db:"website"`
-	ContactEmail         string   `json:"contact_email,omitempty" db:"contact_email"`
-	ContactPhone         string   `json:"contact_phone,omitempty" db:"contact_phone"`
-	Address              string   `json:"address,omitempty" db:"address"`
-	Certifications       []string `json:"certifications,omitempty" db:"certifications"`
+	Description          string               `json:"description,omitempty" db:"description"`
+	Website              string               `json:"website,omitempty" db:"website"`
+	ContactEmail         string               `json:"contact_email,omitempty" db:"contact_email"`
+	ContactPhone         string               `json:"contact_phone,omitempty" db:"contact_phone"`
+	Address              string               `json:"address,omitempty" db:"address"`
+	Certifications       ResilientStringArray `json:"certifications,omitempty" db:"certifications"`
 	LogoURL              string   `json:"logo_url,omitempty" db:"logo_url"`
+	BusinessType         string   `json:"business_type,omitempty" db:"business_type"`
+	YearEstablished      *int     `json:"year_established,omitempty" db:"year_established"`
+	TotalEmployees       string   `json:"total_employees,omitempty" db:"total_employees"`
+	Score                int      `json:"score,omitempty" db:"score"`
 }
 
 // NewCompany creates a new company instance
@@ -31,7 +35,7 @@ func NewCompany(ownerID, name, country string) *Company {
 		Name:                  name,
 		Country:               country,
 		Verified:              false,
-		ExportExperienceYears: 0,
+		ExportExperienceYears: new(int),
 		ExportCountries:       []string{},
 		Certifications:        []string{},
 	}
@@ -70,7 +74,7 @@ func (c *Company) UpdateExportExperience(years int) error {
 	if years < 0 {
 		return ErrInvalidInput
 	}
-	c.ExportExperienceYears = years
+	c.ExportExperienceYears = &years
 	c.UpdateTimestamp()
 	return nil
 }
@@ -102,11 +106,15 @@ func (c *Company) ExportsTo(country string) bool {
 
 // GetExperienceLevel returns the experience level based on years
 func (c *Company) GetExperienceLevel() string {
-	if c.ExportExperienceYears >= 10 {
+	if c.ExportExperienceYears == nil {
+		return "Beginner"
+	}
+	years := *c.ExportExperienceYears
+	if years >= 10 {
 		return "Expert"
-	} else if c.ExportExperienceYears >= 5 {
+	} else if years >= 5 {
 		return "Experienced"
-	} else if c.ExportExperienceYears >= 2 {
+	} else if years >= 2 {
 		return "Intermediate"
 	}
 	return "Beginner"

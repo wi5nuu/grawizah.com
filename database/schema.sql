@@ -44,6 +44,17 @@ CREATE TABLE companies (
     export_license VARCHAR(100),
     export_experience_years INT,
     export_countries TEXT[],
+    description TEXT,
+    website VARCHAR(255),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(50),
+    address TEXT,
+    certifications TEXT[],
+    logo_url VARCHAR(255),
+    business_type VARCHAR(100),
+    year_established INT,
+    total_employees VARCHAR(50),
+    score INT DEFAULT 98,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     deleted_at TIMESTAMP NULL
@@ -100,6 +111,8 @@ CREATE TABLE inquiries (
     response_time_hours DECIMAL(10,2),
     converted_to_deal BOOLEAN DEFAULT FALSE,
     buyer_rating INT,
+    response_message TEXT,
+    responded_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     deleted_at TIMESTAMP NULL
@@ -225,7 +238,7 @@ SELECT
     ls.*,
     c.name as company_name,
     c.country,
-    ROW_NUMBER() OVER (ORDER BY ls.total_score DESC) as rank
+    ROW_NUMBER() OVER (ORDER BY ls.total_score DESC) as dynamic_rank
 FROM leaderboard_scores ls
 JOIN companies c ON ls.company_id = c.id
 WHERE ls.deleted_at IS NULL
@@ -279,21 +292,24 @@ CREATE TRIGGER update_companies_updated_at BEFORE UPDATE ON companies
 CREATE TRIGGER update_inquiries_updated_at BEFORE UPDATE ON inquiries
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Chat Messages table
-CREATE TABLE IF NOT EXISTS chat_messages (
+-- Create Chat Messages Table
+CREATE TABLE chat_messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    supplier_id VARCHAR(255) NOT NULL,
-    buyer_id VARCHAR(255) NOT NULL,
-    product_id UUID,
-    sender_id VARCHAR(255) NOT NULL,
+    supplier_id UUID REFERENCES companies(id) ON DELETE CASCADE,
+    buyer_id UUID REFERENCES buyers(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id) ON DELETE SET NULL,
+    sender_id UUID NOT NULL, -- Could be user_id or buyer_id
     message TEXT NOT NULL,
-    channel VARCHAR(50) NOT NULL DEFAULT 'chat',
+    channel VARCHAR(50) DEFAULT 'chat',
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_chat_supplier_buyer ON chat_messages(supplier_id, buyer_id);
-CREATE INDEX idx_chat_created ON chat_messages(created_at);
+-- Enable Realtime for this table
+ALTER publication supabase_realtime ADD TABLE chat_messages;
+
+-- Create Index for faster lookup
+CREATE INDEX idx_chat_messages_conversation ON chat_messages(supplier_id, buyer_id);
 
 -- Fix documents table: add missing columns if not exists
 ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_size BIGINT;

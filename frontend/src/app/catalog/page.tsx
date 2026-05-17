@@ -6,6 +6,45 @@ import Footer from '@/components/ui/Footer';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/types/product';
 import Link from 'next/link';
+
+// Premium Company Avatar component with robust fallback rendering
+const CompanyAvatar = ({ logoUrl, companyName, className, index }: { logoUrl?: string, companyName: string, className: string, index: number }) => {
+  const [imgError, setImgError] = useState(false);
+  
+  const getAvatarBg = (idx: number) => {
+    const bgs = [
+      'bg-gradient-to-br from-yellow-400 to-amber-600 text-white', // Gold
+      'bg-gradient-to-br from-indigo-400 to-indigo-700 text-white', // Purple
+      'bg-gradient-to-br from-emerald-400 to-emerald-700 text-white', // Emerald
+      'bg-gradient-to-br from-blue-500 to-indigo-600 text-white',
+      'bg-gradient-to-br from-pink-500 to-rose-600 text-white',
+      'bg-gradient-to-br from-purple-500 to-violet-600 text-white',
+      'bg-gradient-to-br from-teal-500 to-emerald-600 text-white',
+    ];
+    return bgs[idx % bgs.length];
+  };
+
+  const isUiAvatar = logoUrl && (logoUrl.includes('ui-avatars.com') || logoUrl.trim() === '');
+
+  if (logoUrl && !imgError && !isUiAvatar) {
+    return (
+      <div className={`${className} overflow-hidden flex items-center justify-center`}>
+        <img 
+          src={logoUrl} 
+          alt={companyName} 
+          onError={() => setImgError(true)} 
+          className="w-full h-full object-cover rounded-xl" 
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${className} flex items-center justify-center font-black ${getAvatarBg(index)} shadow-inner rounded-xl`}>
+      <span>{companyName ? companyName[0].toUpperCase() : 'G'}</span>
+    </div>
+  );
+};
 import { 
   Loader2, 
   Search, 
@@ -29,10 +68,11 @@ export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('relevance');
-  const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<'products' | 'suppliers'>('suppliers');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [companies, setCompanies] = useState<Record<string, any>>({});
   
   const [minRating, setMinRating] = useState<number>(0);
@@ -160,10 +200,16 @@ export default function CatalogPage() {
 
             {/* Quick Filters */}
             <div className="flex items-center gap-3 w-full md:w-auto">
-               <button className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
+               <button 
+                 onClick={() => setShowMobileFilters(!showMobileFilters)}
+                 className="lg:hidden flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all flex-1 justify-center"
+               >
+                  <Filter className="w-4 h-4" /> Filters {showMobileFilters ? <ChevronDown className="w-3 h-3 rotate-180" /> : <ChevronDown className="w-3 h-3" />}
+               </button>
+               <button className="hidden md:flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
                   <Globe className="w-4 h-4" /> Worldwide <ChevronDown className="w-3 h-3" />
                </button>
-               <button className="flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
+               <button className="hidden lg:flex items-center gap-2 px-4 py-3 bg-white dark:bg-dark-surface border border-gray-100 dark:border-dark-surface-variant/30 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-primary transition-all">
                   <Filter className="w-4 h-4" /> All Categories <ChevronDown className="w-3 h-3" />
                </button>
             </div>
@@ -171,10 +217,10 @@ export default function CatalogPage() {
         </div>
       </div>
 
-      <main className="flex-grow max-w-[1400px] w-full mx-auto px-6 md:px-10 pt-10 flex flex-col lg:flex-row gap-12 overflow-hidden h-[calc(100vh-280px)]">
+      <main className="flex-grow max-w-[1400px] w-full mx-auto px-6 md:px-10 pt-6 md:pt-10 flex flex-col lg:flex-row gap-8 lg:gap-12 overflow-hidden h-auto lg:h-[calc(100vh-280px)]">
         
         {/* Sidebar Filters - Formal Design */}
-        <aside className="w-full lg:w-[260px] flex-shrink-0 overflow-y-auto pr-4 scrollbar-hide pb-20">
+        <aside className={`${showMobileFilters ? 'block' : 'hidden'} lg:block w-full lg:w-[260px] flex-shrink-0 lg:overflow-y-auto pr-4 scrollbar-hide lg:pb-20`}>
           <div className="space-y-12">
             <div>
               <h3 className="font-display font-black text-[11px] uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 mb-6">Security & Trust</h3>
@@ -220,8 +266,8 @@ export default function CatalogPage() {
         </aside>
 
         {/* Catalog Grid Area */}
-        <div className="flex-1 min-w-0 overflow-y-auto pr-2 scrollbar-hide pb-20">
-          <div className="flex justify-between items-center mt-4 mb-8 bg-white dark:bg-dark-surface p-4 rounded-2xl border border-gray-100 dark:border-dark-surface-variant/20">
+        <div className="flex-1 min-w-0 lg:overflow-y-auto pr-2 scrollbar-hide pb-20">
+          <div className="flex justify-between items-center mt-2 lg:mt-4 mb-6 lg:mb-8 bg-white dark:bg-dark-surface p-4 rounded-2xl border border-gray-100 dark:border-dark-surface-variant/20">
             <span className="text-[11px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
                Orchestrating {viewType === 'products' ? filteredProducts.length : suppliersWithProducts.length} intelligence nodes
             </span>
@@ -256,7 +302,12 @@ export default function CatalogPage() {
                    <div className="flex flex-col xl:flex-row justify-between items-start gap-8 mb-10 pb-10 border-b border-gray-50 dark:border-dark-surface-variant/10">
                      <div className="flex items-start gap-6">
                         <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-dark-surface-container border border-gray-100 dark:border-dark-surface-variant/20 flex items-center justify-center p-2 transition-transform group-hover:rotate-3">
-                           <img src={`https://ui-avatars.com/api/?name=${supplier.name}&background=6366f1&color=fff&size=128&font-size=0.33`} alt={supplier.name} className="w-full h-full object-contain rounded-xl" />
+                           <CompanyAvatar 
+                              logoUrl={supplier.logo_url} 
+                              companyName={supplier.name} 
+                              className="w-full h-full text-2xl" 
+                              index={supplier.id ? supplier.id.charCodeAt(0) : 0} 
+                            />
                         </div>
                         <div>
                            <div className="flex items-center gap-3 mb-2 flex-wrap">

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/grawizah/backend/internal/models"
 	"github.com/grawizah/backend/internal/services"
 )
 
@@ -103,4 +104,48 @@ func (h *BuyerHandler) GetLeadScore(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, score)
+}
+
+// UpdateBuyer handles PUT /api/buyers/:id
+func (h *BuyerHandler) UpdateBuyer(c *gin.Context) {
+	id := c.Param("id")
+	
+	var input struct {
+		CompanyName string `json:"company_name" binding:"required"`
+		Country     string `json:"country" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 1. Get existing buyer or auto-create if missing to support SSO signups
+	buyer, err := h.buyerService.GetBuyerByID(c.Request.Context(), id)
+	if err != nil {
+		// Auto-create missing buyer profile
+		buyer = models.NewBuyer(input.CompanyName, input.Country, models.DataSourceVerified)
+		buyer.ID = id
+		buyer.Verify() // Boost confidence and score automatically
+		buyer.BuyScore = 95
+		
+		err = h.buyerService.CreateBuyer(c.Request.Context(), buyer)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create buyer profile: " + err.Error()})
+			return
+		}
+	} else {
+		// Update existing
+		buyer.CompanyName = input.CompanyName
+		buyer.Country = input.Country
+		buyer.UpdateTimestamp()
+
+		err = h.buyerService.UpdateBuyer(c.Request.Context(), buyer)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update buyer profile: " + err.Error()})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, buyer)
 }

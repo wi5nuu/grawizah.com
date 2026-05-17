@@ -49,24 +49,52 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
   const chatService = new ChatService();
   const aiGeneralService = new GeneralAIService();
 
-  const effectiveSupplierId = supplierId || 'system-ai-bot';
+  const effectiveSupplierId = supplierId || '00000000-0000-0000-0000-000000000000';
 
+  // ── [H-03] Subscription stored in a ref so cleanup always has the right reference
+  // and we can guard against creating duplicates.
+  const subscriptionRef = useRef<any>(null);
+
+  // Effect 1: Load history and clear unread badge — only when chat is opened
   useEffect(() => {
     if (isOpen && user) {
       loadChatHistory();
       setUnreadCount(0);
     }
-    
-    let subscription: any;
-    if (user) {
-      subscription = setupRealtimeListener();
-    }
-    
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [isOpen, user, supplierId]);
+  }, [isOpen, user]);
 
+  // Effect 2: Realtime subscription — independent of isOpen to avoid
+  // creating multiple subscriptions when the widget is opened/closed.
+  useEffect(() => {
+    if (!user) return;
+
+    // Guard: don't create a second subscription if one already exists
+    if (subscriptionRef.current) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ChatWidget] Realtime already subscribed — skipping duplicate');
+      }
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ChatWidget] Subscribing to realtime:', `chat:${effectiveSupplierId}:${user.id}`);
+    }
+
+    subscriptionRef.current = setupRealtimeListener();
+
+    return () => {
+      if (subscriptionRef.current) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[ChatWidget] Unsubscribing from realtime');
+        }
+        subscriptionRef.current.unsubscribe();
+        subscriptionRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, supplierId]); // ← No isOpen — this is the H-03 fix
+
+  // Effect 3: Scroll to bottom whenever messages change or widget is expanded
   useEffect(() => {
     scrollToBottom();
   }, [messages, isMinimized]);
@@ -104,17 +132,39 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
         },
         (payload: any) => {
           const incoming = payload.new;
-          if (incoming.sender_id !== user.id) {
-            const formattedMessage: Message = {
-              id: incoming.id,
-              sender: 'supplier',
-              message: incoming.message,
-              timestamp: new Date(incoming.created_at),
-              read: incoming.is_read,
-            };
-            setMessages((prev) => [...prev, formattedMessage]);
-            if (!isOpen) setUnreadCount((prev) => prev + 1);
-          }
+          const formattedMessage: Message = {
+            id: incoming.id,
+            sender: incoming.sender_id === user.id ? 'user' : 'supplier',
+            message: incoming.message,
+            timestamp: new Date(incoming.created_at),
+            read: incoming.is_read,
+          };
+          
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incoming.id)) return prev;
+
+            // Deduplicate: replace optimistic message (numeric ID) with DB message (UUID)
+            const isUUID = incoming.id.includes('-');
+            if (isUUID) {
+              const optimisticIndex = prev.findIndex(
+                (m) => m.sender === formattedMessage.sender && 
+                       m.message === formattedMessage.message && 
+                       !m.id.includes('-')
+              );
+              
+              if (optimisticIndex >= 0) {
+                const newMessages = [...prev];
+                newMessages[optimisticIndex] = formattedMessage;
+                return newMessages;
+              }
+            }
+
+            // If it's not a deduplicated message and it's from the other party, increment badge
+            if (!isOpen && formattedMessage.sender !== 'user') {
+              setUnreadCount((count) => count + 1);
+            }
+            return [...prev, formattedMessage];
+          });
         }
       )
       .subscribe();
@@ -188,13 +238,23 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
       };
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Also record the message in the chat history
+      // Record user message in the chat history
       await chatService.sendMessage({
         supplierId: effectiveSupplierId,
         buyerId: user.id,
         senderId: user.id,
         productId,
         message: message.message, // Record original message
+        channel: 'chat',
+      });
+      
+      // Record AI response in the chat history so it persists on reload
+      await chatService.sendMessage({
+        supplierId: effectiveSupplierId,
+        buyerId: user.id,
+        senderId: effectiveSupplierId, // AI response is recorded as from the supplier
+        productId,
+        message: aiResponse,
         channel: 'chat',
       });
     } catch (error) {
@@ -302,37 +362,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
           {/* Action Footer */}
           <div className="p-5 bg-white dark:bg-dark-surface-container-low border-t border-gray-100 dark:border-dark-surface-variant/10">
             
-            {/* Intelligence Translator Row */}
-            <div 
-              onClick={() => setAutoTranslate(!autoTranslate)}
-              className="flex items-center justify-between mb-4 p-2 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 cursor-pointer hover:bg-primary/10 transition-colors group/sync"
-            >
-               <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-white dark:bg-dark-surface rounded-lg shadow-sm group-hover/sync:scale-110 transition-transform">
-                     <Languages className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-[10px] font-black text-gray-900 dark:text-white uppercase tracking-widest">Neural Sync</span>
-               </div>
-               <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                  <select
-                    value={targetLang}
-                    onChange={(e) => setTargetLang(e.target.value)}
-                    className="bg-white dark:bg-dark-surface border-none text-[10px] font-black uppercase tracking-tighter rounded-lg px-2 py-1 outline-none ring-1 ring-gray-100 dark:ring-dark-surface-variant/30"
-                  >
-                    {translatorService.getSupportedLanguages().map((lang) => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.name.toUpperCase()}
-                      </option>
-                    ))}
-                  </select>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setAutoTranslate(!autoTranslate); }}
-                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${autoTranslate ? 'bg-primary text-white' : 'bg-gray-100 dark:bg-dark-surface text-gray-400'}`}
-                  >
-                     {autoTranslate ? 'Active' : 'Sync'}
-                  </button>
-               </div>
-            </div>
+            {/* Translator Row Removed */}
 
             <div className="flex gap-3 items-center">
               <div className="flex-1 relative group">
@@ -355,10 +385,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ supplierId, productId })
 
             <div className="mt-4 flex items-center justify-center gap-4 opacity-40">
                <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em]">
-                  <ShieldCheck className="w-2.5 h-2.5" /> E2E Encrypted
+                  <ShieldCheck className="w-2.5 h-2.5" /> Grawizah AI v1.0
                </div>
                <div className="flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.2em]">
-                  <Sparkles className="w-2.5 h-2.5" /> AI Augmented
+                  <Sparkles className="w-2.5 h-2.5" /> Llama 3.1 Engine
                </div>
             </div>
           </div>

@@ -25,17 +25,22 @@ type BuyerRepository interface {
 	GetByCountry(country string) ([]models.Buyer, error)
 	GetHighQualityBuyers(limit int) ([]models.Buyer, error)
 	Search(criteria models.BuyerSearchCriteria) ([]models.Buyer, error)
+	Create(buyer *models.Buyer) error
+	Update(buyer *models.Buyer) error
+	Delete(id string) error
 }
 
 // InquiryRepository defines methods for inquiry data
 type InquiryRepository interface {
 	GetBySupplierID(supplierID string) ([]models.InquiryDetail, error)
-	GetByBuyerID(buyerID string) ([]models.Inquiry, error)
+	GetByBuyerID(buyerID string) ([]models.InquiryDetail, error)
 	Create(inquiry *models.Inquiry) error
 	Update(inquiry *models.Inquiry) error
 	GetByID(id string) (*models.Inquiry, error)
 	GetAnalytics(supplierID string) (*models.InquiryAnalytics, error)
+	RateInquiry(id string, rating int) error // [M-02] persist buyer rating to DB
 }
+
 
 // LeaderboardRepository defines methods for leaderboard data
 type LeaderboardRepository interface {

@@ -31,8 +31,11 @@ export default function DashboardPage() {
     async function fetchDashboardData() {
       if (!user) return;
       try {
+        const token = localStorage.getItem('grawizah_token');
+        const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+
         // Fetch real Inquiries
-        const res = await fetch(`${API_URL}/api/inquiries/supplier/${user.id}`);
+        const res = await fetch(`${API_URL}/api/inquiries/supplier/${user.id}`, { headers });
         const data = await res.json();
         const inquiriesList = Array.isArray(data) ? data : (data.data || []);
         setInquiries(inquiriesList);
@@ -42,7 +45,7 @@ export default function DashboardPage() {
         const converted = inquiriesList.filter((i: any) => i.converted_to_deal).length;
         
         // Fetch real Intelligence Score
-        const scoreRes = await fetch(`${API_URL}/api/leaderboard/company/${user.id}`);
+        const scoreRes = await fetch(`${API_URL}/api/leaderboard/company/${user.id}`, { headers });
         const scoreData = await scoreRes.json();
         const realScore = scoreData?.total_score ? Math.round(scoreData.total_score) : 94;
         setScore(realScore);
@@ -75,7 +78,7 @@ export default function DashboardPage() {
   const displayName = user?.email?.split('@')[0] || 'User';
 
   return (
-    <div className="p-6 md:p-10 w-full bg-[#fafafa] dark:bg-dark-background min-h-screen font-sans relative">
+    <div className="p-6 md:p-10 w-full min-h-full font-sans relative">
       {/* Header Section */}
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
@@ -139,7 +142,9 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <p className="font-black text-[13px] text-gray-900 dark:text-white leading-none">Inquiry #{activity.id.substring(0, 6).toUpperCase()}</p>
-                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">Buyer: {activity.buyer_id.substring(0, 12)}...</p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium">
+                              {activity.source_type === 'rfq' ? 'RFQ Broadcast' : `Buyer: ${activity.buyer_id.substring(0, 12)}...`}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -156,7 +161,11 @@ export default function DashboardPage() {
                         {new Date(activity.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-8 py-6 text-right font-black text-[13px] text-gray-900 dark:text-white">
-                        $0.00
+                        {activity.source_metadata?.budget
+                          ? activity.source_metadata.budget
+                          : activity.converted_to_deal
+                          ? <span className="text-emerald-600">Converted</span>
+                          : <span className="text-amber-500">Pending</span>}
                       </td>
                     </tr>
                   )) : (

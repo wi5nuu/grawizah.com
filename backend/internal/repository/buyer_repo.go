@@ -21,16 +21,13 @@ func (r *BuyerRepository) Create(buyer *models.Buyer) error {
 	query := `
 		INSERT INTO buyers (
 			id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+			data_source, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 	
 	_, err := r.db.Exec(query,
 		buyer.ID, buyer.CompanyName, buyer.Country, buyer.BuyScore,
 		buyer.Verified, buyer.LastImportDate, buyer.DataSource,
-		buyer.ImportVolume, buyer.ImportValue, buyer.HSCodes,
-		buyer.ContactEmail, buyer.ContactPhone, buyer.Website,
 		buyer.CreatedAt, buyer.UpdatedAt,
 	)
 	
@@ -41,8 +38,7 @@ func (r *BuyerRepository) Create(buyer *models.Buyer) error {
 func (r *BuyerRepository) GetByID(id string) (*models.Buyer, error) {
 	query := `
 		SELECT id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
+			data_source, created_at, updated_at
 		FROM buyers
 		WHERE id = $1 AND deleted_at IS NULL
 	`
@@ -51,8 +47,6 @@ func (r *BuyerRepository) GetByID(id string) (*models.Buyer, error) {
 	err := r.db.QueryRow(query, id).Scan(
 		&buyer.ID, &buyer.CompanyName, &buyer.Country, &buyer.BuyScore,
 		&buyer.Verified, &buyer.LastImportDate, &buyer.DataSource,
-		&buyer.ImportVolume, &buyer.ImportValue, &buyer.HSCodes,
-		&buyer.ContactEmail, &buyer.ContactPhone, &buyer.Website,
 		&buyer.CreatedAt, &buyer.UpdatedAt,
 	)
 	
@@ -67,8 +61,7 @@ func (r *BuyerRepository) GetByID(id string) (*models.Buyer, error) {
 func (r *BuyerRepository) GetAll(limit, offset int) ([]models.Buyer, error) {
 	query := `
 		SELECT id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
+			data_source, created_at, updated_at
 		FROM buyers
 		WHERE deleted_at IS NULL
 		ORDER BY buy_score DESC
@@ -87,8 +80,6 @@ func (r *BuyerRepository) GetAll(limit, offset int) ([]models.Buyer, error) {
 		err := rows.Scan(
 			&b.ID, &b.CompanyName, &b.Country, &b.BuyScore,
 			&b.Verified, &b.LastImportDate, &b.DataSource,
-			&b.ImportVolume, &b.ImportValue, &b.HSCodes,
-			&b.ContactEmail, &b.ContactPhone, &b.Website,
 			&b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {
@@ -105,17 +96,13 @@ func (r *BuyerRepository) Update(buyer *models.Buyer) error {
 	query := `
 		UPDATE buyers SET
 			company_name = $2, country = $3, buy_score = $4, verified = $5,
-			last_import_date = $6, data_source = $7, import_volume = $8,
-			import_value = $9, hs_codes = $10, contact_email = $11,
-			contact_phone = $12, website = $13, updated_at = $14
+			last_import_date = $6, data_source = $7, updated_at = $8
 		WHERE id = $1 AND deleted_at IS NULL
 	`
 	
 	result, err := r.db.Exec(query,
 		buyer.ID, buyer.CompanyName, buyer.Country, buyer.BuyScore,
 		buyer.Verified, buyer.LastImportDate, buyer.DataSource,
-		buyer.ImportVolume, buyer.ImportValue, buyer.HSCodes,
-		buyer.ContactEmail, buyer.ContactPhone, buyer.Website,
 		buyer.UpdatedAt,
 	)
 	
@@ -160,8 +147,7 @@ func (r *BuyerRepository) Delete(id string) error {
 func (r *BuyerRepository) Search(criteria models.BuyerSearchCriteria) ([]models.Buyer, error) {
 	query := `
 		SELECT id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
+			data_source, created_at, updated_at
 		FROM buyers
 		WHERE deleted_at IS NULL
 	`
@@ -230,8 +216,6 @@ func (r *BuyerRepository) Search(criteria models.BuyerSearchCriteria) ([]models.
 		err := rows.Scan(
 			&b.ID, &b.CompanyName, &b.Country, &b.BuyScore,
 			&b.Verified, &b.LastImportDate, &b.DataSource,
-			&b.ImportVolume, &b.ImportValue, &b.HSCodes,
-			&b.ContactEmail, &b.ContactPhone, &b.Website,
 			&b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {
@@ -247,8 +231,7 @@ func (r *BuyerRepository) Search(criteria models.BuyerSearchCriteria) ([]models.
 func (r *BuyerRepository) GetByCountry(country string) ([]models.Buyer, error) {
 	query := `
 		SELECT id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
+			data_source, created_at, updated_at
 		FROM buyers
 		WHERE country = $1 AND deleted_at IS NULL
 		ORDER BY buy_score DESC
@@ -266,8 +249,6 @@ func (r *BuyerRepository) GetByCountry(country string) ([]models.Buyer, error) {
 		err := rows.Scan(
 			&b.ID, &b.CompanyName, &b.Country, &b.BuyScore,
 			&b.Verified, &b.LastImportDate, &b.DataSource,
-			&b.ImportVolume, &b.ImportValue, &b.HSCodes,
-			&b.ContactEmail, &b.ContactPhone, &b.Website,
 			&b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {
@@ -283,8 +264,7 @@ func (r *BuyerRepository) GetByCountry(country string) ([]models.Buyer, error) {
 func (r *BuyerRepository) GetHighQualityBuyers(limit int) ([]models.Buyer, error) {
 	query := `
 		SELECT id, company_name, country, buy_score, verified, last_import_date,
-			data_source, import_volume, import_value, hs_codes, contact_email,
-			contact_phone, website, created_at, updated_at
+			data_source, created_at, updated_at
 		FROM buyers
 		WHERE buy_score >= 70 AND deleted_at IS NULL
 		ORDER BY buy_score DESC
@@ -303,8 +283,6 @@ func (r *BuyerRepository) GetHighQualityBuyers(limit int) ([]models.Buyer, error
 		err := rows.Scan(
 			&b.ID, &b.CompanyName, &b.Country, &b.BuyScore,
 			&b.Verified, &b.LastImportDate, &b.DataSource,
-			&b.ImportVolume, &b.ImportValue, &b.HSCodes,
-			&b.ContactEmail, &b.ContactPhone, &b.Website,
 			&b.CreatedAt, &b.UpdatedAt,
 		)
 		if err != nil {

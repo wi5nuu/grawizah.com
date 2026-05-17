@@ -1,37 +1,50 @@
-# Backend Dockerfile - Golang
-
+# ==========================================
+# STAGE 1: Build Backend
+# ==========================================
 FROM golang:1.21-alpine AS builder
 
-WORKDIR /app
+# Set necessary environment variables needed for our image
+ENV GO111MODULE=on \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
-# Install dependencies
+WORKDIR /build
+
+# Cache dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Copy application source code
 COPY . .
 
-# Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/main.go
+# Build the binary with optimizations (strip debug symbols)
+RUN go build -ldflags="-s -w" -o grawizah-api ./cmd/main.go
 
-# Final stage
-FROM alpine:latest
+# ==========================================
+# STAGE 2: Minimal Runtime Image
+# ==========================================
+FROM alpine:3.19
 
-RUN apk --no-cache add ca-certificates wget
+# Install CA certificates for external HTTPS calls (Supabase, Groq)
+RUN apk --no-cache add ca-certificates tzdata
 
-# Create non-root user
-RUN addgroup -S grawizah && adduser -S grawizah -G grawizah
+# Create non-root user for security
+RUN adduser -D -g '' grawizah
 
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /app/main .
+COPY --from=builder /build/grawizah-api .
 
-# Create uploads directory
-RUN mkdir -p /app/uploads/documents && chown -R grawizah:grawizah /app
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads/documents && \
+    chown -R grawizah:grawizah /app
 
+# Use the non-root user
 USER grawizah
 
 EXPOSE 8080
 
-CMD ["./main"]
+# Command to run the executable
+CMD ["./grawizah-api"]
